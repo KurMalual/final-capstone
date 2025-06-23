@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 
 class WeatherData(models.Model):
@@ -8,7 +9,7 @@ class WeatherData(models.Model):
     rainfall = models.FloatField()
     wind_speed = models.FloatField()
     weather_condition = models.CharField(max_length=50)
-    date = models.DateTimeField()
+    date = models.DateTimeField(default=timezone.now)  # Fixed timezone issue
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

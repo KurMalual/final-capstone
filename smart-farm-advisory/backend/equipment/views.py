@@ -90,3 +90,30 @@ class EquipmentRentalViewSet(viewsets.ModelViewSet):
         requests = EquipmentRental.objects.filter(equipment__owner=request.user)
         serializer = self.get_serializer(requests, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def active_rentals(self, request):
+        """Get active rentals for the current user"""
+        if not request.user.is_authenticated:
+            return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        try:
+            # Get active rentals where user is either renter or equipment owner
+            if request.user.user_type == 'equipment_seller':
+                rentals = EquipmentRental.objects.filter(
+                    equipment__owner=request.user,
+                    status='active'
+                )
+            else:
+                rentals = EquipmentRental.objects.filter(
+                    renter=request.user,
+                    status='active'
+                )
+        
+            serializer = self.get_serializer(rentals, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            return Response({
+                'error': 'Failed to fetch active rentals',
+                'message': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
