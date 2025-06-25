@@ -535,37 +535,35 @@
 }
 
 .edit-btn {
-  background: linear-gradient(135deg, var(--secondary-color) 0%, #1976d2 100%);
+  background-color: #3182ce;
   color: white;
   border: none;
   padding: 0.5rem 1rem;
-  border-radius: 20px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: var(--transition);
-  flex: 1;
+  font-weight: 500;
+  transition: all 0.2s;
 }
 
 .edit-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  background-color: #2c5282;
+  transform: translateY(-1px);
 }
 
 .delete-btn {
-  background: linear-gradient(135deg, var(--danger-color) 0%, #d32f2f 100%);
+  background-color: #e53e3e;
   color: white;
   border: none;
   padding: 0.5rem 1rem;
-  border-radius: 20px;
+  border-radius: 6px;
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: var(--transition);
-  flex: 1;
+  font-weight: 500;
+  transition: all 0.2s;
 }
 
 .delete-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lg);
+  background-color: #c53030;
+  transform: translateY(-1px);
 }
 
 .add-vehicle-section {
@@ -640,6 +638,80 @@
   box-shadow: var(--shadow-lg);
 }
 
+/* Edit Vehicle Modal Styles */
+.edit-vehicle-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.edit-vehicle-modal {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+.edit-vehicle-modal h2 {
+  margin-bottom: 1.5rem;
+  color: #2d3748;
+  text-align: center;
+}
+
+.edit-vehicle-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+.cancel-btn {
+  background-color: #e2e8f0;
+  color: #4a5568;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.cancel-btn:hover {
+  background-color: #cbd5e0;
+}
+
+.update-btn {
+  background-color: #48bb78;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.update-btn:hover {
+  background-color: #38a169;
+}
+
 @media (max-width: 768px) {
   .dashboard-header {
     flex-direction: column;
@@ -691,5 +763,19 @@
 
   .detail-value {
     text-align: left;
+  }
+
+  .edit-vehicle-modal {
+    width: 95%;
+    padding: 1.5rem;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .cancel-btn,
+  .update-btn {
+    width: 100%;
   }
 }

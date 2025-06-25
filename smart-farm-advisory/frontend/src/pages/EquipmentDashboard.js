@@ -5,7 +5,7 @@ import axios from "axios"
 import { useAuth } from "../context/UserContext"
 import { Link } from "react-router-dom"
 import Footer from "../components/Footer"
-import "../TransporterDashboard.css"
+import "../EquipmentDashboard.css"
 
 const EquipmentDashboard = () => {
   const { user, logout } = useAuth()
@@ -15,9 +15,11 @@ const EquipmentDashboard = () => {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("dashboard")
   const [showAddForm, setShowAddForm] = useState(false)
+  const [editingEquipment, setEditingEquipment] = useState(null)
+  const [showEditModal, setShowEditModal] = useState(false)
   const [newEquipment, setNewEquipment] = useState({
     name: "",
-    type: "",
+    equipment_type: "",
     description: "",
     daily_rate: "",
     location: "",
@@ -35,10 +37,11 @@ const EquipmentDashboard = () => {
 
       const [equipmentRes, requestsRes, rentalsRes] = await Promise.all([
         axios.get("http://localhost:8000/api/equipment/my_equipment/", { headers }),
-        axios.get("http://localhost:8000/api/equipment/rental_requests/", { headers }),
-        axios.get("http://localhost:8000/api/equipment/active_rentals/", { headers }),
+        axios.get("http://localhost:8000/api/equipment/rental_requests/", { headers }).catch(() => ({ data: [] })),
+        axios.get("http://localhost:8000/api/equipment/active_rentals/", { headers }).catch(() => ({ data: [] })),
       ])
 
+      console.log("🚜 Fetched equipment data:", equipmentRes.data)
       setEquipment(equipmentRes.data)
       setRentalRequests(requestsRes.data)
       setActiveRentals(rentalsRes.data)
@@ -51,37 +54,189 @@ const EquipmentDashboard = () => {
 
   const handleAddEquipment = async (e) => {
     e.preventDefault()
+
+    console.log("=== Equipment Form Submission Debug ===")
+    console.log("Form data:", newEquipment)
+
     try {
       const token = localStorage.getItem("token")
-      const formData = new FormData()
+      console.log("Token:", token ? `${token.substring(0, 20)}...` : "No token")
 
-      Object.keys(newEquipment).forEach((key) => {
-        if (newEquipment[key] !== null) {
-          formData.append(key, newEquipment[key])
-        }
-      })
+      // Validate required fields
+      if (
+        !newEquipment.name ||
+        !newEquipment.equipment_type ||
+        !newEquipment.description ||
+        !newEquipment.daily_rate ||
+        !newEquipment.location
+      ) {
+        alert("Please fill in all required fields")
+        return
+      }
 
-      await axios.post("http://localhost:8000/api/equipment/", formData, {
+      // Validate daily rate is a number
+      if (isNaN(Number.parseFloat(newEquipment.daily_rate))) {
+        alert("Daily rate must be a valid number")
+        return
+      }
+
+      // Prepare data for submission
+      const equipmentData = {
+        name: newEquipment.name.trim(),
+        equipment_type: newEquipment.equipment_type,
+        description: newEquipment.description.trim(),
+        daily_rate: Number.parseFloat(newEquipment.daily_rate).toFixed(2),
+        location: newEquipment.location.trim(),
+      }
+
+      console.log("Submitting equipment data:", equipmentData)
+
+      const response = await axios.post("http://localhost:8000/api/equipment/", equipmentData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
+          "Content-Type": "application/json",
         },
       })
 
-      alert("Equipment added successfully!")
-      setShowAddForm(false)
-      setNewEquipment({
-        name: "",
-        type: "",
-        description: "",
-        daily_rate: "",
-        location: "",
-        image: null,
-      })
-      fetchData()
+      console.log("Success response:", response.data)
+
+      // Check if response indicates success
+      if (response.data.success !== false) {
+        alert("Equipment added successfully! 🎉")
+        setShowAddForm(false)
+        setNewEquipment({
+          name: "",
+          equipment_type: "",
+          description: "",
+          daily_rate: "",
+          location: "",
+          image: null,
+        })
+        fetchData() // Refresh the equipment list
+      } else {
+        throw new Error(response.data.error || "Unknown error occurred")
+      }
     } catch (error) {
-      console.error("Error adding equipment:", error)
-      alert("Failed to add equipment. Please try again.")
+      console.error("=== Equipment Creation Error ===")
+      console.error("Error object:", error)
+      console.error("Response data:", error.response?.data)
+      console.error("Response status:", error.response?.status)
+
+      let errorMessage = "Failed to add equipment. Please try again."
+
+      if (error.response?.data) {
+        if (typeof error.response.data === "string") {
+          errorMessage = error.response.data
+        } else if (error.response.data.error) {
+          errorMessage = error.response.data.error
+        } else if (error.response.data.detail) {
+          errorMessage = error.response.data.detail
+        } else {
+          // Show validation errors
+          const errors = Object.entries(error.response.data)
+            .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(", ") : messages}`)
+            .join("\n")
+          errorMessage = `Validation errors:\n${errors}`
+        }
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+
+      alert(`❌ ${errorMessage}`)
+    }
+  }
+
+  const handleEditEquipment = (equipmentItem) => {
+    setEditingEquipment({
+      ...equipmentItem,
+      image: null, // Reset image for editing
+    })
+    setShowEditModal(true)
+  }
+
+  const handleUpdateEquipment = async (e) => {
+    e.preventDefault()
+
+    try {
+      const token = localStorage.getItem("token")
+
+      // Validate required fields
+      if (
+        !editingEquipment.name ||
+        !editingEquipment.equipment_type ||
+        !editingEquipment.description ||
+        !editingEquipment.daily_rate ||
+        !editingEquipment.location
+      ) {
+        alert("Please fill in all required fields")
+        return
+      }
+
+      // Validate daily rate is a number
+      if (isNaN(Number.parseFloat(editingEquipment.daily_rate))) {
+        alert("Daily rate must be a valid number")
+        return
+      }
+
+      // Prepare data for submission
+      const equipmentData = {
+        name: editingEquipment.name.trim(),
+        equipment_type: editingEquipment.equipment_type,
+        description: editingEquipment.description.trim(),
+        daily_rate: Number.parseFloat(editingEquipment.daily_rate).toFixed(2),
+        location: editingEquipment.location.trim(),
+      }
+
+      const response = await axios.put(`http://localhost:8000/api/equipment/${editingEquipment.id}/`, equipmentData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+
+      alert("Equipment updated successfully! ✅")
+      setShowEditModal(false)
+      setEditingEquipment(null)
+      fetchData() // Refresh the equipment list
+    } catch (error) {
+      console.error("Error updating equipment:", error)
+      let errorMessage = "Failed to update equipment. Please try again."
+
+      if (error.response?.data) {
+        if (typeof error.response.data === "string") {
+          errorMessage = error.response.data
+        } else if (error.response.data.error) {
+          errorMessage = error.response.data.error
+        } else if (error.response.data.detail) {
+          errorMessage = error.response.data.detail
+        }
+      }
+
+      alert(`❌ ${errorMessage}`)
+    }
+  }
+
+  const handleDeleteEquipment = async (equipmentId, equipmentName) => {
+    const confirmDelete = window.confirm(
+      `Are you sure you want to delete "${equipmentName}"?\n\nThis action cannot be undone.`,
+    )
+
+    if (!confirmDelete) return
+
+    try {
+      const token = localStorage.getItem("token")
+
+      await axios.delete(`http://localhost:8000/api/equipment/${equipmentId}/`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      alert("Equipment deleted successfully! 🗑️")
+      fetchData() // Refresh the equipment list
+    } catch (error) {
+      console.error("Error deleting equipment:", error)
+      alert("Failed to delete equipment. Please try again.")
     }
   }
 
@@ -125,8 +280,21 @@ const EquipmentDashboard = () => {
     logout()
   }
 
+  const getEquipmentTypeEmoji = (type) => {
+    const emojiMap = {
+      tractor: "🚜",
+      harvester: "🌾",
+      planter: "🌱",
+      sprayer: "💧",
+      irrigation: "🚿",
+      other: "🔧",
+    }
+    return emojiMap[type] || "🚜"
+  }
+
   return (
-    <div className="transporter-dashboard">
+    <div className="equipment-dashboard">
+      {/* Header - Match Farmer Dashboard */}
       <header className="dashboard-header">
         <div className="header-left">
           <Link to="/" className="logo-link">
@@ -145,18 +313,16 @@ const EquipmentDashboard = () => {
         </div>
       </header>
 
+      {/* Navigation - Match Farmer Dashboard */}
       <div className="dashboard-nav">
         <button className={activeTab === "dashboard" ? "active" : ""} onClick={() => setActiveTab("dashboard")}>
-          <span className="nav-icon">📊</span>
-          Dashboard
+          📊 Dashboard
         </button>
         <button className={activeTab === "equipment" ? "active" : ""} onClick={() => setActiveTab("equipment")}>
-          <span className="nav-icon">🚜</span>
-          My Equipment
+          🚜 My Equipment
         </button>
         <button className={activeTab === "requests" ? "active" : ""} onClick={() => setActiveTab("requests")}>
-          <span className="nav-icon">📋</span>
-          Rental Requests
+          📋 Rental Requests
         </button>
       </div>
 
@@ -170,69 +336,34 @@ const EquipmentDashboard = () => {
           <>
             {activeTab === "dashboard" && (
               <div className="dashboard-overview">
-                <div className="welcome-section">
-                  <h2>Welcome back, {user.first_name}! 👋</h2>
-                  <p>Here's an overview of your equipment rental business</p>
-                </div>
+                <h1 className="welcome-title">Welcome to Your Equipment Dashboard</h1>
 
-                <div className="stats-grid">
-                  <div className="stat-card equipment-card">
-                    <div className="stat-icon">🚜</div>
-                    <div className="stat-content">
-                      <h3>My Equipment</h3>
-                      <div className="stat-number">{equipment.length}</div>
-                      <p>Total equipment listed</p>
-                      <button className="stat-action-btn" onClick={() => setActiveTab("equipment")}>
-                        Manage Equipment
-                      </button>
-                    </div>
+                {/* Main Cards - Match Farmer Dashboard Layout Exactly */}
+                <div className="main-cards-grid">
+                  <div className="main-card">
+                    <div className="card-icon">📦</div>
+                    <h3>My Equipment</h3>
+                    <div className="card-number">{equipment.length}</div>
+                    <button className="card-button" onClick={() => setActiveTab("equipment")}>
+                      Manage Equipment
+                    </button>
                   </div>
 
-                  <div className="stat-card requests-card">
-                    <div className="stat-icon">📋</div>
-                    <div className="stat-content">
-                      <h3>Pending Requests</h3>
-                      <div className="stat-number">{rentalRequests.filter((r) => r.status === "pending").length}</div>
-                      <p>Awaiting your response</p>
-                      <button className="stat-action-btn" onClick={() => setActiveTab("requests")}>
-                        View Requests
-                      </button>
-                    </div>
+                  <div className="main-card">
+                    <div className="card-icon">📋</div>
+                    <h3>Rental Requests</h3>
+                    <div className="card-number">{rentalRequests.filter((r) => r.status === "pending").length}</div>
+                    <button className="card-button" onClick={() => setActiveTab("requests")}>
+                      View Requests
+                    </button>
                   </div>
 
-                  <div className="stat-card rentals-card">
-                    <div className="stat-icon">✅</div>
-                    <div className="stat-content">
-                      <h3>Active Rentals</h3>
-                      <div className="stat-number">{activeRentals.length}</div>
-                      <p>Currently rented out</p>
-                      <button className="stat-action-btn" onClick={() => setActiveTab("requests")}>
-                        View Rentals
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="recent-activity">
-                  <h3>📈 Recent Activity</h3>
-                  <div className="activity-list">
-                    {rentalRequests.slice(0, 5).map((request) => (
-                      <div key={request.id} className="activity-item">
-                        <div className="activity-content">
-                          <p>
-                            <strong>{request.renter_name}</strong> requested to rent{" "}
-                            <strong>{request.equipment_name}</strong>
-                          </p>
-                          <span className={`activity-status status-${request.status}`}>{request.status}</span>
-                        </div>
-                        <span className="activity-date">{new Date(request.created_at).toLocaleDateString()}</span>
-                      </div>
-                    ))}
-                    {rentalRequests.length === 0 && (
-                      <div className="empty-state">
-                        <p>No recent activity. Start by adding your equipment!</p>
-                      </div>
-                    )}
+                  <div className="main-card">
+                    <div className="card-icon">🚜</div>
+                    <h3>Equipment Available</h3>
+                    <button className="card-button" onClick={() => setActiveTab("equipment")}>
+                      Browse Equipment
+                    </button>
                   </div>
                 </div>
               </div>
@@ -253,60 +384,66 @@ const EquipmentDashboard = () => {
                       <h3>Add New Equipment</h3>
                       <div className="form-grid">
                         <div className="form-group">
-                          <label>Equipment Name</label>
+                          <label>Equipment Name *</label>
                           <input
                             type="text"
                             value={newEquipment.name}
                             onChange={(e) => setNewEquipment({ ...newEquipment, name: e.target.value })}
                             required
+                            placeholder="Enter equipment name"
                           />
                         </div>
                         <div className="form-group">
-                          <label>Type</label>
+                          <label>Type *</label>
                           <select
-                            value={newEquipment.type}
-                            onChange={(e) => setNewEquipment({ ...newEquipment, type: e.target.value })}
+                            value={newEquipment.equipment_type}
+                            onChange={(e) => setNewEquipment({ ...newEquipment, equipment_type: e.target.value })}
                             required
                           >
                             <option value="">Select Type</option>
                             <option value="tractor">Tractor</option>
                             <option value="harvester">Harvester</option>
                             <option value="planter">Planter</option>
-                            <option value="cultivator">Cultivator</option>
+                            <option value="sprayer">Sprayer</option>
+                            <option value="irrigation">Irrigation Equipment</option>
                             <option value="other">Other</option>
                           </select>
                         </div>
                         <div className="form-group">
-                          <label>Daily Rate ($)</label>
+                          <label>Daily Rate ($) *</label>
                           <input
                             type="number"
                             step="0.01"
+                            min="0"
                             value={newEquipment.daily_rate}
                             onChange={(e) => setNewEquipment({ ...newEquipment, daily_rate: e.target.value })}
                             required
+                            placeholder="0.00"
                           />
                         </div>
                         <div className="form-group">
-                          <label>Location</label>
+                          <label>Location *</label>
                           <input
                             type="text"
                             value={newEquipment.location}
                             onChange={(e) => setNewEquipment({ ...newEquipment, location: e.target.value })}
                             required
+                            placeholder="Enter location"
                           />
                         </div>
                       </div>
                       <div className="form-group">
-                        <label>Description</label>
+                        <label>Description *</label>
                         <textarea
                           value={newEquipment.description}
                           onChange={(e) => setNewEquipment({ ...newEquipment, description: e.target.value })}
                           rows="3"
                           required
+                          placeholder="Describe your equipment..."
                         />
                       </div>
                       <div className="form-group">
-                        <label>Equipment Image</label>
+                        <label>Equipment Image (Optional)</label>
                         <input
                           type="file"
                           accept="image/*"
@@ -333,22 +470,35 @@ const EquipmentDashboard = () => {
                           {item.image ? (
                             <img src={item.image || "/placeholder.svg"} alt={item.name} />
                           ) : (
-                            <div className="placeholder-image">🚜</div>
+                            <div className="placeholder-image">
+                              <span className="equipment-emoji">{getEquipmentTypeEmoji(item.equipment_type)}</span>
+                            </div>
                           )}
                         </div>
-                        <div className="equipment-details">
-                          <h3>{item.name}</h3>
-                          <p className="equipment-type">{item.type}</p>
-                          <p className="equipment-description">{item.description}</p>
-                          <div className="equipment-meta">
-                            <span className="equipment-rate">${item.daily_rate}/day</span>
-                            <span className="equipment-location">📍 {item.location}</span>
+                        <div className="equipment-content">
+                          <h3 className="equipment-name">{item.name || "Unnamed Equipment"}</h3>
+                          <div className="equipment-type-container">
+                            <span className="type-badge">{item.equipment_type || "other"}</span>
+                            <span className="capacity-info">Daily Rate</span>
                           </div>
-                          <div className="equipment-status">
+                          <div className="equipment-pricing">
+                            <span className="price">${item.daily_rate || "0.00"}/day</span>
+                            <span className="location">📍 {item.location || "Unknown"}</span>
+                          </div>
+                          <p className="equipment-description">{item.description || "No description"}</p>
+                          <div className="equipment-status-container">
                             <span className={`status-badge ${item.is_available ? "available" : "rented"}`}>
                               {item.is_available ? "✅ Available" : "🔒 Rented"}
                             </span>
                           </div>
+                        </div>
+                        <div className="equipment-actions">
+                          <button className="edit-btn" onClick={() => handleEditEquipment(item)}>
+                            Edit
+                          </button>
+                          <button className="delete-btn" onClick={() => handleDeleteEquipment(item.id, item.name)}>
+                            Delete
+                          </button>
                         </div>
                       </div>
                     ))
@@ -422,6 +572,100 @@ const EquipmentDashboard = () => {
           </>
         )}
       </div>
+
+      {/* Edit Equipment Modal */}
+      {showEditModal && editingEquipment && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <form onSubmit={handleUpdateEquipment} className="edit-form">
+              <h3>Edit Equipment</h3>
+              <div className="form-grid">
+                <div className="form-group">
+                  <label>Equipment Name *</label>
+                  <input
+                    type="text"
+                    value={editingEquipment.name}
+                    onChange={(e) => setEditingEquipment({ ...editingEquipment, name: e.target.value })}
+                    required
+                    placeholder="Enter equipment name"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Type *</label>
+                  <select
+                    value={editingEquipment.equipment_type}
+                    onChange={(e) => setEditingEquipment({ ...editingEquipment, equipment_type: e.target.value })}
+                    required
+                  >
+                    <option value="">Select Type</option>
+                    <option value="tractor">Tractor</option>
+                    <option value="harvester">Harvester</option>
+                    <option value="planter">Planter</option>
+                    <option value="sprayer">Sprayer</option>
+                    <option value="irrigation">Irrigation Equipment</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Daily Rate ($) *</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={editingEquipment.daily_rate}
+                    onChange={(e) => setEditingEquipment({ ...editingEquipment, daily_rate: e.target.value })}
+                    required
+                    placeholder="0.00"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Location *</label>
+                  <input
+                    type="text"
+                    value={editingEquipment.location}
+                    onChange={(e) => setEditingEquipment({ ...editingEquipment, location: e.target.value })}
+                    required
+                    placeholder="Enter location"
+                  />
+                </div>
+              </div>
+              <div className="form-group">
+                <label>Description *</label>
+                <textarea
+                  value={editingEquipment.description}
+                  onChange={(e) => setEditingEquipment({ ...editingEquipment, description: e.target.value })}
+                  rows="3"
+                  required
+                  placeholder="Describe your equipment..."
+                />
+              </div>
+              <div className="form-group">
+                <label>Equipment Image (Optional)</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setEditingEquipment({ ...editingEquipment, image: e.target.files[0] })}
+                />
+              </div>
+              <div className="form-actions">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditModal(false)
+                    setEditingEquipment(null)
+                  }}
+                  className="cancel-btn"
+                >
+                  Cancel
+                </button>
+                <button type="submit" className="submit-btn">
+                  Update Equipment
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>

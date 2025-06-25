@@ -1,12 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { useNavigate, Link } from "react-router-dom"
-import axios from "axios"
+import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "../context/UserContext"
+import Footer from "../components/Footer"
 
 const LoginPage = () => {
-  const [credentials, setCredentials] = useState({
+  const [formData, setFormData] = useState({
     username: "",
     password: "",
   })
@@ -16,106 +16,105 @@ const LoginPage = () => {
   const { login } = useAuth()
 
   const handleChange = (e) => {
-    setCredentials({
-      ...credentials,
+    setFormData({
+      ...formData,
       [e.target.name]: e.target.value,
     })
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError("")
     setLoading(true)
+    setError("")
 
     try {
-      // Configure axios to include credentials for session-based auth
-      axios.defaults.withCredentials = true
+      console.log("🔄 Attempting login with:", { username: formData.username })
 
-      const response = await axios.post("http://localhost:8000/api/auth/login/", credentials, {
-        headers: {
-          "Content-Type": "application/json",
-          "X-Requested-With": "XMLHttpRequest",
-        },
-      })
+      // Use the login function from UserContext
+      const result = await login(formData.username, formData.password)
 
-      // Set the user in context
-      login(response.data)
+      if (result.success) {
+        console.log("✅ Login successful, redirecting...")
 
-      // Redirect based on user type
-      switch (response.data.user_type) {
-        case "farmer":
+        // Get user from context to determine redirect
+        // We'll redirect in a moment to let the context update
+        setTimeout(() => {
+          // Default redirect - the context should have the user by now
           navigate("/farmer-dashboard")
-          break
-        case "buyer":
-          navigate("/buyer-dashboard")
-          break
-        case "transporter":
-          navigate("/transporter-dashboard")
-          break
-        case "equipment_seller":
-          navigate("/equipment-dashboard")
-          break
-        default:
-          navigate("/")
-      }
-    } catch (err) {
-      console.error("Login error:", err)
-      if (err.response?.data?.error) {
-        setError(err.response.data.error)
+        }, 100)
       } else {
-        setError("Invalid username or password. Please try again.")
+        console.log("❌ Login failed:", result.error)
+        setError(result.error || "Login failed. Please try again.")
       }
+    } catch (error) {
+      console.error("❌ Login error:", error)
+      setError("Login failed. Please check your credentials and try again.")
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="login-container">
-      <div className="login-form-container">
-        <h2>Login to Your Account</h2>
-        {error && <div className="error-message">{error}</div>}
+    <div className="auth-page">
+      <header className="auth-header">
+        <Link to="/" className="home-link">
+          <span className="logo-icon">🌱</span>
+          Smart Farm Connect
+        </Link>
+      </header>
 
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="username">Username</label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              value={credentials.username}
-              onChange={handleChange}
-              required
-              placeholder="Enter your username"
-            />
+      <div className="auth-container">
+        <div className="auth-card">
+          <div className="auth-header-content">
+            <h1>Welcome Back</h1>
+            <p>Sign in to your Smart Farm Connect account</p>
           </div>
 
-          <div className="form-group">
-            <label htmlFor="password">Password</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={credentials.password}
-              onChange={handleChange}
-              required
-              placeholder="Enter your password"
-            />
+          {error && <div className="error-message">{error}</div>}
+
+          <form onSubmit={handleSubmit} className="auth-form">
+            <div className="form-group">
+              <label htmlFor="username">Username</label>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                value={formData.username}
+                onChange={handleChange}
+                required
+                placeholder="Enter your username"
+                disabled={loading}
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                placeholder="Enter your password"
+                disabled={loading}
+              />
+            </div>
+
+            <button type="submit" className="auth-btn" disabled={loading}>
+              {loading ? "Signing In..." : "Sign In"}
+            </button>
+          </form>
+
+          <div className="auth-footer">
+            <p>
+              Don't have an account? <Link to="/signup">Sign up here</Link>
+            </p>
           </div>
-
-          <button type="submit" className="login-button" disabled={loading}>
-            {loading ? "Logging in..." : "Login"}
-          </button>
-        </form>
-
-        <div className="signup-link">
-          Don't have an account? <Link to="/signup">Sign up here</Link>
-        </div>
-
-        <div className="guest-link">
-          <Link to="/">Continue as Guest to Marketplace</Link>
         </div>
       </div>
+
+      <Footer />
     </div>
   )
 }

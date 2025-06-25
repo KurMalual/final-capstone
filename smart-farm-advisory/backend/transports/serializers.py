@@ -9,6 +9,7 @@ class VehicleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Vehicle
         fields = '__all__'
+        read_only_fields = ('owner',)  # Make owner read-only
 
 
 class TransportationRequestSerializer(serializers.ModelSerializer):

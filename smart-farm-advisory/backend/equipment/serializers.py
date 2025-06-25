@@ -9,6 +9,11 @@ class EquipmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Equipment
         fields = '__all__'
+        read_only_fields = ('owner',)  # Make owner read-only so it's set automatically
+    
+    def create(self, validated_data):
+        # The owner will be set in the view, so we don't need to handle it here
+        return super().create(validated_data)
 
 
 class EquipmentRentalSerializer(serializers.ModelSerializer):

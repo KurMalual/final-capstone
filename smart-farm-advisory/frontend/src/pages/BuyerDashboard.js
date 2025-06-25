@@ -21,15 +21,17 @@ const BuyerDashboard = () => {
       try {
         // Fetch all available products
         const productsResponse = await axios.get("http://localhost:8000/api/products/")
-        setProducts(productsResponse.data)
+        setProducts(Array.isArray(productsResponse.data) ? productsResponse.data : [])
 
         // Fetch buyer's orders
         const ordersResponse = await axios.get("http://localhost:8000/api/products/my_orders/")
-        setOrders(ordersResponse.data)
+        setOrders(Array.isArray(ordersResponse.data) ? ordersResponse.data : [])
 
         setLoading(false)
       } catch (error) {
         console.error("Error fetching buyer data:", error)
+        setProducts([])
+        setOrders([])
         setLoading(false)
       }
     }
@@ -41,13 +43,15 @@ const BuyerDashboard = () => {
     logout()
   }
 
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch =
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = selectedCategory ? product.category === selectedCategory : true
-    return matchesSearch && matchesCategory && product.is_available
-  })
+  const filteredProducts = Array.isArray(products)
+    ? products.filter((product) => {
+        const matchesSearch =
+          product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          product.description.toLowerCase().includes(searchTerm.toLowerCase())
+        const matchesCategory = selectedCategory ? product.category === selectedCategory : true
+        return matchesSearch && matchesCategory && product.is_available
+      })
+    : []
 
   const categories = ["vegetables", "fruits", "grains", "livestock", "dairy", "other"]
 
@@ -116,7 +120,9 @@ const BuyerDashboard = () => {
                     <div className="stat-icon">🌾</div>
                     <div className="stat-content">
                       <h3>Available Products</h3>
-                      <div className="stat-number">{products.filter((p) => p.is_available).length}</div>
+                      <div className="stat-number">
+                        {Array.isArray(products) ? products.filter((p) => p.is_available).length : 0}
+                      </div>
                       <p>Fresh products available</p>
                       <button className="stat-action-btn" onClick={() => setActiveTab("marketplace")}>
                         Browse Products
@@ -128,7 +134,7 @@ const BuyerDashboard = () => {
                     <div className="stat-icon">📦</div>
                     <div className="stat-content">
                       <h3>My Orders</h3>
-                      <div className="stat-number">{orders.length}</div>
+                      <div className="stat-number">{Array.isArray(orders) ? orders.length : 0}</div>
                       <p>Total orders placed</p>
                       <button className="stat-action-btn" onClick={() => setActiveTab("orders")}>
                         View Orders
@@ -140,7 +146,9 @@ const BuyerDashboard = () => {
                     <div className="stat-icon">⏳</div>
                     <div className="stat-content">
                       <h3>Pending Orders</h3>
-                      <div className="stat-number">{orders.filter((o) => o.status === "pending").length}</div>
+                      <div className="stat-number">
+                        {Array.isArray(orders) ? orders.filter((o) => o.status === "pending").length : 0}
+                      </div>
                       <p>Awaiting processing</p>
                       <button className="stat-action-btn" onClick={() => setActiveTab("orders")}>
                         View Pending
@@ -152,18 +160,19 @@ const BuyerDashboard = () => {
                 <div className="recent-activity">
                   <h3>📈 Recent Activity</h3>
                   <div className="activity-list">
-                    {orders.slice(0, 5).map((order) => (
-                      <div key={order.id} className="activity-item">
-                        <div className="activity-content">
-                          <p>
-                            Order #{order.id} - <strong>{order.product_details?.name || "Unknown Product"}</strong>
-                          </p>
-                          <span className={`activity-status status-${order.status}`}>{order.status}</span>
+                    {Array.isArray(orders) &&
+                      orders.slice(0, 5).map((order) => (
+                        <div key={order.id} className="activity-item">
+                          <div className="activity-content">
+                            <p>
+                              Order #{order.id} - <strong>{order.product_details?.name || "Unknown Product"}</strong>
+                            </p>
+                            <span className={`activity-status status-${order.status}`}>{order.status}</span>
+                          </div>
+                          <span className="activity-date">{new Date(order.created_at).toLocaleDateString()}</span>
                         </div>
-                        <span className="activity-date">{new Date(order.created_at).toLocaleDateString()}</span>
-                      </div>
-                    ))}
-                    {orders.length === 0 && (
+                      ))}
+                    {(!Array.isArray(orders) || orders.length === 0) && (
                       <div className="empty-state">
                         <p>No recent activity. Start by browsing our marketplace!</p>
                       </div>
@@ -246,7 +255,7 @@ const BuyerDashboard = () => {
               <div className="orders-section">
                 <h2>📦 My Orders</h2>
                 <div className="orders-grid">
-                  {orders.length > 0 ? (
+                  {Array.isArray(orders) && orders.length > 0 ? (
                     orders.map((order) => (
                       <div key={order.id} className="order-card">
                         <div className="order-header">

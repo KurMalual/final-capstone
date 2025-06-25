@@ -20,7 +20,70 @@ class VehicleViewSet(viewsets.ModelViewSet):
             return Vehicle.objects.filter(owner=self.request.user)
     
     def perform_create(self, serializer):
-        serializer.save(owner=self.request.user)
+        try:
+            # Set the owner to the current user
+            serializer.save(owner=self.request.user)
+            print(f"✅ Vehicle created successfully for user: {self.request.user.username}")
+        except Exception as e:
+            print(f"❌ Error creating vehicle: {e}")
+            raise
+
+    def create(self, request, *args, **kwargs):
+        try:
+            # Validate required fields
+            required_fields = ['name', 'type', 'capacity', 'rate_per_km']
+            for field in required_fields:
+                if not request.data.get(field):
+                    return Response(
+                        {'error': f'{field} is required'}, 
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+            
+            # Validate numeric fields
+            try:
+                capacity = float(request.data.get('capacity', 0))
+                rate_per_km = float(request.data.get('rate_per_km', 0))
+                
+                if capacity <= 0:
+                    return Response(
+                        {'error': 'Capacity must be greater than 0'}, 
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                
+                if rate_per_km <= 0:
+                    return Response(
+                        {'error': 'Rate per km must be greater than 0'}, 
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+                    
+            except (ValueError, TypeError):
+                return Response(
+                    {'error': 'Invalid numeric values for capacity or rate'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Create the vehicle
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            self.perform_create(serializer)
+            
+            headers = self.get_success_headers(serializer.data)
+            return Response(
+                {
+                    'success': True,
+                    'message': 'Vehicle added successfully!',
+                    'data': serializer.data
+                }, 
+                status=status.HTTP_201_CREATED, 
+                headers=headers
+            )
+            
+        except Exception as e:
+            print(f"❌ Vehicle creation error: {e}")
+            return Response(
+                {'error': f'Failed to create vehicle: {str(e)}'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
     
     @action(detail=False, methods=['get'])
     def my_vehicles(self, request):

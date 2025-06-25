@@ -1,9 +1,18 @@
-from rest_framework import viewsets, permissions, status
-from rest_framework.decorators import action
+from rest_framework import viewsets, permissions, status, generics
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from django.shortcuts import get_object_or_404
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+import json
+import logging
+
 from .models import Equipment, EquipmentRental
 from .serializers import EquipmentSerializer, EquipmentRentalSerializer
 
+logger = logging.getLogger(__name__)
 
 class EquipmentViewSet(viewsets.ModelViewSet):
     queryset = Equipment.objects.all()
@@ -22,15 +31,51 @@ class EquipmentViewSet(viewsets.ModelViewSet):
         if not request.user.is_authenticated:
             return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
         
+        # Log the incoming data
+        logger.info(f"Equipment creation request from {request.user.username}")
+        logger.info(f"Request data: {request.data}")
+        
         # Set the owner to the current user
         data = request.data.copy()
-        data['owner'] = request.user.id
+        
+        # Validate required fields
+        required_fields = ['name', 'equipment_type', 'daily_rate', 'location', 'description']
+        missing_fields = [field for field in required_fields if not data.get(field)]
+        
+        if missing_fields:
+            return Response({
+                'error': f'Missing required fields: {", ".join(missing_fields)}'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate daily_rate is a valid number
+        try:
+            float(data.get('daily_rate', 0))
+        except (ValueError, TypeError):
+            return Response({
+                'error': 'Daily rate must be a valid number'
+            }, status=status.HTTP_400_BAD_REQUEST)
         
         serializer = self.get_serializer(data=data)
-        serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+        
+        try:
+            serializer.is_valid(raise_exception=True)
+            equipment = serializer.save(owner=request.user)
+            
+            logger.info(f"Equipment created successfully: {equipment.name} (ID: {equipment.id})")
+            
+            headers = self.get_success_headers(serializer.data)
+            return Response({
+                'success': True,
+                'message': 'Equipment added successfully!',
+                'equipment': serializer.data
+            }, status=status.HTTP_201_CREATED, headers=headers)
+        
+        except Exception as e:
+            logger.error(f"Equipment creation failed: {str(e)}")
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
     
     @action(detail=False, methods=['get'])
     def my_equipment(self, request):
@@ -113,7 +158,135 @@ class EquipmentRentalViewSet(viewsets.ModelViewSet):
             serializer = self.get_serializer(rentals, many=True)
             return Response(serializer.data)
         except Exception as e:
+            logger.error(f"Error fetching active rentals: {str(e)}")
             return Response({
                 'error': 'Failed to fetch active rentals',
                 'message': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class EquipmentListCreateView(generics.ListCreateAPIView):
+    """List all equipment or create new equipment"""
+    queryset = Equipment.objects.all()
+    serializer_class = EquipmentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        try:
+            equipment = serializer.save(owner=self.request.user)
+            logger.info(f"Equipment '{equipment.name}' created successfully by {self.request.user.username}")
+            return equipment
+        except Exception as e:
+            logger.error(f"Error creating equipment: {str(e)}")
+            raise
+
+class MyEquipmentView(APIView):
+    """Get equipment owned by current user"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        try:
+            equipment = Equipment.objects.filter(owner=request.user)
+            serializer = EquipmentSerializer(equipment, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            logger.error(f"Error fetching user equipment: {str(e)}")
+            return Response(
+                {'error': 'Failed to fetch equipment'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+class RentalRequestsView(APIView):
+    """Handle equipment rental requests"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        # For now, return empty list - can be expanded later
+        return Response([])
+
+class ActiveRentalsView(APIView):
+    """Handle active equipment rentals"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        # For now, return empty list - can be expanded later
+        return Response([])
+
+class EquipmentDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update or delete equipment"""
+    queryset = Equipment.objects.all()
+    serializer_class = EquipmentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        # Users can only access their own equipment
+        return Equipment.objects.filter(owner=self.request.user)
+
+class RentEquipmentView(APIView):
+    """Rent equipment"""
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            equipment = get_object_or_404(Equipment, pk=pk)
+            # Add rental logic here
+            return Response({
+                'success': True,
+                'message': f'Equipment {equipment.name} rented successfully'
+            })
+        except Exception as e:
+            logger.error(f"Error renting equipment: {str(e)}")
+            return Response(
+                {'error': 'Failed to rent equipment'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+# Legacy function-based views for backward compatibility
+@csrf_exempt
+@api_view(['GET', 'POST'])
+@permission_classes([permissions.IsAuthenticated])
+def equipment_list_create(request):
+    """Legacy equipment list/create view"""
+    if request.method == 'GET':
+        equipment = Equipment.objects.all()
+        serializer = EquipmentSerializer(equipment, many=True)
+        return Response(serializer.data)
+    
+    elif request.method == 'POST':
+        try:
+            data = request.data
+            logger.info(f"Creating equipment with data: {data}")
+            
+            # Validate required fields
+            required_fields = ['name', 'equipment_type', 'daily_rate', 'location']
+            for field in required_fields:
+                if not data.get(field):
+                    return Response({
+                        'success': False,
+                        'error': f'{field} is required'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Create equipment
+            equipment = Equipment.objects.create(
+                name=data['name'],
+                equipment_type=data['equipment_type'],
+                daily_rate=data['daily_rate'],
+                location=data['location'],
+                description=data.get('description', ''),
+                owner=request.user
+            )
+            
+            logger.info(f"Equipment created successfully: {equipment.name}")
+            
+            serializer = EquipmentSerializer(equipment)
+            return Response({
+                'success': True,
+                'equipment': serializer.data,
+                'message': 'Equipment added successfully'
+            }, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            logger.error(f"Error creating equipment: {str(e)}")
+            return Response({
+                'success': False,
+                'error': 'Failed to create equipment'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

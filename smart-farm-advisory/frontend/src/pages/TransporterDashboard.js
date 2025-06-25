@@ -13,6 +13,7 @@ const TransporterDashboard = () => {
   const [myVehicles, setMyVehicles] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("dashboard")
+  const [editingVehicle, setEditingVehicle] = useState(null)
   const [newVehicle, setNewVehicle] = useState({
     name: "",
     type: "truck",
@@ -35,6 +36,7 @@ const TransporterDashboard = () => {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         })
+        console.log("🚛 Fetched vehicles data:", vehiclesResponse.data)
         setMyVehicles(vehiclesResponse.data)
 
         setLoading(false)
@@ -65,17 +67,59 @@ const TransporterDashboard = () => {
     }
   }
 
+  const handleEditVehicleChange = (e) => {
+    if (e.target.name === "image") {
+      setEditingVehicle({
+        ...editingVehicle,
+        image: e.target.files[0],
+      })
+    } else {
+      setEditingVehicle({
+        ...editingVehicle,
+        [e.target.name]: e.target.value,
+      })
+    }
+  }
+
   const handleVehicleSubmit = async (e) => {
     e.preventDefault()
 
+    // Validate required fields
+    if (!newVehicle.name.trim()) {
+      alert("❌ Vehicle name is required")
+      return
+    }
+
+    if (!newVehicle.capacity || Number.parseFloat(newVehicle.capacity) <= 0) {
+      alert("❌ Valid capacity is required")
+      return
+    }
+
+    if (!newVehicle.rate_per_km || Number.parseFloat(newVehicle.rate_per_km) <= 0) {
+      alert("❌ Valid rate per km is required")
+      return
+    }
+
     const formData = new FormData()
-    Object.keys(newVehicle).forEach((key) => {
-      if (newVehicle[key] !== null && newVehicle[key] !== "") {
-        formData.append(key, newVehicle[key])
-      }
-    })
+
+    // Add required fields
+    formData.append("name", newVehicle.name.trim())
+    formData.append("type", newVehicle.type)
+    formData.append("capacity", Number.parseFloat(newVehicle.capacity))
+    formData.append("rate_per_km", Number.parseFloat(newVehicle.rate_per_km))
+
+    // Add optional fields
+    if (newVehicle.description.trim()) {
+      formData.append("description", newVehicle.description.trim())
+    }
+
+    if (newVehicle.image) {
+      formData.append("image", newVehicle.image)
+    }
 
     try {
+      console.log("🚛 Submitting vehicle data...")
+
       const response = await axios.post("http://localhost:8000/api/transports/vehicles/", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -83,23 +127,170 @@ const TransporterDashboard = () => {
         },
       })
 
-      setMyVehicles([...myVehicles, response.data])
-      setNewVehicle({
-        name: "",
-        type: "truck",
-        capacity: "",
-        rate_per_km: "",
-        description: "",
-        image: null,
+      console.log("✅ Vehicle creation response:", response.data)
+
+      if (response.data.success) {
+        // Add to local state
+        setMyVehicles([...myVehicles, response.data.data])
+
+        // Reset form
+        setNewVehicle({
+          name: "",
+          type: "truck",
+          capacity: "",
+          rate_per_km: "",
+          description: "",
+          image: null,
+        })
+
+        alert("🚛 Vehicle added successfully!")
+      } else {
+        throw new Error(response.data.error || "Unknown error occurred")
+      }
+    } catch (error) {
+      console.error("❌ Error adding vehicle:", error)
+
+      let errorMessage = "Failed to add vehicle. Please try again."
+
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+
+      alert(`❌ ${errorMessage}`)
+    }
+  }
+
+  const handleEditVehicle = (vehicle) => {
+    setEditingVehicle({
+      ...vehicle,
+      image: null, // Reset image field for editing
+    })
+  }
+
+  const handleUpdateVehicle = async (e) => {
+    e.preventDefault()
+
+    // Validate required fields
+    if (!editingVehicle.name.trim()) {
+      alert("❌ Vehicle name is required")
+      return
+    }
+
+    if (!editingVehicle.capacity || Number.parseFloat(editingVehicle.capacity) <= 0) {
+      alert("❌ Valid capacity is required")
+      return
+    }
+
+    if (!editingVehicle.rate_per_km || Number.parseFloat(editingVehicle.rate_per_km) <= 0) {
+      alert("❌ Valid rate per km is required")
+      return
+    }
+
+    const formData = new FormData()
+
+    // Add required fields
+    formData.append("name", editingVehicle.name.trim())
+    formData.append("type", editingVehicle.type)
+    formData.append("capacity", Number.parseFloat(editingVehicle.capacity))
+    formData.append("rate_per_km", Number.parseFloat(editingVehicle.rate_per_km))
+
+    // Add optional fields
+    if (editingVehicle.description.trim()) {
+      formData.append("description", editingVehicle.description.trim())
+    }
+
+    // Only append image if a new one was selected
+    if (editingVehicle.image) {
+      formData.append("image", editingVehicle.image)
+    }
+
+    try {
+      console.log("🔄 Updating vehicle data...")
+
+      const response = await axios.put(
+        `http://localhost:8000/api/transports/vehicles/${editingVehicle.id}/`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        },
+      )
+
+      console.log("✅ Vehicle update response:", response.data)
+
+      // Update local state
+      setMyVehicles(myVehicles.map((vehicle) => (vehicle.id === editingVehicle.id ? response.data : vehicle)))
+
+      // Clear editing state
+      setEditingVehicle(null)
+
+      alert("✅ Vehicle updated successfully!")
+    } catch (error) {
+      console.error("❌ Error updating vehicle:", error)
+
+      let errorMessage = "Failed to update vehicle. Please try again."
+
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+
+      alert(`❌ ${errorMessage}`)
+    }
+  }
+
+  const handleDeleteVehicle = async (vehicleId, vehicleName) => {
+    const confirmDelete = window.confirm(
+      `🗑️ Are you sure you want to delete "${vehicleName}"?\n\nThis action cannot be undone.`,
+    )
+
+    if (!confirmDelete) {
+      return
+    }
+
+    try {
+      console.log("🗑️ Deleting vehicle...")
+
+      await axios.delete(`http://localhost:8000/api/transports/vehicles/${vehicleId}/`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
       })
 
-      alert("Vehicle added successfully!")
+      console.log("✅ Vehicle deleted successfully")
+
+      // Remove from local state
+      setMyVehicles(myVehicles.filter((vehicle) => vehicle.id !== vehicleId))
+
+      alert("🗑️ Vehicle deleted successfully!")
     } catch (error) {
-      console.error("Error adding vehicle:", error)
-      const errorMessage =
-        error.response?.data?.error || error.response?.data?.message || "Failed to add vehicle. Please try again."
-      alert(errorMessage)
+      console.error("❌ Error deleting vehicle:", error)
+
+      let errorMessage = "Failed to delete vehicle. Please try again."
+
+      if (error.response?.data?.error) {
+        errorMessage = error.response.data.error
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message
+      } else if (error.message) {
+        errorMessage = error.message
+      }
+
+      alert(`❌ ${errorMessage}`)
     }
+  }
+
+  const handleCancelEdit = () => {
+    setEditingVehicle(null)
   }
 
   const handleAcceptRequest = async (requestId) => {
@@ -375,17 +566,21 @@ const TransporterDashboard = () => {
                           )}
                         </div>
                         <div className="vehicle-details">
-                          <h3>{vehicle.name}</h3>
+                          <h3>{vehicle.name || "Unnamed Vehicle"}</h3>
                           <div className="vehicle-info">
-                            <span className="vehicle-type">{vehicle.type}</span>
-                            <span className="vehicle-capacity">{vehicle.capacity} kg</span>
+                            <span className="vehicle-type">{vehicle.type || "truck"}</span>
+                            <span className="vehicle-capacity">{vehicle.capacity || 0} kg</span>
                           </div>
-                          <p className="vehicle-rate">${vehicle.rate_per_km}/km</p>
-                          <p className="vehicle-description">{vehicle.description}</p>
+                          <p className="vehicle-rate">${vehicle.rate_per_km || 0}/km</p>
+                          <p className="vehicle-description">{vehicle.description || "No description"}</p>
                         </div>
                         <div className="vehicle-actions">
-                          <button className="edit-btn">Edit</button>
-                          <button className="delete-btn">Delete</button>
+                          <button className="edit-btn" onClick={() => handleEditVehicle(vehicle)}>
+                            Edit
+                          </button>
+                          <button className="delete-btn" onClick={() => handleDeleteVehicle(vehicle.id, vehicle.name)}>
+                            Delete
+                          </button>
                         </div>
                       </div>
                     ))
@@ -396,6 +591,92 @@ const TransporterDashboard = () => {
                     </div>
                   )}
                 </div>
+
+                {/* Edit Vehicle Form */}
+                {editingVehicle && (
+                  <div className="edit-vehicle-overlay">
+                    <div className="edit-vehicle-modal">
+                      <h2>✏️ Edit Vehicle</h2>
+                      <form onSubmit={handleUpdateVehicle} className="edit-vehicle-form">
+                        <div className="form-row">
+                          <div className="form-group">
+                            <label>Vehicle Name</label>
+                            <input
+                              type="text"
+                              name="name"
+                              value={editingVehicle.name}
+                              onChange={handleEditVehicleChange}
+                              required
+                              placeholder="e.g., Sino Truck"
+                            />
+                          </div>
+
+                          <div className="form-group">
+                            <label>Vehicle Type</label>
+                            <select name="type" value={editingVehicle.type} onChange={handleEditVehicleChange} required>
+                              <option value="truck">Truck</option>
+                              <option value="van">Van</option>
+                              <option value="pickup">Pickup</option>
+                              <option value="refrigerated">Refrigerated Vehicle</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <div className="form-row">
+                          <div className="form-group">
+                            <label>Capacity (kg)</label>
+                            <input
+                              type="number"
+                              name="capacity"
+                              value={editingVehicle.capacity}
+                              onChange={handleEditVehicleChange}
+                              required
+                              placeholder="e.g., 5000"
+                            />
+                          </div>
+
+                          <div className="form-group">
+                            <label>Rate per km ($)</label>
+                            <input
+                              type="number"
+                              step="0.01"
+                              name="rate_per_km"
+                              value={editingVehicle.rate_per_km}
+                              onChange={handleEditVehicleChange}
+                              required
+                              placeholder="e.g., 2.50"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="form-group">
+                          <label>Description</label>
+                          <textarea
+                            name="description"
+                            value={editingVehicle.description}
+                            onChange={handleEditVehicleChange}
+                            rows="3"
+                            placeholder="Describe your vehicle and any special features..."
+                          ></textarea>
+                        </div>
+
+                        <div className="form-group">
+                          <label>Vehicle Image (Optional - leave empty to keep current image)</label>
+                          <input type="file" name="image" onChange={handleEditVehicleChange} accept="image/*" />
+                        </div>
+
+                        <div className="form-actions">
+                          <button type="button" onClick={handleCancelEdit} className="cancel-btn">
+                            Cancel
+                          </button>
+                          <button type="submit" className="update-btn">
+                            Update Vehicle
+                          </button>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                )}
 
                 <div className="add-vehicle-section">
                   <h2>Add New Vehicle</h2>

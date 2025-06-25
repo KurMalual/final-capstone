@@ -1,9 +1,10 @@
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
+from rest_framework import viewsets, generics, status
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly, AllowAny
+from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
-from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.contrib.auth import get_user_model
@@ -285,4 +286,120 @@ class OrderViewSet(viewsets.ModelViewSet):
             return Response({
                 'error': 'Failed to fetch received orders',
                 'message': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class ProductListCreateView(generics.ListCreateAPIView):
+    """List all products or create new product"""
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(farmer=self.request.user)
+        logger.info(f"Product created by {self.request.user.username}")
+
+class MyProductsView(APIView):
+    """Get products owned by current user"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        try:
+            products = Product.objects.filter(farmer=request.user)
+            logger.info(f"Retrieved {products.count()} products for user {request.user.username}")
+            serializer = ProductSerializer(products, many=True)
+            return Response(serializer.data)
+        except Exception as e:
+            logger.error(f"Error fetching user products: {str(e)}")
+            return Response(
+                {'error': 'Failed to fetch products'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+class ProductOrdersView(APIView):
+    """Handle product orders"""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # For now, return empty list - can be expanded later
+        return Response([])
+
+class ProductDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """Retrieve, update or delete product"""
+    queryset = Product.objects.all()
+    serializer_class = ProductSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Users can only access their own products
+        return Product.objects.filter(farmer=self.request.user)
+
+class OrderProductView(APIView):
+    """Order a product"""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        try:
+            product = get_object_or_404(Product, pk=pk)
+            # Add order logic here
+            return Response({
+                'success': True,
+                'message': f'Product {product.name} ordered successfully'
+            })
+        except Exception as e:
+            logger.error(f"Error ordering product: {str(e)}")
+            return Response(
+                {'error': 'Failed to order product'}, 
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+# Legacy function-based views for backward compatibility
+@csrf_exempt
+@api_view(['GET', 'POST'])
+@permission_classes([IsAuthenticated])
+def product_list_create(request):
+    """Legacy product list/create view"""
+    if request.method == 'GET':
+        products = Product.objects.all()
+        serializer = ProductSerializer(products, many=True)
+        return Response(serializer.data)
+    
+    elif request.method == 'POST':
+        try:
+            data = request.data
+            logger.info(f"Creating product with data: {data}")
+            
+            # Validate required fields
+            required_fields = ['name', 'price_per_kg', 'quantity_available', 'location']
+            for field in required_fields:
+                if not data.get(field):
+                    return Response({
+                        'success': False,
+                        'error': f'{field} is required'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+            
+            # Create product
+            product = Product.objects.create(
+                name=data['name'],
+                price_per_kg=data['price_per_kg'],
+                quantity_available=data['quantity_available'],
+                location=data['location'],
+                description=data.get('description', ''),
+                harvest_date=data.get('harvest_date'),
+                farmer=request.user
+            )
+            
+            logger.info(f"Product created successfully: {product.name}")
+            
+            serializer = ProductSerializer(product)
+            return Response({
+                'success': True,
+                'product': serializer.data,
+                'message': 'Product added successfully'
+            }, status=status.HTTP_201_CREATED)
+            
+        except Exception as e:
+            logger.error(f"Error creating product: {str(e)}")
+            return Response({
+                'success': False,
+                'error': 'Failed to create product'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

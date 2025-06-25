@@ -2,11 +2,10 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('register/', views.register, name='register'),
+    path('csrf/', views.csrf_token_view, name='csrf_token'),
+    path('get-csrf/', views.get_csrf_token, name='get_csrf_token'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
-    path('profile/', views.profile, name='profile'),
-    path('contact/', views.contact_form, name='contact_form'),  # New contact form endpoint
-    path('debug/users/', views.debug_users, name='debug_users'),  # Debug endpoint
-    path('csrf-token/', views.get_csrf_token, name='get_csrf_token'),  # CSRF token endpoint
+    path('signup/', views.signup_view, name='signup'),
+    path('profile/', views.profile_view, name='profile'),
 ]
