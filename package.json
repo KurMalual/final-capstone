@@ -4,7 +4,7 @@
   "description": "Smart Farm Advisory Platform for South Sudan",
   "main": "index.js",
   "scripts": {
-    "build": "echo 'Building React frontend...' && cd frontend && npm install && npm run build && mkdir -p staticfiles && cp -r frontend/build/* staticfiles/",
+    "build": "echo 'Building React frontend...' && cd frontend && npm install && npm run build && mkdir -p ../staticfiles && cp -r build/* ../staticfiles/",
     "postinstall": "npm run build"
   },
   "engines": {
