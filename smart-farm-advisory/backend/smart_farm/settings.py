@@ -5,16 +5,24 @@ Django settings for smart_farm project.
 from pathlib import Path
 import os
 
+try:
+    import dj_database_url
+    DEPLOYMENT_READY = True
+except ImportError:
+    DEPLOYMENT_READY = False
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-your-secret-key-here'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-local-development-key-change-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', 'testserver']
+if 'HEROKU_APP_NAME' in os.environ:
+    ALLOWED_HOSTS.append(f"{os.environ['HEROKU_APP_NAME']}.herokuapp.com")
 
 # Application definition
 INSTALLED_APPS = [
@@ -38,6 +46,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -51,7 +60,7 @@ ROOT_URLCONF = 'smart_farm.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -67,12 +76,17 @@ TEMPLATES = [
 WSGI_APPLICATION = 'smart_farm.wsgi.application'
 
 # Database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if 'DATABASE_URL' in os.environ and DEPLOYMENT_READY:
+    DATABASES = {
+        'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
@@ -92,13 +106,23 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Africa/Juba'
 USE_I18N = True
 USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+# Only add STATICFILES_DIRS if the directory exists
+STATICFILES_DIRS = []
+frontend_static_dir = os.path.join(BASE_DIR, 'frontend', 'build', 'static')
+if os.path.exists(frontend_static_dir):
+    STATICFILES_DIRS.append(frontend_static_dir)
+
+# WhiteNoise configuration
+if not DEBUG:
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files (uploads)
 MEDIA_URL = '/media/'
@@ -123,14 +147,17 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20
 }
 
-# CORS settings - COMPLETELY FIXED
-CORS_ALLOW_ALL_ORIGINS = True  # For development only
+# CORS settings - Allow all origins for development
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
+
+if 'HEROKU_APP_NAME' in os.environ:
+    CORS_ALLOWED_ORIGINS.append(f"https://{os.environ['HEROKU_APP_NAME']}.herokuapp.com")
 
 CORS_ALLOW_HEADERS = [
     'accept',
@@ -144,28 +171,33 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-# CSRF settings - COMPLETELY FIXED
+# CSRF settings - Relaxed for development
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
 
-# CRITICAL: These settings fix the CSRF issues
-CSRF_COOKIE_SECURE = False  # Must be False for localhost
-CSRF_COOKIE_HTTPONLY = False  # Must be False so JavaScript can access it
+if 'HEROKU_APP_NAME' in os.environ:
+    CSRF_TRUSTED_ORIGINS.append(f"https://{os.environ['HEROKU_APP_NAME']}.herokuapp.com")
+
+# CSRF settings for development
+CSRF_COOKIE_SECURE = False
+CSRF_COOKIE_HTTPONLY = False
 CSRF_COOKIE_SAMESITE = 'Lax'
-CSRF_USE_SESSIONS = False  # Use cookies instead of sessions
+CSRF_USE_SESSIONS = False
 CSRF_COOKIE_NAME = 'csrftoken'
 
 # Session settings
 SESSION_COOKIE_SECURE = False
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = 'Lax'
-SESSION_COOKIE_AGE = 86400  # 24 hours
+SESSION_COOKIE_AGE = 86400
+SESSION_SAVE_EVERY_REQUEST = True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 # File upload settings
-FILE_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100MB
-DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024  # 100MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024
+DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024
 
 # Logging configuration
 LOGGING = {

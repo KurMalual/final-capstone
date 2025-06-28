@@ -34,8 +34,9 @@ class EquipmentViewSet(viewsets.ModelViewSet):
         # Log the incoming data
         logger.info(f"Equipment creation request from {request.user.username}")
         logger.info(f"Request data: {request.data}")
+        logger.info(f"Request files: {request.FILES}")
         
-        # Set the owner to the current user
+        # Get data from request
         data = request.data.copy()
         
         # Validate required fields
@@ -45,6 +46,12 @@ class EquipmentViewSet(viewsets.ModelViewSet):
         if missing_fields:
             return Response({
                 'error': f'Missing required fields: {", ".join(missing_fields)}'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Validate image is provided
+        if 'image' not in request.FILES:
+            return Response({
+                'error': 'Equipment image is required'
             }, status=status.HTTP_400_BAD_REQUEST)
         
         # Validate daily_rate is a valid number
@@ -62,6 +69,7 @@ class EquipmentViewSet(viewsets.ModelViewSet):
             equipment = serializer.save(owner=request.user)
             
             logger.info(f"Equipment created successfully: {equipment.name} (ID: {equipment.id})")
+            logger.info(f"Equipment image: {equipment.image}")
             
             headers = self.get_success_headers(serializer.data)
             return Response({
@@ -77,6 +85,43 @@ class EquipmentViewSet(viewsets.ModelViewSet):
                 'error': str(e)
             }, status=status.HTTP_400_BAD_REQUEST)
     
+    def update(self, request, *args, **kwargs):
+        # Check if user is authenticated
+        if not request.user.is_authenticated:
+            return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        
+        # Check if user owns this equipment
+        if instance.owner != request.user:
+            return Response({'error': 'You can only edit your own equipment'}, status=status.HTTP_403_FORBIDDEN)
+        
+        logger.info(f"Equipment update request from {request.user.username}")
+        logger.info(f"Request data: {request.data}")
+        logger.info(f"Request files: {request.FILES}")
+        
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        
+        try:
+            serializer.is_valid(raise_exception=True)
+            equipment = serializer.save()
+            
+            logger.info(f"Equipment updated successfully: {equipment.name} (ID: {equipment.id})")
+            
+            return Response({
+                'success': True,
+                'message': 'Equipment updated successfully!',
+                'equipment': serializer.data
+            })
+        
+        except Exception as e:
+            logger.error(f"Equipment update failed: {str(e)}")
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
+    
     @action(detail=False, methods=['get'])
     def my_equipment(self, request):
         if not request.user.is_authenticated:
@@ -84,6 +129,11 @@ class EquipmentViewSet(viewsets.ModelViewSet):
         
         equipment = Equipment.objects.filter(owner=request.user)
         serializer = self.get_serializer(equipment, many=True)
+        
+        # Log image URLs for debugging
+        for item in serializer.data:
+            logger.info(f"Equipment {item['name']} image: {item.get('image')}")
+        
         return Response(serializer.data)
 
 

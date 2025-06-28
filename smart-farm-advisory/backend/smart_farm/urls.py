@@ -18,9 +18,12 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.middleware.csrf import get_token
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.generic import TemplateView
+from django.views.static import serve
+import os
 
 def api_root(request):
     """API root endpoint"""
@@ -42,17 +45,43 @@ def csrf_token(request):
     """Get CSRF token for frontend"""
     return JsonResponse({'csrfToken': get_token(request)})
 
+def home_view(request):
+    return HttpResponse("""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Smart Farm Advisory</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+    </head>
+    <body>
+        <h1>Smart Farm Advisory API</h1>
+        <p>Backend is running successfully!</p>
+        <ul>
+            <li><a href="/admin/">Admin Panel</a></li>
+            <li><a href="/api/products/">Products API</a></li>
+            <li><a href="/api/users/">Users API</a></li>
+        </ul>
+    </body>
+    </html>
+    """)
+
 urlpatterns = [
     path('admin/', admin.site.urls),
+    
+    # API endpoints
     path('api/', api_root, name='api_root'),
     path('api/csrf/', csrf_token, name='csrf_token'),
-    path('api/auth/', include('users.urls')),  # This is correct
-    path('api/users/', include('users.urls')),  # Add this for backward compatibility
+    path('api/auth/', include('users.auth_urls')),
+    path('api/users/', include('users.urls')),
     path('api/products/', include('products.urls')),
     path('api/equipment/', include('equipment.urls')),
     path('api/transports/', include('transports.urls')),
     path('api/weather/', include('weather.urls')),
     path('api/education/', include('education.urls')),
+    
+    # Serve React app for all other routes
+    path('', home_view, name='home'),
 ]
 
 # Serve media files in development

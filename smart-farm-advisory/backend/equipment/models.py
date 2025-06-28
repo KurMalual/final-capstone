@@ -19,10 +19,22 @@ class Equipment(models.Model):
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='equipment_owned')
     location = models.CharField(max_length=100)
     is_available = models.BooleanField(default=True)
+    # Temporarily make image nullable to allow migration, then we'll make it required for new equipment
+    image = models.ImageField(upload_to='equipment_images/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"{self.name} - {self.owner.username}"
+
+    @property
+    def image_url(self):
+        """Return the full URL for the equipment image"""
+        if self.image:
+            return self.image.url
+        return None
+
+    class Meta:
+        ordering = ['-created_at']
 
 
 class EquipmentRental(models.Model):
@@ -44,3 +56,6 @@ class EquipmentRental(models.Model):
 
     def __str__(self):
         return f"{self.equipment.name} - {self.renter.username}"
+
+    class Meta:
+        ordering = ['-created_at']

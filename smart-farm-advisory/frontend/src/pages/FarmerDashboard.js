@@ -5,6 +5,7 @@ import { Link } from "react-router-dom"
 import axios from "axios"
 import { useAuth } from "../context/UserContext"
 import Footer from "../components/Footer"
+import API_ENDPOINTS from "../config/api"
 
 const FarmerDashboard = () => {
   const { user, logout } = useAuth()
@@ -39,49 +40,74 @@ const FarmerDashboard = () => {
   })
 
   const [educationalVideos, setEducationalVideos] = useState([])
-  const [selectedVideo, setSelectedVideo] = useState(null)
-  const [selectedCategory, setSelectedCategory] = useState("all")
+
+  // Helper function to get proper image source
+  const getImageSrc = (imagePath) => {
+    if (!imagePath) return "/placeholder.svg?height=200&width=200"
+
+    // If it's already a full URL, return as is
+    if (imagePath.startsWith("http")) return imagePath
+
+    // For production, prepend the base URL
+    return `${API_ENDPOINTS.BASE_URL}${imagePath}`
+  }
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true)
 
       // Fetch real weather data for South Sudan
-      const weatherResponse = await axios.get(
-        `http://localhost:8000/api/weather/data/current/?location=${user?.location || "Juba"}`,
-      )
-      setWeatherData(weatherResponse.data)
+      try {
+        const weatherResponse = await axios.get(`${API_ENDPOINTS.WEATHER.CURRENT}?location=${user?.location || "Juba"}`)
+        setWeatherData(weatherResponse.data)
+      } catch (error) {
+        console.error("Weather fetch error:", error)
+      }
 
       // Fetch farmer's products
-      const productsResponse = await axios.get("http://localhost:8000/api/products/my_products/", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      })
-      setProducts(productsResponse.data)
+      try {
+        const productsResponse = await axios.get(API_ENDPOINTS.PRODUCTS.MY_PRODUCTS, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        })
+        setProducts(productsResponse.data)
+      } catch (error) {
+        console.error("Products fetch error:", error)
+      }
 
       // Fetch available equipment
-      const equipmentResponse = await axios.get("http://localhost:8000/api/equipment/")
-      setEquipmentList(equipmentResponse.data)
+      try {
+        const equipmentResponse = await axios.get(API_ENDPOINTS.EQUIPMENT.LIST)
+        setEquipmentList(equipmentResponse.data)
+      } catch (error) {
+        console.error("Equipment fetch error:", error)
+      }
 
       // Fetch available transport services
-      const transportResponse = await axios.get("http://localhost:8000/api/transports/available_jobs/")
-      setTransportList(transportResponse.data)
+      try {
+        const transportResponse = await axios.get(API_ENDPOINTS.TRANSPORT.AVAILABLE)
+        setTransportList(transportResponse.data)
+      } catch (error) {
+        console.error("Transport fetch error:", error)
+      }
 
       // Fetch orders for farmer's products
-      const ordersResponse = await axios.get("http://localhost:8000/api/products/orders/", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      })
-      setOrders(ordersResponse.data)
-
-      // Add this right before the educational videos fetch
-      console.log("🎥 Fetching educational videos...")
+      try {
+        const ordersResponse = await axios.get(API_ENDPOINTS.PRODUCTS.ORDERS, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        })
+        setOrders(ordersResponse.data)
+      } catch (error) {
+        console.error("Orders fetch error:", error)
+      }
 
       // Fetch educational videos
       try {
-        const videosResponse = await axios.get("http://localhost:8000/api/education/videos/")
+        console.log("🎥 Fetching educational videos...")
+        const videosResponse = await axios.get(API_ENDPOINTS.EDUCATION.VIDEOS)
         console.log("🎥 Videos API Response:", videosResponse.data)
         setEducationalVideos(videosResponse.data)
         console.log("🎥 Videos set in state:", videosResponse.data.length, "videos")
@@ -125,7 +151,7 @@ const FarmerDashboard = () => {
 
     try {
       const token = localStorage.getItem("token")
-      const response = await axios.post("http://localhost:8000/api/products/", formData, {
+      const response = await axios.post(API_ENDPOINTS.PRODUCTS.LIST, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`,
@@ -186,7 +212,7 @@ const FarmerDashboard = () => {
 
     try {
       const token = localStorage.getItem("token")
-      const response = await axios.put(`http://localhost:8000/api/products/${editingProduct.id}/`, formData, {
+      const response = await axios.put(`${API_ENDPOINTS.PRODUCTS.LIST}${editingProduct.id}/`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${token}`,
@@ -218,7 +244,7 @@ const FarmerDashboard = () => {
     if (window.confirm("Are you sure you want to delete this product?")) {
       try {
         const token = localStorage.getItem("token")
-        await axios.delete(`http://localhost:8000/api/products/${productId}/`, {
+        await axios.delete(`${API_ENDPOINTS.PRODUCTS.LIST}${productId}/`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -236,8 +262,8 @@ const FarmerDashboard = () => {
     e.preventDefault()
     try {
       const token = localStorage.getItem("token")
-      const response = await axios.post(
-        "http://localhost:8000/api/transports/",
+      await axios.post(
+        API_ENDPOINTS.TRANSPORT.LIST,
         {
           ...transportRequest,
           requester: user.id,
@@ -259,7 +285,7 @@ const FarmerDashboard = () => {
         budget: "",
       })
       setShowRequestTransport(false)
-      fetchData() // Refresh data
+      fetchData()
     } catch (error) {
       console.error("Error requesting transport:", error)
       alert("Failed to submit transport request. Please try again.")
@@ -271,7 +297,7 @@ const FarmerDashboard = () => {
       try {
         const token = localStorage.getItem("token")
         await axios.post(
-          `http://localhost:8000/api/transports/${transportId}/accept/`,
+          `${API_ENDPOINTS.TRANSPORT.LIST}${transportId}/accept/`,
           {},
           {
             headers: {
@@ -280,7 +306,7 @@ const FarmerDashboard = () => {
           },
         )
         alert("Transport service hired successfully!")
-        fetchData() // Refresh data
+        fetchData()
       } catch (error) {
         console.error("Error hiring transport:", error)
         alert("Failed to hire transport service. Please try again.")
@@ -299,8 +325,8 @@ const FarmerDashboard = () => {
         const totalCost = days * equipment.daily_rate
 
         const token = localStorage.getItem("token")
-        const response = await axios.post(
-          "http://localhost:8000/api/equipment/rentals/",
+        await axios.post(
+          API_ENDPOINTS.EQUIPMENT.RENTALS,
           {
             equipment: equipmentId,
             renter: user.id,
@@ -316,7 +342,7 @@ const FarmerDashboard = () => {
         )
 
         alert("Equipment rental request submitted successfully!")
-        fetchData() // Refresh data
+        fetchData()
       } catch (error) {
         console.error("Error requesting equipment rental:", error)
         alert("Failed to submit equipment rental request. Please try again.")
@@ -332,6 +358,14 @@ const FarmerDashboard = () => {
     if (conditionLower.includes("sun") || conditionLower.includes("clear")) return "☀️"
     if (conditionLower.includes("storm")) return "⛈️"
     return "🌤️"
+  }
+
+  if (!user) {
+    return (
+      <div style={{ padding: "20px", textAlign: "center" }}>
+        <h2>Redirecting to login...</h2>
+      </div>
+    )
   }
 
   return (
@@ -741,7 +775,13 @@ const FarmerDashboard = () => {
                       <div key={product.id} className="product-item">
                         <div className="product-image">
                           {product.image ? (
-                            <img src={product.image || "/placeholder.svg"} alt={product.name} />
+                            <img
+                              src={getImageSrc(product.image) || "/placeholder.svg"}
+                              alt={product.name}
+                              onError={(e) => {
+                                e.target.src = "/placeholder.svg?height=200&width=200"
+                              }}
+                            />
                           ) : (
                             <div className="placeholder-image">
                               <span>📦</span>
@@ -979,7 +1019,6 @@ const FarmerDashboard = () => {
                               </p>
                               <p>
                                 <strong> 📍 Location:</strong> {equipment.location}
-                                <strong> 📍 Location:</strong> {equipment.location}
                               </p>
                               <p>
                                 <strong>👤 Owner:</strong> {equipment.owner_details?.username}
@@ -1017,7 +1056,7 @@ const FarmerDashboard = () => {
                   onClick={() => {
                     console.log("Manual fetch videos")
                     axios
-                      .get("http://localhost:8000/api/education/videos/")
+                      .get(API_ENDPOINTS.EDUCATION.VIDEOS)
                       .then((response) => {
                         console.log("Videos fetched:", response.data)
                         setEducationalVideos(response.data)

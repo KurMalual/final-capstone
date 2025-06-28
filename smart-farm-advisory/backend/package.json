@@ -1,0 +1,12 @@
+{
+  "name": "smart-farm-backend",
+  "version": "1.0.0",
+  "description": "Smart Farm Advisory Backend",
+  "scripts": {
+    "build": "cd ../frontend && npm install && npm run build",
+    "postinstall": "npm run build"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}

@@ -62,15 +62,16 @@ const EquipmentDashboard = () => {
       const token = localStorage.getItem("token")
       console.log("Token:", token ? `${token.substring(0, 20)}...` : "No token")
 
-      // Validate required fields
+      // Validate required fields (including image)
       if (
         !newEquipment.name ||
         !newEquipment.equipment_type ||
         !newEquipment.description ||
         !newEquipment.daily_rate ||
-        !newEquipment.location
+        !newEquipment.location ||
+        !newEquipment.image
       ) {
-        alert("Please fill in all required fields")
+        alert("Please fill in all required fields including equipment image")
         return
       }
 
@@ -80,21 +81,27 @@ const EquipmentDashboard = () => {
         return
       }
 
-      // Prepare data for submission
-      const equipmentData = {
-        name: newEquipment.name.trim(),
-        equipment_type: newEquipment.equipment_type,
-        description: newEquipment.description.trim(),
-        daily_rate: Number.parseFloat(newEquipment.daily_rate).toFixed(2),
-        location: newEquipment.location.trim(),
+      // Validate image file
+      if (!newEquipment.image || !newEquipment.image.type.startsWith("image/")) {
+        alert("Please select a valid image file")
+        return
       }
 
-      console.log("Submitting equipment data:", equipmentData)
+      // Create FormData for file upload
+      const formData = new FormData()
+      formData.append("name", newEquipment.name.trim())
+      formData.append("equipment_type", newEquipment.equipment_type)
+      formData.append("description", newEquipment.description.trim())
+      formData.append("daily_rate", Number.parseFloat(newEquipment.daily_rate).toFixed(2))
+      formData.append("location", newEquipment.location.trim())
+      formData.append("image", newEquipment.image)
 
-      const response = await axios.post("http://localhost:8000/api/equipment/", equipmentData, {
+      console.log("Submitting equipment with FormData...")
+
+      const response = await axios.post("http://localhost:8000/api/equipment/", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+          "Content-Type": "multipart/form-data",
         },
       })
 
@@ -112,6 +119,10 @@ const EquipmentDashboard = () => {
           location: "",
           image: null,
         })
+        // Reset file input
+        const fileInput = document.querySelector('input[type="file"]')
+        if (fileInput) fileInput.value = ""
+
         fetchData() // Refresh the equipment list
       } else {
         throw new Error(response.data.error || "Unknown error occurred")
@@ -178,19 +189,22 @@ const EquipmentDashboard = () => {
         return
       }
 
-      // Prepare data for submission
-      const equipmentData = {
-        name: editingEquipment.name.trim(),
-        equipment_type: editingEquipment.equipment_type,
-        description: editingEquipment.description.trim(),
-        daily_rate: Number.parseFloat(editingEquipment.daily_rate).toFixed(2),
-        location: editingEquipment.location.trim(),
+      // Create FormData for file upload (if image is provided)
+      const formData = new FormData()
+      formData.append("name", editingEquipment.name.trim())
+      formData.append("equipment_type", editingEquipment.equipment_type)
+      formData.append("description", editingEquipment.description.trim())
+      formData.append("daily_rate", Number.parseFloat(editingEquipment.daily_rate).toFixed(2))
+      formData.append("location", editingEquipment.location.trim())
+
+      if (editingEquipment.image) {
+        formData.append("image", editingEquipment.image)
       }
 
-      const response = await axios.put(`http://localhost:8000/api/equipment/${editingEquipment.id}/`, equipmentData, {
+      const response = await axios.put(`http://localhost:8000/api/equipment/${editingEquipment.id}/`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+          "Content-Type": "multipart/form-data",
         },
       })
 
@@ -290,6 +304,19 @@ const EquipmentDashboard = () => {
       other: "🔧",
     }
     return emojiMap[type] || "🚜"
+  }
+
+  // Helper function to get full image URL
+  const getImageUrl = (imageUrl) => {
+    if (!imageUrl) return null
+
+    // If it's already a full URL, return as is
+    if (imageUrl.startsWith("http")) {
+      return imageUrl
+    }
+
+    // If it's a relative path, prepend the backend URL
+    return `http://localhost:8000${imageUrl}`
   }
 
   return (
@@ -443,12 +470,16 @@ const EquipmentDashboard = () => {
                         />
                       </div>
                       <div className="form-group">
-                        <label>Equipment Image (Optional)</label>
+                        <label>Equipment Image *</label>
                         <input
                           type="file"
                           accept="image/*"
                           onChange={(e) => setNewEquipment({ ...newEquipment, image: e.target.files[0] })}
+                          required
                         />
+                        <small className="form-help">
+                          Please upload a clear image of your equipment (JPG, PNG, GIF)
+                        </small>
                       </div>
                       <div className="form-actions">
                         <button type="button" onClick={() => setShowAddForm(false)} className="cancel-btn">
@@ -467,13 +498,24 @@ const EquipmentDashboard = () => {
                     equipment.map((item) => (
                       <div key={item.id} className="equipment-card">
                         <div className="equipment-image">
-                          {item.image ? (
-                            <img src={item.image || "/placeholder.svg"} alt={item.name} />
-                          ) : (
-                            <div className="placeholder-image">
-                              <span className="equipment-emoji">{getEquipmentTypeEmoji(item.equipment_type)}</span>
-                            </div>
-                          )}
+                          {item.image && getImageUrl(item.image) ? (
+                            <img
+                              src={getImageUrl(item.image) || "/placeholder.svg"}
+                              alt={item.name}
+                              onError={(e) => {
+                                console.error("Image failed to load:", getImageUrl(item.image))
+                                // Fallback to emoji if image fails to load
+                                e.target.style.display = "none"
+                                e.target.nextSibling.style.display = "flex"
+                              }}
+                            />
+                          ) : null}
+                          <div
+                            className="placeholder-image"
+                            style={{ display: item.image && getImageUrl(item.image) ? "none" : "flex" }}
+                          >
+                            <span className="equipment-emoji">{getEquipmentTypeEmoji(item.equipment_type)}</span>
+                          </div>
                         </div>
                         <div className="equipment-content">
                           <h3 className="equipment-name">{item.name || "Unnamed Equipment"}</h3>
@@ -640,12 +682,13 @@ const EquipmentDashboard = () => {
                 />
               </div>
               <div className="form-group">
-                <label>Equipment Image (Optional)</label>
+                <label>Equipment Image (Optional for editing)</label>
                 <input
                   type="file"
                   accept="image/*"
                   onChange={(e) => setEditingEquipment({ ...editingEquipment, image: e.target.files[0] })}
                 />
+                <small className="form-help">Leave empty to keep current image</small>
               </div>
               <div className="form-actions">
                 <button
