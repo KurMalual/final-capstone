@@ -52,7 +52,6 @@ const HomePage = () => {
   useEffect(() => {
     // Only fetch once when component mounts
     fetchProducts()
-
     // Handle hash links on page load
     if (window.location.hash) {
       const id = window.location.hash.substring(1)
@@ -85,7 +84,6 @@ const HomePage = () => {
   // Handle contact form submission
   const handleContactSubmit = async (e) => {
     e.preventDefault()
-
     // Basic validation
     if (!contactForm.name || !contactForm.email || !contactForm.message) {
       setFormStatus({
@@ -117,23 +115,19 @@ const HomePage = () => {
       // In a real application, you would send this to your backend API
       // For now, we'll simulate a successful submission
       await new Promise((resolve) => setTimeout(resolve, 1000))
-
       // For demonstration, log the form data
       console.log("Form submitted:", contactForm)
-
       // Reset form and show success message
       setContactForm({
         name: "",
         email: "",
         message: "",
       })
-
       setFormStatus({
         submitting: false,
         success: true,
         error: null,
       })
-
       // Reset success message after 5 seconds
       setTimeout(() => {
         setFormStatus((prev) => ({
@@ -168,21 +162,22 @@ const HomePage = () => {
     <div className="home-container">
       <Navbar />
 
-      <header className="hero-section">
-        <div className="hero-content">
-          <div>
-            <h1>Welcome to Smart Farm Connect</h1>
-            <p>Empowering South Sudan's Agricultural Future Through Technology</p>
-            <p className="hero-subtitle">
+      {/* Beautiful Hero Section with Agricultural Background */}
+      <header className="hero-section-agricultural">
+        <div className="hero-background-overlay">
+          <div className="hero-content-container">
+            <h1 className="hero-main-title">Smart Farm Connect</h1>
+            <p className="hero-main-subtitle">Empowering South Sudan's Agricultural Future Through Technology</p>
+            <p className="hero-description-text">
               Connecting farmers, buyers, transporters, and equipment providers in one unified platform
             </p>
-            <div className="hero-buttons">
-              <Link to="/signup" className="btn btn-primary">
+            <div className="hero-action-buttons">
+              <Link to="/signup" className="btn-hero-primary">
                 Get Started
               </Link>
               <a
                 href="#about"
-                className="btn btn-secondary"
+                className="btn-hero-secondary"
                 onClick={(e) => {
                   e.preventDefault()
                   scrollToSection("about")
@@ -191,18 +186,6 @@ const HomePage = () => {
                 Learn More
               </a>
             </div>
-          </div>
-          <div className="hero-image">
-            <img
-              src="https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
-              alt="South Sudan Agriculture - Farmers working in green fields"
-              onError={(e) => {
-                e.target.onerror = null // Prevent infinite loop
-                e.target.src =
-                  "https://images.unsplash.com/photo-1625246333195-78d9c38ad449?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80"
-                e.target.alt = "Agricultural farming scene"
-              }}
-            />
           </div>
         </div>
       </header>

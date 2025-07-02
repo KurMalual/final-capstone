@@ -1,186 +1,147 @@
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.models import User
 from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
-from django.views.decorators.http import require_http_methods
 from django.middleware.csrf import get_token
-from rest_framework.authtoken.models import Token
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.utils.decorators import method_decorator
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework import status
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
+from .models import User
+from .serializers import UserSerializer, UserRegistrationSerializer
 import json
 import logging
 
 logger = logging.getLogger(__name__)
 
-@ensure_csrf_cookie
 def get_csrf_token(request):
     """Get CSRF token for frontend"""
     return JsonResponse({'csrfToken': get_token(request)})
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def user_profile(request):
-    """Get current user profile"""
-    try:
-        user = request.user
-        return Response({
-            'id': user.id,
-            'username': user.username,
-            'email': user.email,
-            'first_name': user.first_name,
-            'last_name': user.last_name,
-            'user_type': getattr(user, 'user_type', 'farmer'),
-        })
-    except Exception as e:
-        logger.error(f"Profile error: {str(e)}")
-        return Response({'error': 'Failed to get profile'}, status=500)
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def login_view(request):
-    """Handle user login"""
-    try:
-        data = request.data
-        username = data.get('username')
-        password = data.get('password')
-        
-        logger.info(f"Login attempt for username: {username}")
-        
-        if not username or not password:
-            return Response({
-                'success': False,
-                'error': 'Username and password are required'
-            }, status=400)
-        
-        user = authenticate(request, username=username, password=password)
-        
-        if user is not None:
-            if user.is_active:
+@method_decorator(csrf_exempt, name='dispatch')
+class LoginView(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        try:
+            # Use request.data instead of request.body to avoid reading issues
+            data = request.data
+            username = data.get('username')
+            password = data.get('password')
+            
+            print(f"Login attempt for username: {username}")
+            
+            if not username or not password:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Username and password are required'
+                }, status=400)
+            
+            user = authenticate(request, username=username, password=password)
+            
+            if user is not None:
                 login(request, user)
-                
-                # Get or create token
-                token, created = Token.objects.get_or_create(user=user)
-                
-                logger.info(f"Login successful for user: {username}")
-                
-                return Response({
+                print(f"Login successful for user: {username}")
+                return JsonResponse({
                     'success': True,
                     'message': 'Login successful',
-                    'token': token.key,
                     'user': {
                         'id': user.id,
                         'username': user.username,
                         'email': user.email,
+                        'user_type': user.user_type,
                         'first_name': user.first_name,
                         'last_name': user.last_name,
-                        'user_type': getattr(user, 'user_type', 'farmer'),
                     }
                 })
             else:
-                return Response({
+                print(f"Login failed for username: {username}")
+                return JsonResponse({
                     'success': False,
-                    'error': 'Account is disabled'
-                }, status=400)
-        else:
-            logger.warning(f"Authentication failed for username: {username}")
-            return Response({
+                    'error': 'Invalid username or password'
+                }, status=401)
+                
+        except Exception as e:
+            print(f"Login error: {str(e)}")
+            return JsonResponse({
                 'success': False,
-                'error': 'Invalid username or password'
-            }, status=401)
+                'error': f'Login error: {str(e)}'
+            }, status=500)
+
+@method_decorator(csrf_exempt, name='dispatch')
+class RegisterView(APIView):
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        try:
+            # Use request.data instead of request.body to avoid reading issues
+            data = request.data
+            print(f"Registration attempt for: {data.get('username')}")
             
-    except Exception as e:
-        logger.error(f"Login error: {str(e)}")
-        return Response({
-            'success': False,
-            'error': str(e)
-        }, status=500)
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def register_view(request):
-    """Handle user registration"""
-    try:
-        data = request.data
-        username = data.get('username')
-        password = data.get('password')
-        email = data.get('email', '')
-        first_name = data.get('first_name', '')
-        last_name = data.get('last_name', '')
-        user_type = data.get('user_type', 'farmer')
-        
-        if not username or not password:
-            return Response({
-                'success': False,
-                'error': 'Username and password are required'
-            }, status=400)
-        
-        if User.objects.filter(username=username).exists():
-            return Response({
-                'success': False,
-                'error': 'Username already exists'
-            }, status=400)
-        
-        # Create user
-        user = User.objects.create_user(
-            username=username,
-            password=password,
-            email=email,
-            first_name=first_name,
-            last_name=last_name
-        )
-        
-        # Set user type if your User model supports it
-        if hasattr(user, 'user_type'):
-            user.user_type = user_type
+            # Check if user already exists
+            if User.objects.filter(username=data.get('username')).exists():
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Username already exists'
+                }, status=400)
+            
+            if User.objects.filter(email=data.get('email')).exists():
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Email already exists'
+                }, status=400)
+            
+            # Create new user using the custom User model
+            user = User(
+                username=data.get('username'),
+                email=data.get('email'),
+                first_name=data.get('first_name', ''),
+                last_name=data.get('last_name', ''),
+                user_type=data.get('user_type', 'farmer'),
+                phone_number=data.get('phone_number', ''),
+                location=data.get('location', '')
+            )
+            user.set_password(data.get('password'))
             user.save()
-        
-        # Create token
-        token = Token.objects.create(user=user)
-        
-        # Log the user in
-        login(request, user)
-        
-        return Response({
-            'success': True,
-            'message': 'Registration successful',
-            'token': token.key,
-            'user': {
-                'id': user.id,
-                'username': user.username,
-                'email': user.email,
-                'first_name': user.first_name,
-                'last_name': user.last_name,
-                'user_type': user_type,
-            }
-        })
-        
-    except Exception as e:
-        logger.error(f"Registration error: {str(e)}")
-        return Response({
-            'success': False,
-            'error': str(e)
-        }, status=500)
+            
+            print(f"Registration successful for: {user.username}")
+            
+            return JsonResponse({
+                'success': True,
+                'message': 'Registration successful',
+                'user': {
+                    'id': user.id,
+                    'username': user.username,
+                    'email': user.email,
+                    'user_type': user.user_type,
+                }
+            })
+            
+        except Exception as e:
+            print(f"Registration error: {str(e)}")
+            return JsonResponse({
+                'success': False,
+                'error': f'Registration error: {str(e)}'
+            }, status=500)
 
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def logout_view(request):
-    """Handle user logout"""
-    try:
-        # Delete token if it exists
-        if hasattr(request.user, 'auth_token'):
-            request.user.auth_token.delete()
-        
+class LogoutView(APIView):
+    def post(self, request):
         logout(request)
-        
-        return Response({
+        return JsonResponse({
             'success': True,
             'message': 'Logout successful'
         })
-        
-    except Exception as e:
-        logger.error(f"Logout error: {str(e)}")
-        return Response({
-            'success': False,
-            'error': str(e)
-        }, status=500)
+
+class UserProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
+    
+    def put(self, request):
+        serializer = UserSerializer(request.user, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

@@ -41,15 +41,48 @@ const FarmerDashboard = () => {
 
   const [educationalVideos, setEducationalVideos] = useState([])
 
-  // Helper function to get proper image source
-  const getImageSrc = (imagePath) => {
-    if (!imagePath) return "/placeholder.svg?height=200&width=200"
+  // Helper function to get proper image source - prioritize uploaded images
+  const getImageSrc = (product) => {
+    console.log("Getting image for product:", product.name, "Image data:", {
+      image: product.image,
+      image_url: product.image_url,
+    })
 
-    // If it's already a full URL, return as is
-    if (imagePath.startsWith("http")) return imagePath
+    // First priority: Check if product has an uploaded image
+    if (product.image) {
+      // If it's already a full URL, return as is
+      if (product.image.startsWith("http")) {
+        console.log("Using full URL image:", product.image)
+        return product.image
+      }
+      // For relative paths, prepend the base URL
+      const fullImageUrl = `${API_ENDPOINTS.BASE_URL}${product.image}`
+      console.log("Using relative path image:", fullImageUrl)
+      return fullImageUrl
+    }
 
-    // For production, prepend the base URL
-    return `${API_ENDPOINTS.BASE_URL}${imagePath}`
+    // Second priority: Check if product has image_url field
+    if (product.image_url) {
+      console.log("Using image_url:", product.image_url)
+      return product.image_url
+    }
+
+    // Last resort: Return null to show emoji placeholder instead of generic images
+    console.log("No image found, will show emoji placeholder")
+    return null
+  }
+
+  // Get category emoji for when no image is available
+  const getCategoryEmoji = (category) => {
+    const emojis = {
+      vegetables: "🥬",
+      fruits: "🍎",
+      grains: "🌾",
+      livestock: "🐄",
+      dairy: "🥛",
+      other: "📦",
+    }
+    return emojis[category] || emojis.other
   }
 
   const fetchData = useCallback(async () => {
@@ -71,6 +104,7 @@ const FarmerDashboard = () => {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         })
+        console.log("Products fetched:", productsResponse.data) // Debug log
         setProducts(productsResponse.data)
       } catch (error) {
         console.error("Products fetch error:", error)
@@ -747,7 +781,7 @@ const FarmerDashboard = () => {
                             accept="image/*"
                             onChange={(e) => setNewProduct({ ...newProduct, image: e.target.files[0] })}
                           />
-                          <small>Upload a clear photo of your product (optional)</small>
+                          <small>Upload a clear photo of your product (recommended for better visibility)</small>
                         </div>
 
                         <div className="modal-actions">
@@ -769,49 +803,71 @@ const FarmerDashboard = () => {
                   </div>
                 )}
 
-                <div className="products-list">
+                <div className="products-grid">
                   {products.length > 0 ? (
-                    products.map((product) => (
-                      <div key={product.id} className="product-item">
-                        <div className="product-image">
-                          {product.image ? (
-                            <img
-                              src={getImageSrc(product.image) || "/placeholder.svg"}
-                              alt={product.name}
-                              onError={(e) => {
-                                e.target.src = "/placeholder.svg?height=200&width=200"
-                              }}
-                            />
-                          ) : (
-                            <div className="placeholder-image">
-                              <span>📦</span>
+                    products.map((product) => {
+                      const imageSrc = getImageSrc(product)
+                      return (
+                        <div key={product.id} className="product-card">
+                          <div className="product-image-container">
+                            {imageSrc ? (
+                              // Show uploaded image
+                              <img
+                                src={imageSrc || "/placeholder.svg"}
+                                alt={product.name}
+                                className="product-image"
+                                onError={(e) => {
+                                  console.log("Image failed to load for:", product.name, "Src:", e.target.src)
+                                  // Hide the image and show emoji placeholder instead
+                                  e.target.style.display = "none"
+                                  e.target.nextSibling.style.display = "flex"
+                                }}
+                                onLoad={(e) => {
+                                  console.log("Image loaded successfully for:", product.name)
+                                }}
+                              />
+                            ) : null}
+
+                            {/* Emoji placeholder - only show when no image */}
+                            <div className="product-placeholder" style={{ display: imageSrc ? "none" : "flex" }}>
+                              <span className="placeholder-emoji">{getCategoryEmoji(product.category)}</span>
                             </div>
-                          )}
-                        </div>
-                        <div className="product-info">
-                          <h3>{product.name}</h3>
-                          <p className="product-category">{product.category}</p>
-                          <p className="product-description">{product.description}</p>
-                          <div className="product-meta">
-                            <span className="product-price">
-                              ${product.price} per {product.unit}
-                            </span>
-                            <span className="product-quantity">
-                              Available: {product.quantity} {product.unit}
-                            </span>
+
+                            <div className="product-category-badge">{product.category}</div>
                           </div>
-                          <div className="product-location">📍 {product.location}</div>
+
+                          <div className="product-details">
+                            <h3 className="product-name">{product.name}</h3>
+                            <p className="product-description">{product.description}</p>
+
+                            <div className="product-price-section">
+                              <div className="product-price">
+                                ${product.price} per {product.unit}
+                              </div>
+                              <div className="product-quantity">
+                                Available: {product.quantity} {product.unit}
+                              </div>
+                            </div>
+
+                            <div className="product-meta-info">
+                              <div className="product-location">📍 {product.location}</div>
+                              <div className="product-date">
+                                📅 {new Date(product.harvest_date).toLocaleDateString()}
+                              </div>
+                            </div>
+
+                            <div className="product-actions">
+                              <button className="edit-btn" onClick={() => handleEditProduct(product)}>
+                                ✏️ Edit
+                              </button>
+                              <button className="delete-btn" onClick={() => handleDeleteProduct(product.id)}>
+                                🗑️ Delete
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                        <div className="product-actions">
-                          <button className="edit-btn" onClick={() => handleEditProduct(product)}>
-                            ✏️ Edit
-                          </button>
-                          <button className="delete-btn" onClick={() => handleDeleteProduct(product.id)}>
-                            🗑️ Delete
-                          </button>
-                        </div>
-                      </div>
-                    ))
+                      )
+                    })
                   ) : (
                     <div className="empty-state">
                       <span className="empty-icon">📦</span>

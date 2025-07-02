@@ -16,22 +16,27 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.views.generic import TemplateView
 from django.conf import settings
 from django.conf.urls.static import static
+from django.http import JsonResponse
+from django.views.generic import TemplateView
+
+def health_check(request):
+    return JsonResponse({'status': 'ok'})
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('health/', health_check, name='health_check'),
+    path('api/auth/', include('users.auth_urls')),
     path('api/users/', include('users.urls')),
     path('api/products/', include('products.urls')),
     path('api/equipment/', include('equipment.urls')),
     path('api/transports/', include('transports.urls')),
     path('api/weather/', include('weather.urls')),
     path('api/education/', include('education.urls')),
-    path('health/', TemplateView.as_view(template_name='health.html'), name='health'),
-    path('', TemplateView.as_view(template_name='index.html'), name='home'),
+    path('', lambda request: JsonResponse({'message': 'Smart Farm API is running'})),
 ]
 
-# Serve media files during development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
