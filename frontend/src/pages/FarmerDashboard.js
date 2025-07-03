@@ -40,6 +40,8 @@ const FarmerDashboard = () => {
   })
 
   const [educationalVideos, setEducationalVideos] = useState([])
+  const [videoCategories, setVideoCategories] = useState([])
+  const [selectedCategory, setSelectedCategory] = useState("")
 
   // Helper function to get proper image source - prioritize uploaded images
   const getImageSrc = (product) => {
@@ -85,6 +87,65 @@ const FarmerDashboard = () => {
     return emojis[category] || emojis.other
   }
 
+  const fetchEducationalContent = async () => {
+    try {
+      console.log("🎥 Fetching educational content...")
+
+      // Fetch categories - FIXED: Use API_ENDPOINTS constant
+      try {
+        const categoriesResponse = await axios.get(API_ENDPOINTS.EDUCATION.CATEGORIES)
+        console.log("📂 Categories Response:", categoriesResponse.data)
+
+        if (categoriesResponse.data) {
+          if (categoriesResponse.data.results && Array.isArray(categoriesResponse.data.results)) {
+            setVideoCategories(categoriesResponse.data.results)
+          } else if (Array.isArray(categoriesResponse.data)) {
+            setVideoCategories(categoriesResponse.data)
+          }
+        }
+      } catch (error) {
+        console.error("📂 Error fetching categories:", error)
+      }
+
+      // Fetch videos - FIXED: Use API_ENDPOINTS constant
+      const videosUrl = selectedCategory
+        ? `${API_ENDPOINTS.EDUCATION.VIDEOS}?category=${selectedCategory}`
+        : API_ENDPOINTS.EDUCATION.VIDEOS
+
+      const videosResponse = await axios.get(videosUrl)
+      console.log("🎥 Videos Response:", videosResponse.data)
+      console.log("🎥 Response status:", videosResponse.status)
+
+      let videos = []
+
+      // Handle different response formats
+      if (videosResponse.data) {
+        if (videosResponse.data.results && Array.isArray(videosResponse.data.results)) {
+          // Paginated response
+          videos = videosResponse.data.results
+          console.log("🎥 Found paginated response with", videos.length, "videos")
+        } else if (Array.isArray(videosResponse.data)) {
+          // Direct array response
+          videos = videosResponse.data
+          console.log("🎥 Found direct array response with", videos.length, "videos")
+        } else {
+          console.log("🎥 Unexpected response format:", typeof videosResponse.data, videosResponse.data)
+        }
+      }
+
+      setEducationalVideos(videos)
+      console.log("🎥 Videos set in state:", videos.length)
+
+      return videos
+    } catch (error) {
+      console.error("🎥 Error fetching educational content:", error)
+      console.error("🎥 Error response:", error.response?.data)
+      console.error("🎥 Error status:", error.response?.status)
+      setEducationalVideos([])
+      return []
+    }
+  }
+
   const fetchData = useCallback(async () => {
     try {
       setLoading(true)
@@ -104,26 +165,37 @@ const FarmerDashboard = () => {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         })
-        console.log("Products fetched:", productsResponse.data) // Debug log
-        setProducts(productsResponse.data)
+        console.log("Products fetched:", productsResponse.data)
+        setProducts(Array.isArray(productsResponse.data) ? productsResponse.data : [])
       } catch (error) {
         console.error("Products fetch error:", error)
+        setProducts([])
       }
 
       // Fetch available equipment
       try {
         const equipmentResponse = await axios.get(API_ENDPOINTS.EQUIPMENT.LIST)
-        setEquipmentList(equipmentResponse.data)
+        setEquipmentList(Array.isArray(equipmentResponse.data) ? equipmentResponse.data : [])
       } catch (error) {
         console.error("Equipment fetch error:", error)
+        setEquipmentList([])
       }
 
       // Fetch available transport services
       try {
         const transportResponse = await axios.get(API_ENDPOINTS.TRANSPORT.AVAILABLE)
-        setTransportList(transportResponse.data)
+        console.log("Transport response:", transportResponse.data)
+        // Handle both array and object responses
+        if (Array.isArray(transportResponse.data)) {
+          setTransportList(transportResponse.data)
+        } else if (transportResponse.data && Array.isArray(transportResponse.data.results)) {
+          setTransportList(transportResponse.data.results)
+        } else {
+          setTransportList([])
+        }
       } catch (error) {
         console.error("Transport fetch error:", error)
+        setTransportList([])
       }
 
       // Fetch orders for farmer's products
@@ -133,35 +205,34 @@ const FarmerDashboard = () => {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         })
-        setOrders(ordersResponse.data)
+        setOrders(Array.isArray(ordersResponse.data) ? ordersResponse.data : [])
       } catch (error) {
         console.error("Orders fetch error:", error)
+        setOrders([])
       }
 
-      // Fetch educational videos
-      try {
-        console.log("🎥 Fetching educational videos...")
-        const videosResponse = await axios.get(API_ENDPOINTS.EDUCATION.VIDEOS)
-        console.log("🎥 Videos API Response:", videosResponse.data)
-        setEducationalVideos(videosResponse.data)
-        console.log("🎥 Videos set in state:", videosResponse.data.length, "videos")
-      } catch (error) {
-        console.error("🎥 Error fetching videos:", error)
-        console.error("🎥 Error details:", error.response?.data)
-      }
+      // Fetch educational content
+      await fetchEducationalContent()
 
       setLoading(false)
     } catch (error) {
       console.error("Error fetching farmer data:", error)
       setLoading(false)
     }
-  }, [user])
+  }, [user, selectedCategory])
 
   useEffect(() => {
     if (user) {
       fetchData()
     }
   }, [user, fetchData])
+
+  // Refetch videos when category changes
+  useEffect(() => {
+    if (activeTab === "education") {
+      fetchEducationalContent()
+    }
+  }, [selectedCategory])
 
   const handleLogout = () => {
     logout()
@@ -988,7 +1059,7 @@ const FarmerDashboard = () => {
 
                 <div className="available-transport">
                   <h3>🚛 Available Transportation Services</h3>
-                  {transportList.length > 0 ? (
+                  {transportList && transportList.length > 0 ? (
                     <div className="transport-grid">
                       {transportList.map((transport) => (
                         <div key={transport.id} className="transport-card">
@@ -1052,7 +1123,7 @@ const FarmerDashboard = () => {
                 <h2>🚜 Equipment Rental</h2>
                 <div className="available-equipment">
                   <h3>Available Equipment for Rent</h3>
-                  {equipmentList.length > 0 ? (
+                  {equipmentList && equipmentList.length > 0 ? (
                     <div className="equipment-grid">
                       {equipmentList.map((equipment) => (
                         <div key={equipment.id} className="equipment-card">
@@ -1108,31 +1179,44 @@ const FarmerDashboard = () => {
               <div className="education-section">
                 <h2>📚 Educational Resources</h2>
 
-                <button
-                  onClick={() => {
-                    console.log("Manual fetch videos")
-                    axios
-                      .get(API_ENDPOINTS.EDUCATION.VIDEOS)
-                      .then((response) => {
-                        console.log("Videos fetched:", response.data)
-                        setEducationalVideos(response.data)
-                      })
-                      .catch((error) => {
-                        console.error("Error fetching videos:", error)
-                      })
-                  }}
-                  style={{
-                    padding: "10px 20px",
-                    backgroundColor: "#4CAF50",
-                    color: "white",
-                    border: "none",
-                    borderRadius: "5px",
-                    marginBottom: "20px",
-                    cursor: "pointer",
-                  }}
-                >
-                  Refresh Videos
-                </button>
+                <div className="education-controls">
+                  <div className="category-filter">
+                    <label htmlFor="category-select">Filter by Category:</label>
+                    <select
+                      id="category-select"
+                      value={selectedCategory}
+                      onChange={(e) => setSelectedCategory(e.target.value)}
+                      style={{
+                        padding: "8px 12px",
+                        marginLeft: "10px",
+                        borderRadius: "5px",
+                        border: "1px solid #ddd",
+                      }}
+                    >
+                      <option value="">All Categories</option>
+                      {videoCategories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name} ({category.video_count || 0})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <button
+                    onClick={fetchEducationalContent}
+                    style={{
+                      padding: "10px 20px",
+                      backgroundColor: "#4CAF50",
+                      color: "white",
+                      border: "none",
+                      borderRadius: "5px",
+                      marginLeft: "20px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    🔄 Refresh Videos
+                  </button>
+                </div>
 
                 <div
                   style={{
@@ -1140,50 +1224,113 @@ const FarmerDashboard = () => {
                     padding: "10px",
                     margin: "10px 0",
                     borderRadius: "5px",
+                    fontSize: "14px",
                   }}
                 >
                   <strong>Debug Info:</strong> Found {educationalVideos.length} videos in state
+                  {selectedCategory && ` (filtered by category)`}
                 </div>
 
-                {educationalVideos.length > 0 ? (
-                  <div style={{ display: "grid", gap: "20px" }}>
+                {educationalVideos && educationalVideos.length > 0 ? (
+                  <div className="videos-grid" style={{ display: "grid", gap: "20px", marginTop: "20px" }}>
                     <h3>🎥 Educational Videos ({educationalVideos.length} videos found)</h3>
                     {educationalVideos.map((video) => (
                       <div
                         key={video.id}
+                        className="video-card"
                         style={{
                           border: "1px solid #ddd",
-                          padding: "15px",
+                          padding: "20px",
                           borderRadius: "8px",
                           backgroundColor: "white",
+                          boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
                         }}
                       >
-                        <h4 style={{ margin: "0 0 10px 0", color: "#333" }}>{video.title}</h4>
-                        <p style={{ margin: "0 0 10px 0", color: "#666" }}>{video.description}</p>
-                        <div style={{ fontSize: "14px", color: "#888" }}>
-                          <span>📂 Category: {video.category_name}</span> |<span> ⏱️ Duration: {video.duration}</span> |
-                          <span> 👁️ Views: {video.views}</span>
-                        </div>
-                        {video.video_url && (
-                          <div style={{ marginTop: "10px" }}>
-                            <a
-                              href={video.video_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              style={{ color: "#4CAF50", textDecoration: "none" }}
-                            >
-                              🎬 Watch Video
-                            </a>
+                        <div style={{ display: "flex", gap: "15px" }}>
+                          {video.thumbnail_url && (
+                            <div style={{ flexShrink: 0 }}>
+                              <img
+                                src={video.thumbnail_url || "/placeholder.svg"}
+                                alt={video.title}
+                                style={{
+                                  width: "120px",
+                                  height: "90px",
+                                  objectFit: "cover",
+                                  borderRadius: "6px",
+                                }}
+                                onError={(e) => {
+                                  e.target.style.display = "none"
+                                }}
+                              />
+                            </div>
+                          )}
+                          <div style={{ flex: 1 }}>
+                            <h4 style={{ margin: "0 0 10px 0", color: "#333", fontSize: "18px" }}>{video.title}</h4>
+                            <p style={{ margin: "0 0 15px 0", color: "#666", lineHeight: "1.5" }}>
+                              {video.description}
+                            </p>
+                            <div style={{ fontSize: "14px", color: "#888", marginBottom: "15px" }}>
+                              <span>📂 {video.category_name || "Uncategorized"}</span>
+                              {video.duration && <span> | ⏱️ {video.duration}</span>}
+                              <span> | 👁️ {video.views || 0} views</span>
+                              <span> | 📅 {new Date(video.created_at).toLocaleDateString()}</span>
+                            </div>
+                            {video.video_url && (
+                              <div>
+                                <a
+                                  href={video.video_url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  style={{
+                                    display: "inline-block",
+                                    padding: "8px 16px",
+                                    backgroundColor: "#4CAF50",
+                                    color: "white",
+                                    textDecoration: "none",
+                                    borderRadius: "5px",
+                                    fontSize: "14px",
+                                  }}
+                                  onClick={() => {
+                                    // Record view - FIXED: Use API_ENDPOINTS constant
+                                    axios
+                                      .post(`${API_ENDPOINTS.EDUCATION.VIDEOS}${video.id}/view/`)
+                                      .catch((error) => console.log("Error recording view:", error))
+                                  }}
+                                >
+                                  🎬 Watch Video
+                                </a>
+                              </div>
+                            )}
                           </div>
-                        )}
+                        </div>
                       </div>
                     ))}
                   </div>
                 ) : (
                   <div style={{ textAlign: "center", padding: "40px" }}>
                     <span style={{ fontSize: "48px" }}>🎓</span>
-                    <h3>No Educational Videos Yet</h3>
-                    <p>Educational videos will appear here once uploaded by administrators.</p>
+                    <h3>No Educational Videos Found</h3>
+                    <p>
+                      {selectedCategory
+                        ? "No videos found in the selected category. Try selecting a different category or view all videos."
+                        : "Educational videos will appear here once uploaded by administrators."}
+                    </p>
+                    {selectedCategory && (
+                      <button
+                        onClick={() => setSelectedCategory("")}
+                        style={{
+                          padding: "10px 20px",
+                          backgroundColor: "#007cba",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "5px",
+                          cursor: "pointer",
+                          marginTop: "10px",
+                        }}
+                      >
+                        View All Videos
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
