@@ -1,3 +1,4 @@
+# smart_farm/wsgi.py"""
 """
 ASGI config for smart_farm project.
 
