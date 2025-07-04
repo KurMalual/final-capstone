@@ -28,9 +28,14 @@ SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-local-development-key
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
+# Hosts setup with fallback for Heroku app domain
 ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0', 'testserver']
-if 'HEROKU_APP_NAME' in os.environ:
-    ALLOWED_HOSTS.append(f"{os.environ['HEROKU_APP_NAME']}.herokuapp.com")
+
+heroku_app_name = os.environ.get('HEROKU_APP_NAME')
+if heroku_app_name:
+    ALLOWED_HOSTS.append(f"{heroku_app_name}.herokuapp.com")
+else:
+    ALLOWED_HOSTS.append('smart-farm-advisory-d46b4015b13a.herokuapp.com')
 
 # Application definition
 INSTALLED_APPS = [
@@ -122,13 +127,11 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Only add STATICFILES_DIRS if the directory exists
 STATICFILES_DIRS = []
 frontend_static_dir = os.path.join(BASE_DIR, 'frontend', 'build', 'static')
 if os.path.exists(frontend_static_dir):
     STATICFILES_DIRS.append(frontend_static_dir)
 
-# WhiteNoise configuration for serving static files
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Media files (uploads)
@@ -165,8 +168,12 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8000",
 ]
 
-if 'HEROKU_APP_NAME' in os.environ:
-    CORS_ALLOWED_ORIGINS.append(f"https://{os.environ['HEROKU_APP_NAME']}.herokuapp.com")
+if heroku_app_name:
+    heroku_url = f"https://{heroku_app_name}.herokuapp.com"
+else:
+    heroku_url = "https://smart-farm-advisory-d46b4015b13a.herokuapp.com"
+
+CORS_ALLOWED_ORIGINS.append(heroku_url)
 
 CORS_ALLOW_HEADERS = [
     'accept',
@@ -188,8 +195,7 @@ CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8000",
 ]
 
-if 'HEROKU_APP_NAME' in os.environ:
-    CSRF_TRUSTED_ORIGINS.append(f"https://{os.environ['HEROKU_APP_NAME']}.herokuapp.com")
+CSRF_TRUSTED_ORIGINS.append(heroku_url)
 
 # Force HTTP for development
 SECURE_SSL_REDIRECT = False
