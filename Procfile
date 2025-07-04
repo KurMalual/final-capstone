@@ -1,1 +1,1 @@
-web: gunicorn smart_farm.wsgi --chdir backend
+web: gunicorn smart_farm.wsgi
