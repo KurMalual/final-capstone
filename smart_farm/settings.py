@@ -11,16 +11,12 @@ try:
 except ImportError:
     DEPLOYMENT_READY = False
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
+# Build paths inside the project
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# SECURITY WARNING: keep the secret key used in production secret!
+# SECURITY SETTINGS
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-local-development-key-change-in-production')
-
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
-
-# Updated ALLOWED_HOSTS for production
 ALLOWED_HOSTS = [
     'localhost', 
     '127.0.0.1', 
@@ -29,7 +25,7 @@ ALLOWED_HOSTS = [
     'smart-farm-advisory-d46b4015b13a.herokuapp.com',
 ]
 
-# Application definition
+# APPLICATIONS
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -80,7 +76,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'smart_farm.wsgi.application'
 
-# Database
+# DATABASE CONFIGURATION
 if 'DATABASE_URL' in os.environ and DEPLOYMENT_READY:
     DATABASES = {
         'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
@@ -93,52 +89,40 @@ else:
         }
     }
 
-# Password validation
+# AUTHENTICATION & PASSWORD VALIDATION
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# Internationalization
+# INTERNATIONALIZATION
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Africa/Juba'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (CSS, JavaScript, Images)
+# STATIC FILES
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
-# Only add STATICFILES_DIRS if the directory exists
 STATICFILES_DIRS = []
 frontend_static_dir = os.path.join(BASE_DIR, 'frontend', 'build', 'static')
 if os.path.exists(frontend_static_dir):
     STATICFILES_DIRS.append(frontend_static_dir)
-
-# WhiteNoise configuration for serving static files
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Media files (uploads)
+# MEDIA FILES
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Default primary key field type
+# DEFAULT PRIMARY KEY FIELD TYPE
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Custom user model
+# CUSTOM USER MODEL
 AUTH_USER_MODEL = 'users.User'
 
-# REST Framework settings
+# DJANGO REST FRAMEWORK
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework.authentication.SessionAuthentication',
@@ -151,24 +135,18 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 20
 }
 
-# CORS settings - UPDATED FOR PRODUCTION
-CORS_ALLOW_ALL_ORIGINS = DEBUG  # Only allow all origins in development
-
-# Production CORS settings
+# CORS SETTINGS
+CORS_ALLOW_ALL_ORIGINS = DEBUG
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
-    # Your Vercel domains
     "https://final-capstone-2xnp-git-main-kur-majoks-projects.vercel.app",
     "https://final-capstone-2xnp-420vvcj2-kur-majoks-projects.vercel.app",
-    # Add any other Vercel preview URLs you might have
     "https://final-capstone-2xnp.vercel.app",
 ]
-
-CORS_ALLOW_CREDENTIALS = True  # Important for authentication
-
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -181,38 +159,32 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
-# CSRF settings - UPDATED FOR PRODUCTION
+# CSRF SETTINGS
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
     "http://localhost:8000",
     "http://127.0.0.1:8000",
-    # Your Vercel domains
     "https://final-capstone-2xnp-git-main-kur-majoks-projects.vercel.app",
     "https://final-capstone-2xnp-420vvcj2-kur-majoks-projects.vercel.app",
     "https://final-capstone-2xnp.vercel.app",
 ]
 
-# Production security settings
 if not DEBUG:
-    SECURE_SSL_REDIRECT = False  # Heroku handles SSL
+    SECURE_SSL_REDIRECT = False
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     SECURE_BROWSER_XSS_FILTER = True
-    
-    # Session and CSRF cookies for production
     SESSION_COOKIE_SECURE = True
     SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SAMESITE = 'None'  # Required for cross-origin requests
-    
+    SESSION_COOKIE_SAMESITE = 'None'
     CSRF_COOKIE_SECURE = True
-    CSRF_COOKIE_HTTPONLY = False  # Must be False for frontend to read it
-    CSRF_COOKIE_SAMESITE = 'None'  # Required for cross-origin requests
+    CSRF_COOKIE_HTTPONLY = False
+    CSRF_COOKIE_SAMESITE = 'None'
 else:
-    # Development settings
     SECURE_SSL_REDIRECT = False
     SESSION_COOKIE_SECURE = False
     CSRF_COOKIE_SECURE = False
@@ -223,18 +195,16 @@ CSRF_USE_SESSIONS = False
 CSRF_COOKIE_NAME = 'csrftoken'
 SESSION_COOKIE_AGE = 86400
 
-# File upload settings
+# FILE UPLOAD
 FILE_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024
 DATA_UPLOAD_MAX_MEMORY_SIZE = 100 * 1024 * 1024
 
-# Logging configuration
+# LOGGING
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
+        'console': {'class': 'logging.StreamHandler'},
     },
     'root': {
         'handlers': ['console'],
@@ -242,5 +212,5 @@ LOGGING = {
     },
 }
 
-# Weather API settings
-OPENWEATHER_API_KEY = os.environ.get('API_KEY67d420588c363ed048911e7549549c98')
+# WEATHER API KEY
+OPENWEATHER_API_KEY = os.environ.get('OPENWEATHER_API_KEY')

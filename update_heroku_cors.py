@@ -18,35 +18,36 @@ def main():
     print("🚀 Updating Heroku CORS configuration...")
     print("=" * 50)
     
-    # Check if Heroku CLI is installed
-    success, _, _ = run_command("heroku --version")
-    if not success:
-        print("❌ Heroku CLI not found. Please install it first.")
-        sys.exit(1)
-    
     # Set environment variables
     env_vars = {
-        "DEBUG": "False",
-        "SECRET_KEY": "your-production-secret-key-here",
-        "CORS_ALLOW_CREDENTIALS": "True",
+        'DEBUG': 'False',
+        'CORS_ALLOW_CREDENTIALS': 'True',
+        'ALLOWED_HOSTS': 'smart-farm-advisory-d46b4015b13a.herokuapp.com,localhost,127.0.0.1',
     }
     
     for key, value in env_vars.items():
-        print(f"🔧 Setting {key}...")
-        success, stdout, stderr = run_command(f'heroku config:set {key}="{value}"')
+        command = f'heroku config:set {key}="{value}"'
+        print(f"Setting {key}...")
+        success, stdout, stderr = run_command(command)
+        
         if success:
             print(f"✅ {key} set successfully")
         else:
             print(f"❌ Failed to set {key}: {stderr}")
     
-    print("\n🌐 Current Heroku config:")
+    print("\n🔍 Current Heroku config:")
     success, stdout, stderr = run_command("heroku config")
     if success:
         print(stdout)
     else:
         print(f"❌ Failed to get config: {stderr}")
     
-    print("\n✅ Heroku configuration update complete!")
+    print("\n🚀 Restarting Heroku app...")
+    success, stdout, stderr = run_command("heroku restart")
+    if success:
+        print("✅ App restarted successfully")
+    else:
+        print(f"❌ Failed to restart: {stderr}")
 
 if __name__ == "__main__":
     main()

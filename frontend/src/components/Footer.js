@@ -14,18 +14,18 @@ const Footer = () => {
             </div>
             <p>Connecting farmers, buyers, transporters, and equipment providers across South Sudan.</p>
             <div className="social-links">
-              <a href="#" aria-label="Facebook">
+              <button className="social-link" aria-label="Facebook">
                 📘
-              </a>
-              <a href="#" aria-label="Twitter">
+              </button>
+              <button className="social-link" aria-label="Twitter">
                 🐦
-              </a>
-              <a href="#" aria-label="Instagram">
+              </button>
+              <button className="social-link" aria-label="Instagram">
                 📷
-              </a>
-              <a href="#" aria-label="LinkedIn">
+              </button>
+              <button className="social-link" aria-label="LinkedIn">
                 💼
-              </a>
+              </button>
             </div>
           </div>
 
@@ -54,16 +54,16 @@ const Footer = () => {
             <h4>Services</h4>
             <ul>
               <li>
-                <a href="#marketplace">Marketplace</a>
+                <button className="footer-link">Marketplace</button>
               </li>
               <li>
-                <a href="#equipment">Equipment Rental</a>
+                <button className="footer-link">Equipment Rental</button>
               </li>
               <li>
-                <a href="#transport">Transportation</a>
+                <button className="footer-link">Transportation</button>
               </li>
               <li>
-                <a href="#weather">Weather Updates</a>
+                <button className="footer-link">Weather Updates</button>
               </li>
             </ul>
           </div>
@@ -81,8 +81,8 @@ const Footer = () => {
         <div className="footer-bottom">
           <p>&copy; 2024 Smart Farm Connect. All rights reserved.</p>
           <div className="footer-links">
-            <a href="#privacy">Privacy Policy</a>
-            <a href="#terms">Terms of Service</a>
+            <button className="footer-link">Privacy Policy</button>
+            <button className="footer-link">Terms of Service</button>
           </div>
         </div>
       </div>

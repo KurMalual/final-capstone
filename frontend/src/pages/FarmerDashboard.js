@@ -5,7 +5,7 @@ import { Link } from "react-router-dom"
 import axios from "axios"
 import { useAuth } from "../context/UserContext"
 import Footer from "../components/Footer"
-import API_ENDPOINTS from "../config/api"
+import API_ENDPOINTS from "../config/apiEndpoints"
 
 const FarmerDashboard = () => {
   const { user, logout } = useAuth()
@@ -87,7 +87,7 @@ const FarmerDashboard = () => {
     return emojis[category] || emojis.other
   }
 
-  const fetchEducationalContent = async () => {
+  const fetchEducationalContent = useCallback(async () => {
     try {
       console.log("🎥 Fetching educational content...")
 
@@ -144,7 +144,7 @@ const FarmerDashboard = () => {
       setEducationalVideos([])
       return []
     }
-  }
+  }, [selectedCategory])
 
   const fetchData = useCallback(async () => {
     try {
@@ -219,7 +219,7 @@ const FarmerDashboard = () => {
       console.error("Error fetching farmer data:", error)
       setLoading(false)
     }
-  }, [user, selectedCategory])
+  }, [user, fetchEducationalContent])
 
   useEffect(() => {
     if (user) {
@@ -232,7 +232,7 @@ const FarmerDashboard = () => {
     if (activeTab === "education") {
       fetchEducationalContent()
     }
-  }, [selectedCategory])
+  }, [activeTab, fetchEducationalContent])
 
   const handleLogout = () => {
     logout()

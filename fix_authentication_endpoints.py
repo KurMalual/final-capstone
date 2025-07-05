@@ -3,162 +3,132 @@
 Script to test and fix authentication endpoints
 """
 
-import os
-import sys
-import django
 import requests
+import json
+import sys
 
-# Add the current directory to Python path
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+BASE_URL = "https://smart-farm-advisory-d46b4015b13a.herokuapp.com"
 
-# Setup Django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'smart_farm.settings')
-django.setup()
-
-from django.contrib.auth import get_user_model
-from django.test import Client
-from django.urls import reverse
-
-User = get_user_model()
-
-def test_auth_endpoints():
-    """Test authentication endpoints"""
-    print("🔍 Testing authentication endpoints...")
-    
-    client = Client()
-    
-    # Test registration endpoint
-    print("\n1. Testing registration endpoint...")
-    register_data = {
-        'username': 'testuser',
-        'email': 'test@example.com',
-        'password': 'testpass123',
-        'user_type': 'farmer'
-    }
+def test_endpoint(method, endpoint, data=None, headers=None):
+    """Test an API endpoint"""
+    url = f"{BASE_URL}{endpoint}"
     
     try:
-        response = client.post('/api/auth/register/', 
-                             data=json.dumps(register_data),
-                             content_type='application/json')
-        print(f"   POST /api/auth/register/ - Status: {response.status_code}")
-        if response.status_code != 201:
-            print(f"   Response: {response.content.decode()}")
-    except Exception as e:
-        print(f"   Error: {e}")
-    
-    # Test login endpoint
-    print("\n2. Testing login endpoint...")
-    login_data = {
-        'username': 'testuser',
-        'password': 'testpass123'
-    }
-    
-    try:
-        response = client.post('/api/auth/login/',
-                             data=json.dumps(login_data),
-                             content_type='application/json')
-        print(f"   POST /api/auth/login/ - Status: {response.status_code}")
-        if response.status_code != 200:
-            print(f"   Response: {response.content.decode()}")
-    except Exception as e:
-        print(f"   Error: {e}")
-    
-    # Test GET requests (should return 405)
-    print("\n3. Testing GET requests (should return 405)...")
-    try:
-        response = client.get('/api/auth/register/')
-        print(f"   GET /api/auth/register/ - Status: {response.status_code}")
+        if method.upper() == "GET":
+            response = requests.get(url, headers=headers)
+        elif method.upper() == "POST":
+            response = requests.post(url, json=data, headers=headers)
+        elif method.upper() == "PUT":
+            response = requests.put(url, json=data, headers=headers)
+        elif method.upper() == "DELETE":
+            response = requests.delete(url, headers=headers)
+        else:
+            return None, f"Unsupported method: {method}"
         
-        response = client.get('/api/auth/login/')
-        print(f"   GET /api/auth/login/ - Status: {response.status_code}")
+        return response, None
     except Exception as e:
-        print(f"   Error: {e}")
+        return None, str(e)
 
-def test_authentication_endpoints():
+def main():
     print("🚀 Testing and fixing authentication endpoints...")
     print("=" * 50)
     
-    # Test user credentials
-    test_username = "testuser"
-    test_password = "testpass123"
-    test_email = "test@example.com"
-    
-    # Check if test user exists
+    # Test user creation first
     print("🔧 Checking user model...")
-    try:
-        user = User.objects.get(username=test_username)
-        print("✅ Test user already exists")
-    except User.DoesNotExist:
-        print("🔧 Creating test user...")
-        user = User.objects.create_user(
-            username=test_username,
-            email=test_email,
-            password=test_password
-        )
-        print("✅ Test user created")
+    test_user_data = {
+        "username": "testuser",
+        "password": "testpass123",
+        "email": "test@example.com",
+        "user_type": "farmer"
+    }
     
-    # Test endpoints
-    base_url = "https://smart-farm-advisory-d46b4015b13a.herokuapp.com"
+    # Check if user exists
+    response, error = test_endpoint("GET", "/api/users/")
+    if response and response.status_code == 200:
+        print("✅ Test user already exists")
+    else:
+        print("❌ Could not check existing users")
     
     print("\n🔍 Testing authentication endpoints...")
     
-    # Test registration endpoint
+    # Test registration
     print("1. Testing registration endpoint...")
-    registration_data = {
-        "username": test_username,
-        "email": test_email,
-        "password": test_password,
-        "first_name": "Test",
-        "last_name": "User"
-    }
+    print(f"Registration attempt for: {test_user_data['username']}")
+    response, error = test_endpoint("POST", "/api/auth/register/", test_user_data)
     
-    print(f"Registration attempt for: {test_username}")
-    try:
-        response = requests.post(f"{base_url}/api/auth/register/", json=registration_data)
+    if response:
         print(f"   POST /api/auth/register/ - Status: {response.status_code}")
-        if response.status_code != 201:
-            print(f"   Response: {response.json()}")
-    except Exception as e:
-        print(f"   Error: {e}")
+        if response.status_code in [200, 201]:
+            print("   ✅ Registration successful")
+        elif response.status_code == 400:
+            try:
+                data = response.json()
+                print(f"   Response: {data}")
+            except:
+                print(f"   Response: {response.text}")
+        else:
+            print(f"   ❌ Registration failed: {response.text}")
+    else:
+        print(f"   ❌ Request failed: {error}")
     
-    # Test login endpoint
+    # Test login
     print("\n2. Testing login endpoint...")
     login_data = {
-        "username": test_username,
-        "password": test_password
+        "username": test_user_data["username"],
+        "password": test_user_data["password"]
     }
+    print(f"Login attempt for username: {login_data['username']}")
+    response, error = test_endpoint("POST", "/api/auth/login/", login_data)
     
-    print(f"Login attempt for username: {test_username}")
-    try:
-        response = requests.post(f"{base_url}/api/auth/login/", json=login_data)
+    token = None
+    if response:
         print(f"   POST /api/auth/login/ - Status: {response.status_code}")
         if response.status_code == 200:
-            print(f"Login successful for user: {test_username}")
-            token = response.json().get('token')
-            if token:
-                print(f"   Token received: {token[:20]}...")
+            try:
+                data = response.json()
+                token = data.get("token")
+                print(f"Login successful for user: {data.get('user', {}).get('username', 'unknown')}")
+                if token:
+                    print(f"   Token received: {token[:20]}...")
+            except:
+                print("   Login successful but no JSON response")
         else:
-            print(f"   Response: {response.json()}")
-    except Exception as e:
-        print(f"   Error: {e}")
+            print(f"   ❌ Login failed: {response.text}")
+    else:
+        print(f"   ❌ Request failed: {error}")
     
     # Test GET requests (should return 405)
     print("\n3. Testing GET requests (should return 405)...")
-    try:
-        response = requests.get(f"{base_url}/api/auth/register/")
-        print(f"   GET /api/auth/register/ - Status: {response.status_code}")
-    except Exception as e:
-        print(f"   Error: {e}")
     
-    try:
-        response = requests.get(f"{base_url}/api/auth/login/")
-        print(f"   GET /api/auth/login/ - Status: {response.status_code}")
-    except Exception as e:
-        print(f"   Error: {e}")
+    for endpoint in ["/api/auth/register/", "/api/auth/login/"]:
+        response, error = test_endpoint("GET", endpoint)
+        if response:
+            print(f"   GET {endpoint} - Status: {response.status_code}")
+            if response.status_code == 405:
+                print("   ✅ Correctly returns Method Not Allowed")
+            else:
+                print(f"   ⚠️  Unexpected status: {response.status_code}")
+        else:
+            print(f"   ❌ Request failed: {error}")
+    
+    # Test authenticated endpoint if we have a token
+    if token:
+        print("\n4. Testing authenticated endpoint...")
+        headers = {"Authorization": f"Bearer {token}"}
+        response, error = test_endpoint("GET", "/api/equipment/", headers=headers)
+        
+        if response:
+            print(f"   GET /api/equipment/ - Status: {response.status_code}")
+            if response.status_code == 200:
+                print("   ✅ Authenticated request successful")
+            else:
+                print(f"   ❌ Authenticated request failed: {response.text}")
+        else:
+            print(f"   ❌ Request failed: {error}")
     
     print("\n✅ Authentication endpoint test complete!")
     print("If you see 405 errors for GET requests, that's normal.")
     print("The endpoints should only accept POST requests.")
 
 if __name__ == "__main__":
-    test_authentication_endpoints()
+    main()

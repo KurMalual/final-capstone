@@ -51,7 +51,7 @@ export const UserProvider = ({ children }) => {
           if (!csrfToken) {
             try {
               console.log("🔄 Getting CSRF token...")
-              const csrfResponse = await axios.get("/api/users/csrf/", {
+              await axios.get("/api/users/csrf/", {
                 withCredentials: true,
                 headers: {}, // Don't include auth headers for CSRF request
               })
@@ -101,7 +101,6 @@ export const UserProvider = ({ children }) => {
           data: error.response?.data,
           url: error.config?.url,
         })
-
         if (error.response?.status === 401) {
           console.log("🔄 401 error - clearing user state")
           setUser(null)
@@ -181,7 +180,6 @@ export const UserProvider = ({ children }) => {
     try {
       // First get CSRF token
       await axios.get("/api/users/csrf/")
-
       const response = await axios.post("/api/auth/signup/", userData)
 
       if (response.data.success) {

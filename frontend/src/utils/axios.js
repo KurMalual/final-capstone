@@ -5,6 +5,7 @@ import API_ENDPOINTS from "../config/api"
 const axiosInstance = axios.create({
   baseURL: API_ENDPOINTS.BASE_URL,
   timeout: 30000, // 30 seconds timeout
+  withCredentials: true, // Important for CORS with credentials
   headers: {
     "Content-Type": "application/json",
   },
@@ -18,6 +19,13 @@ axiosInstance.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`
     }
 
+    // Add CSRF token if available
+    const csrfToken = document.querySelector("[name=csrfmiddlewaretoken]")?.value
+    if (csrfToken) {
+      config.headers["X-CSRFToken"] = csrfToken
+    }
+
+    // Log request for debugging
     console.log(`🔄 API Request: ${config.method?.toUpperCase()} ${config.url}`)
     console.log(`🌐 Full URL: ${config.baseURL}${config.url}`)
     if (config.headers.Authorization) {
@@ -42,11 +50,15 @@ axiosInstance.interceptors.response.use(
     console.error(`❌ API Error: ${error.response?.status} ${error.config?.url}`)
     console.error("Error details:", error.response?.data)
 
+    // Handle 401 errors (unauthorized)
     if (error.response?.status === 401) {
       console.log("🔓 Unauthorized - clearing token")
       localStorage.removeItem("token")
+      // Optionally redirect to login
+      // window.location.href = '/login'
     }
 
+    // Handle 403 errors (forbidden)
     if (error.response?.status === 403) {
       console.log("🚫 Forbidden - check authentication")
     }

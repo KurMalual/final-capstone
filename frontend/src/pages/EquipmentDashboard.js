@@ -11,7 +11,6 @@ const EquipmentDashboard = () => {
   const { user, logout } = useAuth()
   const [equipment, setEquipment] = useState([])
   const [rentalRequests, setRentalRequests] = useState([])
-  const [activeRentals, setActiveRentals] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState("dashboard")
   const [showAddForm, setShowAddForm] = useState(false)
@@ -35,16 +34,14 @@ const EquipmentDashboard = () => {
       const token = localStorage.getItem("token")
       const headers = { Authorization: `Bearer ${token}` }
 
-      const [equipmentRes, requestsRes, rentalsRes] = await Promise.all([
+      const [equipmentRes, requestsRes] = await Promise.all([
         axios.get("http://localhost:8000/api/equipment/my_equipment/", { headers }),
         axios.get("http://localhost:8000/api/equipment/rental_requests/", { headers }).catch(() => ({ data: [] })),
-        axios.get("http://localhost:8000/api/equipment/active_rentals/", { headers }).catch(() => ({ data: [] })),
       ])
 
       console.log("🚜 Fetched equipment data:", equipmentRes.data)
       setEquipment(equipmentRes.data)
       setRentalRequests(requestsRes.data)
-      setActiveRentals(rentalsRes.data)
       setLoading(false)
     } catch (error) {
       console.error("Error fetching data:", error)
@@ -98,35 +95,28 @@ const EquipmentDashboard = () => {
 
       console.log("Submitting equipment with FormData...")
 
-      const response = await axios.post("http://localhost:8000/api/equipment/", formData, {
+      await axios.post("http://localhost:8000/api/equipment/", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
         },
       })
 
-      console.log("Success response:", response.data)
+      alert("Equipment added successfully! 🎉")
+      setShowAddForm(false)
+      setNewEquipment({
+        name: "",
+        equipment_type: "",
+        description: "",
+        daily_rate: "",
+        location: "",
+        image: null,
+      })
+      // Reset file input
+      const fileInput = document.querySelector('input[type="file"]')
+      if (fileInput) fileInput.value = ""
 
-      // Check if response indicates success
-      if (response.data.success !== false) {
-        alert("Equipment added successfully! 🎉")
-        setShowAddForm(false)
-        setNewEquipment({
-          name: "",
-          equipment_type: "",
-          description: "",
-          daily_rate: "",
-          location: "",
-          image: null,
-        })
-        // Reset file input
-        const fileInput = document.querySelector('input[type="file"]')
-        if (fileInput) fileInput.value = ""
-
-        fetchData() // Refresh the equipment list
-      } else {
-        throw new Error(response.data.error || "Unknown error occurred")
-      }
+      fetchData() // Refresh the equipment list
     } catch (error) {
       console.error("=== Equipment Creation Error ===")
       console.error("Error object:", error)
@@ -201,7 +191,7 @@ const EquipmentDashboard = () => {
         formData.append("image", editingEquipment.image)
       }
 
-      const response = await axios.put(`http://localhost:8000/api/equipment/${editingEquipment.id}/`, formData, {
+      await axios.put(`http://localhost:8000/api/equipment/${editingEquipment.id}/`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
