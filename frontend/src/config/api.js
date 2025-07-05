@@ -1,4 +1,3 @@
-// src/config/apiEndpoints.js
 const API_BASE_URL =
   process.env.NODE_ENV === "production"
     ? process.env.REACT_APP_API_URL || "https://smart-farm-advisory-d46b4015b13a.herokuapp.com"
