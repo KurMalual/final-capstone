@@ -1,5 +1,4 @@
 "use client"
-
 import { useState, useEffect } from "react"
 import axios from "axios"
 import { useAuth } from "../context/UserContext"
@@ -36,25 +35,32 @@ const TransporterDashboard = () => {
       const headers = { Authorization: `Bearer ${token}` }
 
       const [vehiclesRes, requestsRes, jobsRes] = await Promise.all([
-        axios.get("http://localhost:8000/api/transports/my_vehicles/", { headers }),
+        axios
+          .get("http://localhost:8000/api/transports/vehicles/my_vehicles/", { headers })
+          .catch(() => ({ data: [] })),
         axios.get("http://localhost:8000/api/transports/requests/", { headers }).catch(() => ({ data: [] })),
-        axios.get("http://localhost:8000/api/transports/active_jobs/", { headers }).catch(() => ({ data: [] })),
+        axios.get("http://localhost:8000/api/transports/available_jobs/", { headers }).catch(() => ({ data: [] })),
       ])
 
       console.log("🚛 Fetched transport data:", vehiclesRes.data)
-      setVehicles(vehiclesRes.data)
-      setTransportRequests(requestsRes.data)
-      setActiveJobs(jobsRes.data)
+
+      // Ensure data is always an array
+      setVehicles(Array.isArray(vehiclesRes.data) ? vehiclesRes.data : [])
+      setTransportRequests(Array.isArray(requestsRes.data) ? requestsRes.data : [])
+      setActiveJobs(Array.isArray(jobsRes.data) ? jobsRes.data : [])
       setLoading(false)
     } catch (error) {
       console.error("Error fetching data:", error)
+      // Set empty arrays on error to prevent crashes
+      setVehicles([])
+      setTransportRequests([])
+      setActiveJobs([])
       setLoading(false)
     }
   }
 
   const handleAddVehicle = async (e) => {
     e.preventDefault()
-
     console.log("=== Vehicle Form Submission Debug ===")
     console.log("Form data:", newVehicle)
 
@@ -95,7 +101,8 @@ const TransporterDashboard = () => {
 
       // Create FormData for file upload
       const formData = new FormData()
-      formData.append("vehicle_type", newVehicle.vehicle_type)
+      formData.append("name", `${newVehicle.vehicle_type} - ${newVehicle.location}`)
+      formData.append("type", newVehicle.vehicle_type)
       formData.append("capacity", Number.parseFloat(newVehicle.capacity).toFixed(2))
       formData.append("description", newVehicle.description.trim())
       formData.append("rate_per_km", Number.parseFloat(newVehicle.rate_per_km).toFixed(2))
@@ -104,7 +111,8 @@ const TransporterDashboard = () => {
 
       console.log("Submitting vehicle with FormData...")
 
-      await axios.post("http://localhost:8000/api/transports/", formData, {
+      // Use the correct vehicles endpoint
+      await axios.post("http://localhost:8000/api/transports/vehicles/", formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
@@ -121,6 +129,7 @@ const TransporterDashboard = () => {
         location: "",
         image: null,
       })
+
       // Reset file input
       const fileInput = document.querySelector('input[type="file"]')
       if (fileInput) fileInput.value = ""
@@ -134,7 +143,9 @@ const TransporterDashboard = () => {
 
       let errorMessage = "Failed to add vehicle. Please try again."
 
-      if (error.response?.data) {
+      if (error.response?.status === 405) {
+        errorMessage = "Vehicle creation endpoint not available. Please contact support."
+      } else if (error.response?.data) {
         if (typeof error.response.data === "string") {
           errorMessage = error.response.data
         } else if (error.response.data.error) {
@@ -166,7 +177,6 @@ const TransporterDashboard = () => {
 
   const handleUpdateVehicle = async (e) => {
     e.preventDefault()
-
     try {
       const token = localStorage.getItem("token")
 
@@ -196,7 +206,8 @@ const TransporterDashboard = () => {
 
       // Create FormData for file upload (if image is provided)
       const formData = new FormData()
-      formData.append("vehicle_type", editingVehicle.vehicle_type)
+      formData.append("name", `${editingVehicle.vehicle_type} - ${editingVehicle.location}`)
+      formData.append("type", editingVehicle.vehicle_type)
       formData.append("capacity", Number.parseFloat(editingVehicle.capacity).toFixed(2))
       formData.append("description", editingVehicle.description.trim())
       formData.append("rate_per_km", Number.parseFloat(editingVehicle.rate_per_km).toFixed(2))
@@ -206,7 +217,7 @@ const TransporterDashboard = () => {
         formData.append("image", editingVehicle.image)
       }
 
-      await axios.put(`http://localhost:8000/api/transports/${editingVehicle.id}/`, formData, {
+      await axios.put(`http://localhost:8000/api/transports/vehicles/${editingVehicle.id}/`, formData, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "multipart/form-data",
@@ -221,7 +232,9 @@ const TransporterDashboard = () => {
       console.error("Error updating vehicle:", error)
       let errorMessage = "Failed to update vehicle. Please try again."
 
-      if (error.response?.data) {
+      if (error.response?.status === 405) {
+        errorMessage = "Vehicle update endpoint not available. Please contact support."
+      } else if (error.response?.data) {
         if (typeof error.response.data === "string") {
           errorMessage = error.response.data
         } else if (error.response.data.error) {
@@ -244,8 +257,7 @@ const TransporterDashboard = () => {
 
     try {
       const token = localStorage.getItem("token")
-
-      await axios.delete(`http://localhost:8000/api/transports/${vehicleId}/`, {
+      await axios.delete(`http://localhost:8000/api/transports/vehicles/${vehicleId}/`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -314,12 +326,10 @@ const TransporterDashboard = () => {
   // Helper function to get full image URL
   const getImageUrl = (imageUrl) => {
     if (!imageUrl) return null
-
     // If it's already a full URL, return as is
     if (imageUrl.startsWith("http")) {
       return imageUrl
     }
-
     // If it's a relative path, prepend the backend URL
     return `http://localhost:8000${imageUrl}`
   }
@@ -337,7 +347,7 @@ const TransporterDashboard = () => {
         </div>
         <div className="user-info">
           <span>
-            Welcome, {user.first_name} {user.last_name}
+            Welcome, {user?.first_name || "User"} {user?.last_name || ""}
           </span>
           <button onClick={handleLogout} className="logout-btn">
             Logout
@@ -372,31 +382,32 @@ const TransporterDashboard = () => {
             {activeTab === "dashboard" && (
               <div className="dashboard-overview">
                 <h1 className="welcome-title">Welcome to Your Transport Dashboard</h1>
-
                 {/* Main Cards - Match Farmer Dashboard Layout Exactly */}
                 <div className="main-cards-grid">
                   <div className="main-card">
                     <div className="card-icon">🚛</div>
                     <h3>My Vehicles</h3>
-                    <div className="card-number">{vehicles.length}</div>
+                    <div className="card-number">{Array.isArray(vehicles) ? vehicles.length : 0}</div>
                     <button className="card-button" onClick={() => setActiveTab("vehicles")}>
                       Manage Vehicles
                     </button>
                   </div>
-
                   <div className="main-card">
                     <div className="card-icon">📋</div>
                     <h3>Transport Requests</h3>
-                    <div className="card-number">{transportRequests.filter((r) => r.status === "pending").length}</div>
+                    <div className="card-number">
+                      {Array.isArray(transportRequests)
+                        ? transportRequests.filter((r) => r.status === "pending").length
+                        : 0}
+                    </div>
                     <button className="card-button" onClick={() => setActiveTab("requests")}>
                       View Requests
                     </button>
                   </div>
-
                   <div className="main-card">
                     <div className="card-icon">🚚</div>
                     <h3>Active Jobs</h3>
-                    <div className="card-number">{activeJobs.length}</div>
+                    <div className="card-number">{Array.isArray(activeJobs) ? activeJobs.length : 0}</div>
                     <button className="card-button" onClick={() => setActiveTab("jobs")}>
                       View Jobs
                     </button>
@@ -503,14 +514,14 @@ const TransporterDashboard = () => {
                 )}
 
                 <div className="vehicles-grid">
-                  {vehicles.length > 0 ? (
+                  {Array.isArray(vehicles) && vehicles.length > 0 ? (
                     vehicles.map((item) => (
                       <div key={item.id} className="vehicle-card">
                         <div className="vehicle-image">
                           {item.image && getImageUrl(item.image) ? (
                             <img
                               src={getImageUrl(item.image) || "/placeholder.svg"}
-                              alt={item.vehicle_type}
+                              alt={item.vehicle_type || item.type}
                               onError={(e) => {
                                 console.error("Image failed to load:", getImageUrl(item.image))
                                 // Fallback to emoji if image fails to load
@@ -523,13 +534,15 @@ const TransporterDashboard = () => {
                             className="placeholder-image"
                             style={{ display: item.image && getImageUrl(item.image) ? "none" : "flex" }}
                           >
-                            <span className="vehicle-emoji">{getVehicleTypeEmoji(item.vehicle_type)}</span>
+                            <span className="vehicle-emoji">{getVehicleTypeEmoji(item.vehicle_type || item.type)}</span>
                           </div>
                         </div>
                         <div className="vehicle-content">
-                          <h3 className="vehicle-name">{item.vehicle_type || "Unknown Vehicle"}</h3>
+                          <h3 className="vehicle-name">
+                            {item.name || item.vehicle_type || item.type || "Unknown Vehicle"}
+                          </h3>
                           <div className="vehicle-type-container">
-                            <span className="type-badge">{item.vehicle_type || "other"}</span>
+                            <span className="type-badge">{item.vehicle_type || item.type || "other"}</span>
                             <span className="capacity-info">Capacity: {item.capacity}kg</span>
                           </div>
                           <div className="vehicle-pricing">
@@ -549,7 +562,7 @@ const TransporterDashboard = () => {
                           </button>
                           <button
                             className="delete-btn"
-                            onClick={() => handleDeleteVehicle(item.id, item.vehicle_type)}
+                            onClick={() => handleDeleteVehicle(item.id, item.vehicle_type || item.type)}
                           >
                             Delete
                           </button>
@@ -574,7 +587,7 @@ const TransporterDashboard = () => {
               <div className="requests-section">
                 <h2>📋 Transport Requests</h2>
                 <div className="requests-grid">
-                  {transportRequests.length > 0 ? (
+                  {Array.isArray(transportRequests) && transportRequests.length > 0 ? (
                     transportRequests.map((request) => (
                       <div key={request.id} className="request-card">
                         <div className="request-header">
@@ -631,7 +644,7 @@ const TransporterDashboard = () => {
               <div className="jobs-section">
                 <h2>🚚 Active Jobs</h2>
                 <div className="jobs-grid">
-                  {activeJobs.length > 0 ? (
+                  {Array.isArray(activeJobs) && activeJobs.length > 0 ? (
                     activeJobs.map((job) => (
                       <div key={job.id} className="job-card">
                         <div className="job-header">
@@ -691,8 +704,10 @@ const TransporterDashboard = () => {
                 <div className="form-group">
                   <label>Vehicle Type *</label>
                   <select
-                    value={editingVehicle.vehicle_type}
-                    onChange={(e) => setEditingVehicle({ ...editingVehicle, vehicle_type: e.target.value })}
+                    value={editingVehicle.vehicle_type || editingVehicle.type}
+                    onChange={(e) =>
+                      setEditingVehicle({ ...editingVehicle, vehicle_type: e.target.value, type: e.target.value })
+                    }
                     required
                   >
                     <option value="">Select Type</option>
