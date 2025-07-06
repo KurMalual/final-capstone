@@ -26,7 +26,7 @@ This project consists of:
 
 3. Navigate to the backend directory and run migrations:
    \`\`\`
-   cd backend
+   cd final-capstone
    python manage.py makemigrations
    python manage.py migrate
    \`\`\`
