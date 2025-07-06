@@ -25,18 +25,18 @@ This project consists of:
    \`\`\`
 
 3. Navigate to the backend directory and run migrations:
-   \`\`\`
-   cd final-capstone
+   \`\`\`cd final-capstone
+   '''
    python manage.py makemigrations
    python manage.py migrate
    \`\`\`
 
-4. Create a superuser:
+5. Create a superuser:
    \`\`\`
    python manage.py createsuperuser
    \`\`\`
 
-5. Run the development server:
+6. Run the development server:
    \`\`\`
    python manage.py runserver
    \`\`\`
