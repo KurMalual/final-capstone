@@ -12,22 +12,23 @@ This project consists of:
 ## Setup Instructions
 
 ### Backend Setup
-
-1. Create a virtual environment:
+1. Clone the repo https://github.com/KurMalual/final-capstone
+2. . Create a virtual environment:
    \`\`\`
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    \`\`\`
 
-2. Install dependencies:
+3. Install dependencies:
    \`\`\`
    pip install django djangorestframework django-cors-headers pillow
    \`\`\`
 
-3. Navigate to the backend directory and run migrations:
+4. Navigate to the backend directory and run migrations:
    \`\`\`cd final-capstone
-   '''
+   `\`
    python manage.py makemigrations
+   `\  `
    python manage.py migrate
    \`\`\`
 
