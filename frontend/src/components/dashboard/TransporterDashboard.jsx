@@ -74,6 +74,22 @@ const TransporterDashboard = ({ data, onRefresh }) => {
     }
   };
 
+  const handleDeleteTransportRequest = async (requestId, vehicleName) => {
+    if (window.confirm(`Are you sure you want to delete this transport request for "${vehicleName}"?`)) {
+      try {
+        setLoading(true);
+        await transportAPI.deleteTransportRequest(requestId);
+        showNotification(`✅ Transport request deleted successfully!`, 'success');
+        if (onRefresh) onRefresh();
+      } catch (error) {
+        console.error('Error deleting transport request:', error);
+        showNotification('❌ Failed to delete transport request', 'danger');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   const handleEditVehicle = (vehicle) => {
     setEditingVehicle(vehicle);
     setEditForm({
@@ -255,11 +271,22 @@ const TransporterDashboard = ({ data, onRefresh }) => {
                             </Button>
                           </div>
                         ) : (
-                          <Badge bg={
-                            request.status === 'approved' ? 'success' : 'danger'
-                          }>
-                            {request.status === 'approved' ? '✅ Accepted' : '❌ Rejected'}
-                          </Badge>
+                          <div className="d-flex justify-content-between align-items-center">
+                            <Badge bg={
+                              request.status === 'approved' ? 'success' : 'danger'
+                            }>
+                              {request.status === 'approved' ? '✅ Accepted' : '❌ Rejected'}
+                            </Badge>
+                            <Button 
+                              variant="outline-secondary" 
+                              size="sm"
+                              onClick={() => handleDeleteTransportRequest(request.id, request.transport__vehicle_name)}
+                              disabled={loading}
+                              title="Delete this request"
+                            >
+                              🗑️
+                            </Button>
+                          </div>
                         )}
                       </div>
                     </Card.Body>

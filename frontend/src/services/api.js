@@ -77,6 +77,7 @@ export const equipmentAPI = {
   createRentalRequest: (data) => api.post('/equipment-rental-requests/', data),
   approveRental: (id) => api.post(`/equipment-rental-requests/${id}/approve/`),
   rejectRental: (id) => api.post(`/equipment-rental-requests/${id}/reject/`),
+  deleteRentalRequest: (id) => api.delete(`/equipment-rental-requests/${id}/`),
 };
 
 // Transport API calls
@@ -91,6 +92,7 @@ export const transportAPI = {
   createTransportRequest: (data) => api.post('/transport-requests/', data),
   approveTransport: (id) => api.post(`/transport-requests/${id}/approve/`),
   rejectTransport: (id) => api.post(`/transport-requests/${id}/reject/`),
+  deleteTransportRequest: (id) => api.delete(`/transport-requests/${id}/`),
 };
 
 // Marketplace API calls
@@ -105,6 +107,7 @@ export const marketplaceAPI = {
   createOrder: (data) => api.post('/product-orders/', data),
   approveOrder: (id) => api.post(`/product-orders/${id}/approve/`),
   rejectOrder: (id) => api.post(`/product-orders/${id}/reject/`),
+  deleteOrder: (id) => api.delete(`/product-orders/${id}/`),
 };
 
 // Weather API calls

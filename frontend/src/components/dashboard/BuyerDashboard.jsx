@@ -37,6 +37,22 @@ const BuyerDashboard = ({ data, onRefresh }) => {
     }
   };
 
+  const handleDeleteOrder = async (orderId, productName) => {
+    if (window.confirm(`Are you sure you want to delete your order for "${productName}"?`)) {
+      try {
+        setLoading(true);
+        await marketplaceAPI.deleteOrder(orderId);
+        showNotification(`✅ Order for ${productName} deleted successfully!`, 'success');
+        if (onRefresh) onRefresh();
+      } catch (error) {
+        console.error('Error deleting order:', error);
+        showNotification('❌ Failed to delete order', 'danger');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   return (
     <Container className="py-4">
       {/* Welcome Header */}
@@ -125,13 +141,26 @@ const BuyerDashboard = ({ data, onRefresh }) => {
                         <small className="text-muted">
                           {new Date(order.created_at).toLocaleDateString()}
                         </small>
-                        <Badge bg={
-                          order.status === 'approved' ? 'success' : 
-                          order.status === 'rejected' ? 'danger' : 'warning'
-                        }>
-                          {order.status === 'approved' ? '✅ Approved' :
-                           order.status === 'rejected' ? '❌ Rejected' : '⏳ Pending'}
-                        </Badge>
+                        <div className="d-flex align-items-center gap-2">
+                          <Badge bg={
+                            order.status === 'approved' ? 'success' : 
+                            order.status === 'rejected' ? 'danger' : 'warning'
+                          }>
+                            {order.status === 'approved' ? '✅ Approved' :
+                             order.status === 'rejected' ? '❌ Rejected' : '⏳ Pending'}
+                          </Badge>
+                          {(order.status === 'approved' || order.status === 'rejected') && (
+                            <Button 
+                              variant="outline-secondary" 
+                              size="sm"
+                              onClick={() => handleDeleteOrder(order.id, order.product__name)}
+                              disabled={loading}
+                              title="Delete this order"
+                            >
+                              🗑️
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </Card.Body>
                   </Card>

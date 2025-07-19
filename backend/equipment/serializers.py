@@ -12,5 +12,5 @@ class EquipmentRentalRequestSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = EquipmentRentalRequest
-        fields = ['id', 'equipment', 'equipment_name', 'farmer', 'status', 'message', 'created_at', 'updated_at']
+        fields = ['id', 'equipment', 'equipment_name', 'farmer', 'status', 'message', 'operation_location', 'created_at', 'updated_at']
         read_only_fields = ['id', 'equipment_name', 'farmer', 'created_at', 'updated_at']

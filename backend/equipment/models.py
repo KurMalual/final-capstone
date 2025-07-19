@@ -15,6 +15,7 @@ class Equipment(models.Model):
 class EquipmentRentalRequest(models.Model):
     equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name='rental_requests')
     farmer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='equipment_rental_requests')
+    operation_location = models.CharField(max_length=200, help_text="Location where the equipment will be used")
     status = models.CharField(max_length=20, choices=[('pending','Pending'),('approved','Approved'),('rejected','Rejected')], default='pending')
     message = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

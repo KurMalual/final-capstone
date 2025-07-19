@@ -34,6 +34,14 @@ const FarmerDashboard = ({ data, onRefresh }) => {
     image: null
   });
 
+  // Equipment Rental Modal
+  const [showRentalModal, setShowRentalModal] = useState(false);
+  const [selectedEquipment, setSelectedEquipment] = useState(null);
+  const [rentalForm, setRentalForm] = useState({
+    message: '',
+    operation_location: ''
+  });
+
   if (!data) return null;
 
   const { profile } = data;
@@ -54,13 +62,25 @@ const FarmerDashboard = ({ data, onRefresh }) => {
   };
 
   const handleHireEquipment = async (equipmentId, equipmentName) => {
+    setSelectedEquipment({ id: equipmentId, name: equipmentName });
+    setRentalForm({
+      message: `Request to hire ${equipmentName}`,
+      operation_location: ''
+    });
+    setShowRentalModal(true);
+  };
+
+  const handleSubmitRental = async (e) => {
+    e.preventDefault();
     try {
       setLoading(true);
       await equipmentAPI.createRentalRequest({
-        equipment: equipmentId,
-        message: `Request to hire ${equipmentName}`
+        equipment: selectedEquipment.id,
+        message: rentalForm.message,
+        operation_location: rentalForm.operation_location
       });
-      showNotification(`✅ Rental request sent for ${equipmentName}!`, 'success');
+      showNotification(`✅ Rental request sent for ${selectedEquipment.name}!`, 'success');
+      setShowRentalModal(false);
       if (onRefresh) onRefresh();
     } catch (error) {
       console.error('Error hiring equipment:', error);
@@ -87,6 +107,22 @@ const FarmerDashboard = ({ data, onRefresh }) => {
     }
   };
 
+  const handleCancelRentalRequest = async (requestId, equipmentName) => {
+    if (window.confirm(`Are you sure you want to cancel your rental request for "${equipmentName}"?`)) {
+      try {
+        setLoading(true);
+        await equipmentAPI.deleteRentalRequest(requestId);
+        showNotification(`✅ Rental request for ${equipmentName} cancelled!`, 'success');
+        if (onRefresh) onRefresh();
+      } catch (error) {
+        console.error('Error cancelling rental request:', error);
+        showNotification('❌ Failed to cancel rental request', 'danger');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   const handleApproveOrder = async (orderId, productName) => {
     try {
       setLoading(true);
@@ -98,6 +134,38 @@ const FarmerDashboard = ({ data, onRefresh }) => {
       showNotification('❌ Failed to approve order', 'danger');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCancelTransportRequest = async (requestId, vehicleName) => {
+    if (window.confirm(`Are you sure you want to cancel your transport request for "${vehicleName}"?`)) {
+      try {
+        setLoading(true);
+        await transportAPI.deleteTransportRequest(requestId);
+        showNotification(`✅ Transport request for ${vehicleName} cancelled!`, 'success');
+        if (onRefresh) onRefresh();
+      } catch (error) {
+        console.error('Error cancelling transport request:', error);
+        showNotification('❌ Failed to cancel transport request', 'danger');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleCancelOrder = async (orderId, productName) => {
+    if (window.confirm(`Are you sure you want to cancel your order for "${productName}"?`)) {
+      try {
+        setLoading(true);
+        await marketplaceAPI.deleteOrder(orderId);
+        showNotification(`✅ Order for ${productName} cancelled!`, 'success');
+        if (onRefresh) onRefresh();
+      } catch (error) {
+        console.error('Error cancelling order:', error);
+        showNotification('❌ Failed to cancel order', 'danger');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -468,7 +536,18 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                             </Button>
                           </>
                         ) : (
-                          getStatusBadge(order.status)
+                          <div className="d-flex align-items-center gap-2">
+                            {getStatusBadge(order.status)}
+                            <Button 
+                              variant="outline-secondary" 
+                              size="sm"
+                              onClick={() => handleCancelOrder(order.id, order.product__name)}
+                              disabled={loading}
+                              title="Delete this order"
+                            >
+                              🗑️
+                            </Button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -481,8 +560,28 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                     <div className="d-flex justify-content-between align-items-center">
                       <div>
                         <small className="text-muted">Equipment: {rental.equipment__name}</small>
+                        {rental.operation_location && (
+                          <div>
+                            <small className="text-primary">
+                              <i className="bi bi-geo-alt"></i> {rental.operation_location}
+                            </small>
+                          </div>
+                        )}
                       </div>
-                      {getStatusBadge(rental.status)}
+                      <div className="d-flex align-items-center gap-2">
+                        {rental.status === 'pending' && (
+                          <Button 
+                            variant="outline-danger" 
+                            size="sm"
+                            onClick={() => handleCancelRentalRequest(rental.id, rental.equipment__name)}
+                            disabled={loading}
+                            title="Cancel request"
+                          >
+                            ❌
+                          </Button>
+                        )}
+                        {getStatusBadge(rental.status)}
+                      </div>
                     </div>
                   </ListGroup.Item>
                 ))}
@@ -494,7 +593,20 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                       <div>
                         <small className="text-muted">Transport: {request.transport__vehicle_name}</small>
                       </div>
-                      {getStatusBadge(request.status)}
+                      <div className="d-flex align-items-center gap-2">
+                        {request.status === 'pending' && (
+                          <Button 
+                            variant="outline-danger" 
+                            size="sm"
+                            onClick={() => handleCancelTransportRequest(request.id, request.transport__vehicle_name)}
+                            disabled={loading}
+                            title="Cancel request"
+                          >
+                            ❌
+                          </Button>
+                        )}
+                        {getStatusBadge(request.status)}
+                      </div>
                     </div>
                   </ListGroup.Item>
                 ))}
@@ -758,6 +870,55 @@ const FarmerDashboard = ({ data, onRefresh }) => {
             </div>
           </Form>
         </Modal.Body>
+      </Modal>
+
+      {/* Equipment Rental Modal */}
+      <Modal show={showRentalModal} onHide={() => setShowRentalModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Request Equipment Rental</Modal.Title>
+        </Modal.Header>
+        <Form onSubmit={handleSubmitRental}>
+          <Modal.Body>
+            {selectedEquipment && (
+              <Alert variant="info">
+                <strong>Equipment:</strong> {selectedEquipment.name}
+              </Alert>
+            )}
+            
+            <Form.Group className="mb-3">
+              <Form.Label>Operation Location <span className="text-danger">*</span></Form.Label>
+              <Form.Control
+                type="text"
+                value={rentalForm.operation_location}
+                onChange={(e) => setRentalForm({...rentalForm, operation_location: e.target.value})}
+                placeholder="Enter where you'll use this equipment (e.g., Farm Location, Village, District)"
+                required
+              />
+              <Form.Text className="text-muted">
+                Please specify the location where you plan to operate this equipment
+              </Form.Text>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Message (Optional)</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                value={rentalForm.message}
+                onChange={(e) => setRentalForm({...rentalForm, message: e.target.value})}
+                placeholder="Additional details about your rental request..."
+              />
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowRentalModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" type="submit" disabled={loading}>
+              {loading ? 'Sending...' : '📝 Send Request'}
+            </Button>
+          </Modal.Footer>
+        </Form>
       </Modal>
     </Container>
   );

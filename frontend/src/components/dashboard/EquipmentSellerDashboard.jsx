@@ -112,6 +112,22 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
     }
   };
 
+  const handleDeleteRentalRequest = async (requestId, equipmentName) => {
+    if (window.confirm(`Are you sure you want to delete this rental request for "${equipmentName}"?`)) {
+      try {
+        setLoading(true);
+        await equipmentAPI.deleteRentalRequest(requestId);
+        showNotification(`✅ Rental request deleted successfully!`, 'success');
+        if (onRefresh) onRefresh();
+      } catch (error) {
+        console.error('Error deleting rental request:', error);
+        showNotification('❌ Failed to delete rental request', 'danger');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   return (
     <Container className="py-4">
       {/* Welcome Header */}
@@ -223,6 +239,18 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
                     <Card.Body className="py-2">
                       <h6 className="mb-1">{request.equipment__name}</h6>
                       <small className="text-muted">by {request.farmer__username}</small>
+                      {request.operation_location && (
+                        <div className="mt-1">
+                          <small className="text-primary">
+                            <i className="bi bi-geo-alt"></i> {request.operation_location}
+                          </small>
+                        </div>
+                      )}
+                      {request.message && (
+                        <div className="mt-1">
+                          <small className="text-muted">"{request.message}"</small>
+                        </div>
+                      )}
                       <div className="mt-2">
                         {request.status === 'pending' ? (
                           <div className="d-grid gap-2">
@@ -244,11 +272,22 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
                             </Button>
                           </div>
                         ) : (
-                          <Badge bg={
-                            request.status === 'approved' ? 'success' : 'danger'
-                          }>
-                            {request.status === 'approved' ? '✅ Approved' : '❌ Rejected'}
-                          </Badge>
+                          <div className="d-flex justify-content-between align-items-center">
+                            <Badge bg={
+                              request.status === 'approved' ? 'success' : 'danger'
+                            }>
+                              {request.status === 'approved' ? '✅ Approved' : '❌ Rejected'}
+                            </Badge>
+                            <Button 
+                              variant="outline-secondary" 
+                              size="sm"
+                              onClick={() => handleDeleteRentalRequest(request.id, request.equipment__name)}
+                              disabled={loading}
+                              title="Delete this request"
+                            >
+                              🗑️
+                            </Button>
+                          </div>
                         )}
                       </div>
                     </Card.Body>
