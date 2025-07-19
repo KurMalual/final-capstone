@@ -3,23 +3,30 @@ import { Container, Row, Col, Card, Form, Button, Alert, Spinner } from 'react-b
 import { weatherAPI } from '../services/api';
 
 const Weather = () => {
-  const [weatherData, setWeatherData] = useState(null);
+  const [weatherData, setWeatherData] = useState([]);
   const [location, setLocation] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    loadCurrentWeather();
+    loadSouthSudanWeather();
   }, []);
 
-  const loadCurrentWeather = async () => {
+  const loadSouthSudanWeather = async () => {
     try {
       setLoading(true);
-      const response = await weatherAPI.getWeatherData();
-      setWeatherData(response.data);
+      setError('');
+      const response = await weatherAPI.getSouthSudanWeather();
+      setWeatherData(Array.isArray(response.data) ? response.data : [response.data]);
     } catch (err) {
-      setError('Failed to load weather data');
-      console.error('Error loading weather:', err);
+      // Fallback to general weather data if South Sudan specific fails
+      try {
+        const response = await weatherAPI.getWeatherData();
+        setWeatherData(Array.isArray(response.data) ? response.data : [response.data]);
+      } catch (fallbackErr) {
+        setError('Failed to load weather data');
+        console.error('Error loading weather:', fallbackErr);
+      }
     } finally {
       setLoading(false);
     }
@@ -33,12 +40,42 @@ const Weather = () => {
       setLoading(true);
       setError('');
       const response = await weatherAPI.fetchWeather(location);
-      setWeatherData(response.data);
+      // Add the new weather data to the existing list
+      setWeatherData([response.data, ...weatherData]);
+      setLocation(''); // Clear the input
     } catch (err) {
-      setError('Failed to fetch weather for the specified location');
+      setError('Failed to fetch weather for the specified location. Please check the location name and try again.');
       console.error('Error fetching weather:', err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const getWeatherAdvice = (description, temperature) => {
+    const desc = description?.toLowerCase() || '';
+    const temp = parseFloat(temperature) || 0;
+
+    // Priority 1: Check for rain/precipitation first
+    if (desc.includes('rain') || desc.includes('drizzle') || desc.includes('shower')) {
+      return { text: 'Natural irrigation for crops', color: 'info' };
+    }
+    
+    // Priority 2: Check temperature ranges  
+    if (temp > 35) {
+      return { text: 'Too hot - provide shade', color: 'danger' };
+    } else if (temp < 15) {
+      return { text: 'Too cool for most crops', color: 'warning' };
+    }
+    
+    // Priority 3: Check sky conditions for good farming weather (15-35°C)
+    if (desc.includes('clear') || desc.includes('sunny')) {
+      return { text: 'Excellent for farming', color: 'success' };
+    } else if (desc.includes('few clouds') || desc.includes('scattered clouds')) {
+      return { text: 'Good for farming', color: 'success' };
+    } else if (desc.includes('broken clouds') || desc.includes('overcast')) {
+      return { text: 'Fair conditions', color: 'warning' };
+    } else {
+      return { text: 'Moderate conditions', color: 'secondary' };
     }
   };
 
@@ -87,137 +124,73 @@ const Weather = () => {
       )}
 
       {/* Weather Display */}
-      {weatherData && !loading && (
-        <>
-          {weatherData.error ? (
-            <Alert variant="warning" className="mb-3">
-              {weatherData.error}
-            </Alert>
-          ) : (
+      {weatherData && weatherData.length > 0 && !loading && (
+        <Row>
+          <Col>
+            <h3 className="mb-4">South Sudan Weather Information</h3>
             <Row>
-              {/* Current Weather */}
-              <Col lg={8} className="mb-4">
-                <Card className="h-100">
-                  <Card.Body>
-                    <Card.Title>Current Weather</Card.Title>
-                    {weatherData.current ? (
-                      <Row>
-                        <Col md={6}>
-                          <h3>{weatherData.location?.name || 'Unknown Location'}</h3>
-                          <p className="text-muted">
-                            {weatherData.location?.region && `${weatherData.location.region}, `}
-                            {weatherData.location?.country}
-                          </p>
-                          <div className="d-flex align-items-center mb-3">
-                            <h1 className="me-3">{Math.round(weatherData.current.temp_c)}°C</h1>
-                            <div>
-                              <p className="mb-0">{weatherData.current.condition?.text}</p>
-                              <small className="text-muted">
-                                Feels like {Math.round(weatherData.current.feelslike_c)}°C
-                              </small>
-                            </div>
-                          </div>
-                        </Col>
-                        <Col md={6}>
-                          <Row className="g-3">
-                            <Col xs={6}>
-                              <Card className="bg-light border-0">
-                                <Card.Body className="p-3">
-                                  <small className="text-muted">Humidity</small>
-                                  <div className="fw-bold">{weatherData.current.humidity}%</div>
-                                </Card.Body>
-                              </Card>
-                            </Col>
-                            <Col xs={6}>
-                              <Card className="bg-light border-0">
-                                <Card.Body className="p-3">
-                                  <small className="text-muted">Wind Speed</small>
-                                  <div className="fw-bold">{weatherData.current.wind_kph} km/h</div>
-                                </Card.Body>
-                              </Card>
-                            </Col>
-                            <Col xs={6}>
-                              <Card className="bg-light border-0">
-                                <Card.Body className="p-3">
-                                  <small className="text-muted">Pressure</small>
-                                  <div className="fw-bold">{weatherData.current.pressure_mb} mb</div>
-                                </Card.Body>
-                              </Card>
-                            </Col>
-                            <Col xs={6}>
-                              <Card className="bg-light border-0">
-                                <Card.Body className="p-3">
-                                  <small className="text-muted">UV Index</small>
-                                  <div className="fw-bold">{weatherData.current.uv}</div>
-                                </Card.Body>
-                              </Card>
-                            </Col>
-                          </Row>
-                        </Col>
-                      </Row>
-                    ) : (
-                      <p>No current weather data available</p>
-                    )}
-                  </Card.Body>
-                </Card>
-              </Col>
-
-              {/* Weather Summary */}
-              <Col lg={4} className="mb-4">
-                <Card className="h-100">
-                  <Card.Body>
-                    <Card.Title>Weather Summary</Card.Title>
-                    {weatherData.current ? (
-                      <div>
-                        <p><strong>Visibility:</strong> {weatherData.current.vis_km} km</p>
-                        <p><strong>Cloud Cover:</strong> {weatherData.current.cloud}%</p>
-                        <p><strong>Wind Direction:</strong> {weatherData.current.wind_dir}</p>
-                        <p><strong>Precipitation:</strong> {weatherData.current.precip_mm} mm</p>
-                        
-                        <div className="mt-4">
-                          <h6>Farming Conditions</h6>
-                          <div className="mb-2">
-                            {weatherData.current.precip_mm > 5 ? (
-                              <span className="badge bg-warning">Wet conditions - Avoid field work</span>
-                            ) : weatherData.current.precip_mm > 0 ? (
-                              <span className="badge bg-info">Light rain - Be cautious</span>
-                            ) : (
-                              <span className="badge bg-success">Dry conditions - Good for farming</span>
-                            )}
-                          </div>
-                          <div className="mb-2">
-                            {weatherData.current.wind_kph > 25 ? (
-                              <span className="badge bg-danger">High winds - Avoid spraying</span>
-                            ) : weatherData.current.wind_kph > 15 ? (
-                              <span className="badge bg-warning">Moderate winds</span>
-                            ) : (
-                              <span className="badge bg-success">Calm winds</span>
-                            )}
-                          </div>
+              {weatherData.map((weather, index) => {
+                const advice = getWeatherAdvice(weather.description, weather.temperature);
+                return (
+                  <Col md={6} lg={4} className="mb-4" key={weather.id || index}>
+                    <Card className="h-100 shadow-sm">
+                      <Card.Body>
+                        <div className="d-flex justify-content-between align-items-start mb-3">
                           <div>
-                            {weatherData.current.temp_c > 30 ? (
-                              <span className="badge bg-danger">Hot - Ensure adequate irrigation</span>
-                            ) : weatherData.current.temp_c < 5 ? (
-                              <span className="badge bg-primary">Cold - Protect sensitive crops</span>
-                            ) : (
-                              <span className="badge bg-success">Moderate temperature</span>
-                            )}
+                            <Card.Title className="mb-1">{weather.location}</Card.Title>
+                            <small className="text-muted">
+                              {new Date(weather.timestamp).toLocaleDateString()}
+                            </small>
+                          </div>
+                          <span className={`badge bg-${advice.color}`}>
+                            {advice.text}
+                          </span>
+                        </div>
+                        
+                        <div className="text-center mb-3">
+                          <h2 className="display-4 mb-0">{Math.round(weather.temperature)}°C</h2>
+                          <p className="text-capitalize text-muted mb-0">{weather.description}</p>
+                        </div>
+                        
+                        <div className="d-flex justify-content-between">
+                          <div className="text-center">
+                            <div className="fw-bold">{weather.humidity}%</div>
+                            <small className="text-muted">Humidity</small>
+                          </div>
+                          <div className="text-center">
+                            <div className="fw-bold">
+                              {weather.temperature > 30 ? 'Hot' : weather.temperature < 20 ? 'Cool' : 'Warm'}
+                            </div>
+                            <small className="text-muted">Condition</small>
                           </div>
                         </div>
-                      </div>
-                    ) : (
-                      <p>No weather summary available</p>
-                    )}
-                  </Card.Body>
-                </Card>
-              </Col>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                );
+              })}
             </Row>
-          )}
-        </>
+          </Col>
+        </Row>
+      )}
+
+      {/* No weather data message */}
+      {!loading && (!weatherData || weatherData.length === 0) && (
+        <Row>
+          <Col>
+            <Alert variant="info" className="text-center">
+              <h5>No weather data available</h5>
+              <p>Try searching for a specific location or check back later.</p>
+              <Button variant="primary" onClick={loadSouthSudanWeather}>
+                Reload Weather Data
+              </Button>
+            </Alert>
+          </Col>
+        </Row>
       )}
 
       {/* Weather Tips */}
-      <Row>
+      <Row className="mt-4">
         <Col>
           <Card>
             <Card.Body>

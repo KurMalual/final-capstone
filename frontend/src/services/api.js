@@ -104,6 +104,7 @@ export const marketplaceAPI = {
 // Weather API calls
 export const weatherAPI = {
   getWeatherData: () => api.get('/weather/'),
+  getSouthSudanWeather: () => api.get('/weather/south-sudan/'),
   fetchWeather: (location) => api.get(`/weather/fetch/?location=${location}`),
 };
 

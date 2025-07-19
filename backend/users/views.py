@@ -108,10 +108,11 @@ class DashboardSummaryView(views.APIView):
             weather_debug = None
             try:
                 from weather.models import WeatherData
-                latest_weather = WeatherData.objects.order_by('-created_at').values('id', 'location', 'temperature', 'humidity', 'description', 'created_at')[:1]
+                # Use 'timestamp' field instead of 'created_at' and filter for Juba specifically
+                latest_weather = WeatherData.objects.filter(location__iexact='Juba').order_by('-timestamp').values('id', 'location', 'temperature', 'humidity', 'description', 'timestamp')[:1]
                 weather = latest_weather[0] if latest_weather else None
                 if not weather:
-                    weather_debug = 'No local weather data found.'
+                    weather_debug = 'No local weather data found for Juba.'
             except Exception as e:
                 weather_debug = f'Weather model import error: {str(e)}'
             if not weather:

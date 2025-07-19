@@ -25,6 +25,7 @@ from marketplace.views import ProductViewSet, ProductOrderViewSet
 from transport.views import TransportViewSet, TransportRequestViewSet
 from users.views import UserViewSet
 from education.views import EducationalResourceViewSet
+from weather.views import WeatherDataViewSet
 from users.views import DashboardSummaryView
 
 
@@ -37,6 +38,7 @@ router.register(r'product-orders', ProductOrderViewSet)
 router.register(r'transports', TransportViewSet)
 router.register(r'transport-requests', TransportRequestViewSet)
 router.register(r'educational-resources', EducationalResourceViewSet)
+router.register(r'weather', WeatherDataViewSet)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
