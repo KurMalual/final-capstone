@@ -44,7 +44,7 @@ const Header = () => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <Navbar bg="success" variant="dark" expand="lg" className="shadow">
+    <Navbar bg="success" variant="dark" expand="lg" fixed="top" className="shadow">
       <Container>
         <Navbar.Brand as={Link} to="/dashboard" className="fw-bold">
           🌾 Smart Farm APMS
