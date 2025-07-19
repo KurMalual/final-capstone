@@ -1,6 +1,0 @@
-{
-  "version": 2,
-  "env": {
-    "REACT_APP_API_URL": "https://smart-farm-advisory-d46b4015b13a.herokuapp.com"
-  }
-}
