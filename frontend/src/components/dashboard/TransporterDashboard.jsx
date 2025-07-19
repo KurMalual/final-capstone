@@ -229,10 +229,11 @@ const TransporterDashboard = ({ data, onRefresh }) => {
                 requestsData.map((request) => (
                   <Card key={request.id} className="mb-3 border">
                     <Card.Body className="py-2">
-                      <h6 className="mb-1">{request.transport__vehicle_type}</h6>
-                      <small className="text-muted">by {request.requestor__username}</small>
+                      <h6 className="mb-1">{request.transport__vehicle_name}</h6>
+                      <small className="text-muted">by {request.farmer__username}</small>
                       <p className="mb-1 text-sm">From: {request.pickup_location}</p>
                       <p className="mb-1 text-sm">To: {request.delivery_location}</p>
+                      <p className="mb-1 text-sm">Cargo: {request.cargo_details}</p>
                       <div className="mt-2">
                         {request.status === 'pending' ? (
                           <div className="d-grid gap-2">
@@ -240,7 +241,7 @@ const TransporterDashboard = ({ data, onRefresh }) => {
                               variant="success" 
                               size="sm"
                               disabled={loading}
-                              onClick={() => handleAcceptTransport(request.id, request.transport__vehicle_type)}
+                              onClick={() => handleAcceptTransport(request.id, request.transport__vehicle_name)}
                             >
                               ✅ Accept
                             </Button>
@@ -248,7 +249,7 @@ const TransporterDashboard = ({ data, onRefresh }) => {
                               variant="danger" 
                               size="sm"
                               disabled={loading}
-                              onClick={() => handleRejectTransport(request.id, request.transport__vehicle_type)}
+                              onClick={() => handleRejectTransport(request.id, request.transport__vehicle_name)}
                             >
                               ❌ Reject
                             </Button>

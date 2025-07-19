@@ -101,7 +101,7 @@ class DashboardSummaryView(views.APIView):
             available_vehicles = list(Transport.objects.filter(available=True).exclude(owner=user).values('id', 'vehicle_name', 'owner__username', 'available'))
             my_products = list(Product.objects.filter(farmer=user).values('id', 'name', 'available', 'price', 'created_at'))
             my_equipment_rentals = list(EquipmentRentalRequest.objects.filter(farmer=user).order_by('-created_at').values('id', 'equipment__name', 'status', 'created_at'))
-            my_transport_requests = list(TransportRequest.objects.filter(farmer=user).order_by('-created_at').values('id', 'transport__vehicle_name', 'status', 'created_at'))
+            my_transport_requests = list(TransportRequest.objects.filter(farmer=user).order_by('-created_at').values('id', 'transport__vehicle_name', 'pickup_location', 'delivery_location', 'cargo_details', 'status', 'created_at'))
             my_orders = list(ProductOrder.objects.filter(product__farmer=user).order_by('-created_at').values('id', 'product__name', 'buyer__username', 'status', 'created_at'))
             # Weather and education as before
             weather = None
@@ -178,7 +178,7 @@ class DashboardSummaryView(views.APIView):
             # My vehicles
             my_vehicles = list(Transport.objects.filter(owner=user).values('id', 'vehicle_name', 'available'))
             # Transport requests for my vehicles
-            transport_requests = list(TransportRequest.objects.filter(transport__owner=user).order_by('-created_at').values('id', 'transport__vehicle_name', 'farmer__username', 'status', 'created_at'))
+            transport_requests = list(TransportRequest.objects.filter(transport__owner=user).order_by('-created_at').values('id', 'transport__vehicle_name', 'farmer__username', 'pickup_location', 'delivery_location', 'cargo_details', 'status', 'created_at'))
             data = {
                 'my_vehicles': my_vehicles,
                 'transport_requests': transport_requests,

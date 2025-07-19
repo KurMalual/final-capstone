@@ -328,7 +328,7 @@ const Transport = () => {
                   <Card>
                     <Card.Body>
                       <Card.Title>Transport Request</Card.Title>
-                      <p><strong>Vehicle:</strong> {request.transport_type || 'N/A'}</p>
+                      <p><strong>Vehicle:</strong> {request.transport_name || 'N/A'}</p>
                       <p><strong>From:</strong> {request.pickup_location}</p>
                       <p><strong>To:</strong> {request.delivery_location}</p>
                       <p><strong>Cargo:</strong> {request.cargo_details}</p>

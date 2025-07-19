@@ -15,6 +15,9 @@ class Transport(models.Model):
 class TransportRequest(models.Model):
     transport = models.ForeignKey(Transport, on_delete=models.CASCADE, related_name='transport_requests')
     farmer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transport_requests', null=True, blank=True)
+    pickup_location = models.CharField(max_length=200, blank=True)
+    delivery_location = models.CharField(max_length=200, blank=True)
+    cargo_details = models.TextField(blank=True)
     status = models.CharField(max_length=20, choices=[('pending','Pending'),('approved','Approved'),('rejected','Rejected')], default='pending')
     message = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

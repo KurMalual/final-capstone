@@ -492,7 +492,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                   <ListGroup.Item key={`transport-${request.id}`} className="px-0">
                     <div className="d-flex justify-content-between align-items-center">
                       <div>
-                        <small className="text-muted">Transport: {request.transport__vehicle_type}</small>
+                        <small className="text-muted">Transport: {request.transport__vehicle_name}</small>
                       </div>
                       {getStatusBadge(request.status)}
                     </div>

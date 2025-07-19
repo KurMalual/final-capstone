@@ -8,7 +8,10 @@ class TransportSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'owner']
 
 class TransportRequestSerializer(serializers.ModelSerializer):
+    transport_name = serializers.CharField(source='transport.vehicle_name', read_only=True)
+    
     class Meta:
         model = TransportRequest
-        fields = ['id', 'transport', 'farmer', 'status', 'message', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'farmer', 'created_at', 'updated_at']
+        fields = ['id', 'transport', 'transport_name', 'farmer', 'pickup_location', 'delivery_location', 
+                 'cargo_details', 'status', 'message', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'transport_name', 'farmer', 'created_at', 'updated_at']

@@ -8,7 +8,9 @@ class EquipmentSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'owner']
 
 class EquipmentRentalRequestSerializer(serializers.ModelSerializer):
+    equipment_name = serializers.CharField(source='equipment.name', read_only=True)
+    
     class Meta:
         model = EquipmentRentalRequest
-        fields = ['id', 'equipment', 'farmer', 'status', 'message', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'farmer', 'created_at', 'updated_at']
+        fields = ['id', 'equipment', 'equipment_name', 'farmer', 'status', 'message', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'equipment_name', 'farmer', 'created_at', 'updated_at']
