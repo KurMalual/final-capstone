@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Card, Badge, Button, Toast, ToastContainer, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Card, Badge, Button, Toast, ToastContainer, Alert, Modal, Form } from 'react-bootstrap';
 import { transportAPI } from '../../services/api';
 
 const TransporterDashboard = ({ data, onRefresh }) => {
@@ -7,6 +7,16 @@ const TransporterDashboard = ({ data, onRefresh }) => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastVariant, setToastVariant] = useState('success');
+  
+  // Edit Modal State
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingVehicle, setEditingVehicle] = useState(null);
+  const [editForm, setEditForm] = useState({
+    vehicle_type: '',
+    capacity: '',
+    price_per_km: '',
+    available: true
+  });
 
   console.log('TransporterDashboard received data:', data);
 
@@ -64,6 +74,50 @@ const TransporterDashboard = ({ data, onRefresh }) => {
     }
   };
 
+  const handleEditVehicle = (vehicle) => {
+    setEditingVehicle(vehicle);
+    setEditForm({
+      vehicle_type: vehicle.vehicle_type,
+      capacity: vehicle.capacity,
+      price_per_km: vehicle.price_per_km,
+      available: vehicle.available
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateVehicle = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      await transportAPI.update(editingVehicle.id, editForm);
+      showNotification(`✅ Vehicle updated successfully!`, 'success');
+      setShowEditModal(false);
+      setEditingVehicle(null);
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      console.error('Error updating vehicle:', error);
+      showNotification('❌ Failed to update vehicle', 'danger');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteVehicle = async (vehicleId, vehicleName) => {
+    if (window.confirm(`Are you sure you want to delete "${vehicleName}"?`)) {
+      try {
+        setLoading(true);
+        await transportAPI.delete(vehicleId);
+        showNotification(`✅ Vehicle "${vehicleName}" deleted successfully!`, 'success');
+        if (onRefresh) onRefresh();
+      } catch (error) {
+        console.error('Error deleting vehicle:', error);
+        showNotification('❌ Failed to delete vehicle', 'danger');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   return (
     <Container className="py-4">
       {/* Welcome Header */}
@@ -116,6 +170,14 @@ const TransporterDashboard = ({ data, onRefresh }) => {
                   {vehiclesData.map((vehicle) => (
                     <Col md={6} key={vehicle.id} className="mb-3">
                       <Card className="h-100">
+                        {vehicle.image && (
+                          <Card.Img
+                            variant="top"
+                            src={vehicle.image}
+                            alt={vehicle.vehicle_type}
+                            style={{ height: '150px', objectFit: 'cover' }}
+                          />
+                        )}
                         <Card.Body>
                           <h6>{vehicle.vehicle_type}</h6>
                           <small className="text-muted">Capacity: {vehicle.capacity}</small>
@@ -125,9 +187,24 @@ const TransporterDashboard = ({ data, onRefresh }) => {
                             <Badge bg={vehicle.available ? 'success' : 'danger'}>
                               {vehicle.available ? '✅ Available' : '🔴 In Use'}
                             </Badge>
-                            <Button variant="outline-info" size="sm">
-                              Edit
-                            </Button>
+                            <div className="d-flex gap-1">
+                              <Button 
+                                variant="outline-info" 
+                                size="sm"
+                                onClick={() => handleEditVehicle(vehicle)}
+                                disabled={loading}
+                              >
+                                ✏️ Edit
+                              </Button>
+                              <Button 
+                                variant="outline-danger" 
+                                size="sm"
+                                onClick={() => handleDeleteVehicle(vehicle.id, vehicle.vehicle_type)}
+                                disabled={loading}
+                              >
+                                🗑️ Delete
+                              </Button>
+                            </div>
                           </div>
                         </Card.Body>
                       </Card>
@@ -194,6 +271,61 @@ const TransporterDashboard = ({ data, onRefresh }) => {
           </Card>
         </Col>
       </Row>
+      
+      {/* Edit Vehicle Modal */}
+      <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Edit Vehicle</Modal.Title>
+        </Modal.Header>
+        <Form onSubmit={handleUpdateVehicle}>
+          <Modal.Body>
+            <Form.Group className="mb-3">
+              <Form.Label>Vehicle Type</Form.Label>
+              <Form.Control
+                type="text"
+                value={editForm.vehicle_type}
+                onChange={(e) => setEditForm(prev => ({ ...prev, vehicle_type: e.target.value }))}
+                required
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Capacity</Form.Label>
+              <Form.Control
+                type="text"
+                value={editForm.capacity}
+                onChange={(e) => setEditForm(prev => ({ ...prev, capacity: e.target.value }))}
+                required
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Price per KM ($)</Form.Label>
+              <Form.Control
+                type="number"
+                step="0.01"
+                value={editForm.price_per_km}
+                onChange={(e) => setEditForm(prev => ({ ...prev, price_per_km: e.target.value }))}
+                required
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Check
+                type="checkbox"
+                label="Available for transport"
+                checked={editForm.available}
+                onChange={(e) => setEditForm(prev => ({ ...prev, available: e.target.checked }))}
+              />
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" type="submit" disabled={loading}>
+              {loading ? 'Updating...' : 'Update Vehicle'}
+            </Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
       
       {/* Toast Notifications */}
       <ToastContainer position="top-end" className="p-3">

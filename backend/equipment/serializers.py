@@ -4,7 +4,7 @@ from .models import Equipment, EquipmentRentalRequest
 class EquipmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Equipment
-        fields = ['id', 'name', 'description', 'available', 'price_per_day', 'created_at', 'owner']
+        fields = ['id', 'name', 'description', 'image', 'available', 'price_per_day', 'created_at', 'owner']
         read_only_fields = ['id', 'created_at', 'owner']
 
 class EquipmentRentalRequestSerializer(serializers.ModelSerializer):

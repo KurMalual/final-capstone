@@ -6,6 +6,7 @@ User = get_user_model()
 class Product(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
+    image = models.ImageField(upload_to='products/', blank=True, null=True)
     farmer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='products')
     price = models.DecimalField(max_digits=10, decimal_places=2)
     quantity = models.CharField(max_length=50, blank=True)  # e.g., "100 kg", "50 pieces"

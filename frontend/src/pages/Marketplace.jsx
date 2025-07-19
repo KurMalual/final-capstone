@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Modal, Form, Alert, Badge, Spinner } from 'react-bootstrap';
 import { marketplaceAPI } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
+import ImageUpload from '../components/ImageUpload';
 
 const Marketplace = () => {
   const { user } = useAuth();
@@ -13,8 +14,10 @@ const Marketplace = () => {
   
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [editingProduct, setEditingProduct] = useState(null);
   
   // Form states
   const [productForm, setProductForm] = useState({
@@ -23,7 +26,18 @@ const Marketplace = () => {
     price: '',
     quantity: '',
     category: '',
-    available: true
+    available: true,
+    image: null
+  });
+  
+  const [editForm, setEditForm] = useState({
+    name: '',
+    description: '',
+    price: '',
+    quantity: '',
+    category: '',
+    available: true,
+    image: null
   });
   
   const [orderForm, setOrderForm] = useState({
@@ -33,7 +47,7 @@ const Marketplace = () => {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadData = async () => {
     try {
@@ -69,14 +83,41 @@ const Marketplace = () => {
   const handleAddProduct = async (e) => {
     e.preventDefault();
     try {
-      await marketplaceAPI.createProduct(productForm);
+      const formData = new FormData();
+      formData.append('name', productForm.name);
+      formData.append('description', productForm.description);
+      formData.append('price', productForm.price);
+      formData.append('quantity', productForm.quantity);
+      formData.append('category', productForm.category);
+      formData.append('available', productForm.available);
+      
+      if (productForm.image) {
+        formData.append('image', productForm.image);
+      }
+      
+      // Debug: Log FormData contents
+      console.log('Sending Product FormData with:');
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+      }
+      
+      await marketplaceAPI.createProduct(formData);
       setSuccess('Product added successfully!');
       setShowAddModal(false);
-      setProductForm({ name: '', description: '', price: '', quantity: '', category: '', available: true });
+      setProductForm({ 
+        name: '', 
+        description: '', 
+        price: '', 
+        quantity: '', 
+        category: '', 
+        available: true,
+        image: null
+      });
       loadData();
     } catch (error) {
+      console.error('Failed to add product - Full error:', error);
+      console.error('Error response:', error.response?.data);
       setError('Failed to add product');
-      console.error('Failed to add product:', error);
     }
   };
 
@@ -117,6 +158,59 @@ const Marketplace = () => {
     } catch (error) {
       setError('Failed to reject order');
       console.error('Failed to reject order:', error);
+    }
+  };
+
+  const handleEditProduct = (product) => {
+    setEditingProduct(product);
+    setEditForm({
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      quantity: product.quantity,
+      category: product.category,
+      available: product.available,
+      image: null
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateProduct = async (e) => {
+    e.preventDefault();
+    try {
+      const formData = new FormData();
+      formData.append('name', editForm.name);
+      formData.append('description', editForm.description);
+      formData.append('price', editForm.price);
+      formData.append('quantity', editForm.quantity);
+      formData.append('category', editForm.category);
+      formData.append('available', editForm.available);
+      
+      if (editForm.image) {
+        formData.append('image', editForm.image);
+      }
+      
+      await marketplaceAPI.updateProduct(editingProduct.id, formData);
+      setSuccess('Product updated successfully!');
+      setShowEditModal(false);
+      setEditingProduct(null);
+      loadData();
+    } catch (error) {
+      console.error('Failed to update product:', error);
+      setError('Failed to update product');
+    }
+  };
+
+  const handleDeleteProduct = async (productId, productName) => {
+    if (window.confirm(`Are you sure you want to delete "${productName}"?`)) {
+      try {
+        await marketplaceAPI.deleteProduct(productId);
+        setSuccess(`Product "${productName}" deleted successfully!`);
+        loadData();
+      } catch (error) {
+        console.error('Failed to delete product:', error);
+        setError('Failed to delete product');
+      }
     }
   };
 
@@ -171,6 +265,14 @@ const Marketplace = () => {
               products.map((product) => (
                 <Col md={6} lg={4} key={product.id} className="mb-3">
                   <Card className="h-100">
+                    {product.image && (
+                      <Card.Img
+                        variant="top"
+                        src={product.image}
+                        alt={product.name}
+                        style={{ height: '200px', objectFit: 'cover' }}
+                      />
+                    )}
                     <Card.Body>
                       <Card.Title>{product.name}</Card.Title>
                       <Card.Text>{product.description}</Card.Text>
@@ -188,15 +290,37 @@ const Marketplace = () => {
                       <div className="mb-3">
                         <strong>Quantity:</strong> {product.quantity || 'N/A'}
                       </div>
-                      {isBuyer && product.available && (
-                        <Button 
-                          variant="primary" 
-                          onClick={() => openOrderModal(product)}
-                          className="w-100"
-                        >
-                          Place Order
-                        </Button>
-                      )}
+                      <div className="d-flex flex-column gap-2">
+                        {isBuyer && product.available && (
+                          <Button 
+                            variant="primary" 
+                            onClick={() => openOrderModal(product)}
+                            className="w-100"
+                          >
+                            Place Order
+                          </Button>
+                        )}
+                        {user?.id === product.farmer && (
+                          <div className="d-flex gap-2">
+                            <Button 
+                              variant="outline-warning" 
+                              size="sm"
+                              onClick={() => handleEditProduct(product)}
+                              className="flex-fill"
+                            >
+                              ✏️ Edit
+                            </Button>
+                            <Button 
+                              variant="outline-danger" 
+                              size="sm"
+                              onClick={() => handleDeleteProduct(product.id, product.name)}
+                              className="flex-fill"
+                            >
+                              🗑️ Delete
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </Card.Body>
                   </Card>
                 </Col>
@@ -323,6 +447,11 @@ const Marketplace = () => {
               />
             </Form.Group>
             
+            <ImageUpload
+              onImageSelect={(file) => setProductForm({...productForm, image: file})}
+              placeholder="Upload Product Image"
+            />
+            
             <Form.Check
               type="checkbox"
               label="Available for sale"
@@ -392,6 +521,108 @@ const Marketplace = () => {
               </Form>
             </>
           )}
+        </Modal.Body>
+      </Modal>
+
+      {/* Edit Product Modal */}
+      <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Edit Product</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleUpdateProduct}>
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Product Name</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={editForm.name}
+                    onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Category</Form.Label>
+                  <Form.Select
+                    value={editForm.category}
+                    onChange={(e) => setEditForm({...editForm, category: e.target.value})}
+                    required
+                  >
+                    <option value="">Select category</option>
+                    <option value="grains">Grains</option>
+                    <option value="vegetables">Vegetables</option>
+                    <option value="fruits">Fruits</option>
+                    <option value="dairy">Dairy</option>
+                    <option value="meat">Meat</option>
+                    <option value="other">Other</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+            </Row>
+            
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Price ($)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="0.01"
+                    value={editForm.price}
+                    onChange={(e) => setEditForm({...editForm, price: e.target.value})}
+                    required
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Quantity</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={editForm.quantity}
+                    onChange={(e) => setEditForm({...editForm, quantity: e.target.value})}
+                    placeholder="e.g., 100 kg, 50 pieces"
+                    required
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+            
+            <Form.Group className="mb-3">
+              <Form.Label>Description</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                value={editForm.description}
+                onChange={(e) => setEditForm({...editForm, description: e.target.value})}
+                placeholder="Describe your product..."
+              />
+            </Form.Group>
+            
+            <ImageUpload
+              onImageSelect={(file) => setEditForm({...editForm, image: file})}
+              placeholder="Update Product Image (Optional)"
+            />
+            
+            <Form.Check
+              type="checkbox"
+              label="Available for sale"
+              checked={editForm.available}
+              onChange={(e) => setEditForm({...editForm, available: e.target.checked})}
+              className="mb-3"
+            />
+            
+            <div className="d-flex gap-2">
+              <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+                Cancel
+              </Button>
+              <Button variant="primary" type="submit">
+                Update Product
+              </Button>
+            </div>
+          </Form>
         </Modal.Body>
       </Modal>
     </Container>

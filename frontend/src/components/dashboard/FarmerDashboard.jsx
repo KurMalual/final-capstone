@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Container, Row, Col, Card, Badge, Button, ListGroup, Alert, Toast, ToastContainer, Modal, Form } from 'react-bootstrap';
 import { equipmentAPI, transportAPI, marketplaceAPI } from '../../services/api';
+import ImageUpload from '../ImageUpload';
 
 const FarmerDashboard = ({ data, onRefresh }) => {
   const [loading, setLoading] = useState(false);
@@ -16,7 +17,21 @@ const FarmerDashboard = ({ data, onRefresh }) => {
     price: '',
     quantity: '',
     category: '',
-    available: true
+    available: true,
+    image: null
+  });
+  
+  // Edit Product Modal
+  const [showEditProductModal, setShowEditProductModal] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+  const [editProductForm, setEditProductForm] = useState({
+    name: '',
+    description: '',
+    price: '',
+    quantity: '',
+    category: '',
+    available: true,
+    image: null
   });
 
   if (!data) return null;
@@ -104,7 +119,20 @@ const FarmerDashboard = ({ data, onRefresh }) => {
     e.preventDefault();
     try {
       setLoading(true);
-      await marketplaceAPI.createProduct(productForm);
+      
+      const formData = new FormData();
+      formData.append('name', productForm.name);
+      formData.append('description', productForm.description);
+      formData.append('price', productForm.price);
+      formData.append('quantity', productForm.quantity);
+      formData.append('category', productForm.category);
+      formData.append('available', productForm.available);
+      
+      if (productForm.image) {
+        formData.append('image', productForm.image);
+      }
+      
+      await marketplaceAPI.createProduct(formData);
       showNotification('✅ Product added successfully!', 'success');
       setShowAddProductModal(false);
       setProductForm({
@@ -113,7 +141,8 @@ const FarmerDashboard = ({ data, onRefresh }) => {
         price: '',
         quantity: '',
         category: '',
-        available: true
+        available: true,
+        image: null
       });
       if (onRefresh) onRefresh();
     } catch (error) {
@@ -121,6 +150,66 @@ const FarmerDashboard = ({ data, onRefresh }) => {
       showNotification('❌ Failed to add product', 'danger');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEditProduct = (product) => {
+    setEditingProduct(product);
+    setEditProductForm({
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      quantity: product.quantity,
+      category: product.category,
+      available: product.available,
+      image: null // Don't pre-populate image
+    });
+    setShowEditProductModal(true);
+  };
+
+  const handleUpdateProduct = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      
+      const formData = new FormData();
+      formData.append('name', editProductForm.name);
+      formData.append('description', editProductForm.description);
+      formData.append('price', editProductForm.price);
+      formData.append('quantity', editProductForm.quantity);
+      formData.append('category', editProductForm.category);
+      formData.append('available', editProductForm.available);
+      
+      if (editProductForm.image) {
+        formData.append('image', editProductForm.image);
+      }
+      
+      await marketplaceAPI.updateProduct(editingProduct.id, formData);
+      showNotification('✅ Product updated successfully!', 'success');
+      setShowEditProductModal(false);
+      setEditingProduct(null);
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      console.error('Error updating product:', error);
+      showNotification('❌ Failed to update product', 'danger');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteProduct = async (productId, productName) => {
+    if (window.confirm(`Are you sure you want to delete "${productName}"?`)) {
+      try {
+        setLoading(true);
+        await marketplaceAPI.deleteProduct(productId);
+        showNotification(`✅ Product "${productName}" deleted successfully!`, 'success');
+        if (onRefresh) onRefresh();
+      } catch (error) {
+        console.error('Error deleting product:', error);
+        showNotification('❌ Failed to delete product', 'danger');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -285,17 +374,53 @@ const FarmerDashboard = ({ data, onRefresh }) => {
               {data.my_products?.length > 0 ? (
                 data.my_products.map((product) => (
                   <Card key={product.id} className="mb-2 border-0 bg-light">
-                    <Card.Body className="py-2">
-                      <div className="d-flex justify-content-between align-items-center">
-                        <div>
-                          <h6 className="mb-1">{product.name}</h6>
-                          <small className="text-muted">${product.price}</small>
+                    <div className="d-flex">
+                      {product.image && (
+                        <div style={{ width: '60px', height: '60px', flexShrink: 0 }}>
+                          <img
+                            src={product.image}
+                            alt={product.name}
+                            style={{ 
+                              width: '100%', 
+                              height: '100%', 
+                              objectFit: 'cover',
+                              borderRadius: '4px'
+                            }}
+                          />
                         </div>
-                        <Badge bg={product.available ? 'success' : 'secondary'}>
-                          {product.available ? 'Available' : 'Unavailable'}
-                        </Badge>
-                      </div>
-                    </Card.Body>
+                      )}
+                      <Card.Body className="py-2">
+                        <div className="d-flex justify-content-between align-items-center">
+                          <div>
+                            <h6 className="mb-1">{product.name}</h6>
+                            <small className="text-muted">${product.price}</small>
+                          </div>
+                          <div className="d-flex align-items-center gap-2">
+                            <Badge bg={product.available ? 'success' : 'secondary'}>
+                              {product.available ? 'Available' : 'Unavailable'}
+                            </Badge>
+                            <div className="d-flex gap-1">
+                              <Button 
+                                variant="outline-warning" 
+                                size="sm"
+                                onClick={() => handleEditProduct(product)}
+                                disabled={loading}
+                              >
+                                ✏️
+                              </Button>
+                              <Button 
+                                variant="outline-danger" 
+                                size="sm"
+                                onClick={() => handleDeleteProduct(product.id, product.name)}
+                                disabled={loading}
+                              >
+                                🗑️
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </Card.Body>
+                    </div>
                   </Card>
                 ))
               ) : (
@@ -507,6 +632,12 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                 placeholder="Describe your product..."
               />
             </Form.Group>
+            
+            <ImageUpload
+              onImageSelect={(file) => setProductForm({...productForm, image: file})}
+              placeholder="Upload Product Image"
+            />
+            
             <Form.Group className="mb-3">
               <Form.Check
                 type="checkbox"
@@ -520,6 +651,108 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                 {loading ? 'Adding...' : '✅ Add Product'}
               </Button>
               <Button variant="secondary" onClick={() => setShowAddProductModal(false)}>
+                Cancel
+              </Button>
+            </div>
+          </Form>
+        </Modal.Body>
+      </Modal>
+
+      {/* Edit Product Modal */}
+      <Modal show={showEditProductModal} onHide={() => setShowEditProductModal(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>✏️ Edit Product</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleUpdateProduct}>
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Product Name *</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={editProductForm.name}
+                    onChange={(e) => setEditProductForm({...editProductForm, name: e.target.value})}
+                    required
+                    placeholder="Enter product name"
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Category *</Form.Label>
+                  <Form.Select
+                    value={editProductForm.category}
+                    onChange={(e) => setEditProductForm({...editProductForm, category: e.target.value})}
+                    required
+                  >
+                    <option value="">Select category</option>
+                    <option value="grains">Grains</option>
+                    <option value="vegetables">Vegetables</option>
+                    <option value="fruits">Fruits</option>
+                    <option value="dairy">Dairy</option>
+                    <option value="meat">Meat</option>
+                    <option value="other">Other</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+            </Row>
+            <Row>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Price (USD) *</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="0.01"
+                    value={editProductForm.price}
+                    onChange={(e) => setEditProductForm({...editProductForm, price: e.target.value})}
+                    required
+                    placeholder="0.00"
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={6}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Quantity *</Form.Label>
+                  <Form.Control
+                    type="number"
+                    value={editProductForm.quantity}
+                    onChange={(e) => setEditProductForm({...editProductForm, quantity: e.target.value})}
+                    required
+                    placeholder="Enter quantity"
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
+            <Form.Group className="mb-3">
+              <Form.Label>Description</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                value={editProductForm.description}
+                onChange={(e) => setEditProductForm({...editProductForm, description: e.target.value})}
+                placeholder="Describe your product..."
+              />
+            </Form.Group>
+            
+            <ImageUpload
+              onImageSelect={(file) => setEditProductForm({...editProductForm, image: file})}
+              placeholder="Update Product Image (Optional)"
+            />
+            
+            <Form.Group className="mb-3">
+              <Form.Check
+                type="checkbox"
+                label="Available for sale"
+                checked={editProductForm.available}
+                onChange={(e) => setEditProductForm({...editProductForm, available: e.target.checked})}
+              />
+            </Form.Group>
+            <div className="d-flex gap-2">
+              <Button variant="primary" type="submit" disabled={loading}>
+                {loading ? 'Updating...' : '✅ Update Product'}
+              </Button>
+              <Button variant="secondary" onClick={() => setShowEditProductModal(false)}>
                 Cancel
               </Button>
             </div>

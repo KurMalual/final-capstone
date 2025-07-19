@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Modal, Form, Alert, Badge, Spinner } from 'react-bootstrap';
 import { transportAPI } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
+import ImageUpload from '../components/ImageUpload';
 
 const Transport = () => {
   const { user } = useAuth();
@@ -13,15 +14,26 @@ const Transport = () => {
   
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
+  const [editingVehicle, setEditingVehicle] = useState(null);
   
   // Form states
   const [vehicleForm, setVehicleForm] = useState({
     vehicle_name: '',
     description: '',
     price_per_trip: '',
-    available: true
+    available: true,
+    image: null
+  });
+  
+  const [editForm, setEditForm] = useState({
+    vehicle_name: '',
+    description: '',
+    price_per_trip: '',
+    available: true,
+    image: null
   });
   
   const [requestForm, setRequestForm] = useState({
@@ -69,14 +81,37 @@ const Transport = () => {
   const handleAddVehicle = async (e) => {
     e.preventDefault();
     try {
-      await transportAPI.create(vehicleForm);
+      const formData = new FormData();
+      formData.append('vehicle_name', vehicleForm.vehicle_name);
+      formData.append('description', vehicleForm.description);
+      formData.append('price_per_trip', vehicleForm.price_per_trip);
+      formData.append('available', vehicleForm.available);
+      
+      if (vehicleForm.image) {
+        formData.append('image', vehicleForm.image);
+      }
+      
+      // Debug: Log FormData contents
+      console.log('Sending FormData with:');
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+      }
+      
+      await transportAPI.create(formData);
       setSuccess('Vehicle added successfully!');
       setShowAddModal(false);
-      setVehicleForm({ vehicle_name: '', description: '', price_per_trip: '', available: true });
+      setVehicleForm({ 
+        vehicle_name: '', 
+        description: '', 
+        price_per_trip: '', 
+        available: true,
+        image: null
+      });
       loadData();
     } catch (error) {
+      console.error('Failed to add vehicle - Full error:', error);
+      console.error('Error response:', error.response?.data);
       setError('Failed to add vehicle');
-      console.error('Failed to add vehicle:', error);
     }
   };
 
@@ -119,6 +154,55 @@ const Transport = () => {
     } catch (error) {
       setError('Failed to reject request');
       console.error('Failed to reject request:', error);
+    }
+  };
+
+  const handleEditVehicle = (vehicle) => {
+    setEditingVehicle(vehicle);
+    setEditForm({
+      vehicle_name: vehicle.vehicle_name,
+      description: vehicle.description,
+      price_per_trip: vehicle.price_per_trip,
+      available: vehicle.available,
+      image: null
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateVehicle = async (e) => {
+    e.preventDefault();
+    try {
+      const formData = new FormData();
+      formData.append('vehicle_name', editForm.vehicle_name);
+      formData.append('description', editForm.description);
+      formData.append('price_per_trip', editForm.price_per_trip);
+      formData.append('available', editForm.available);
+      
+      if (editForm.image) {
+        formData.append('image', editForm.image);
+      }
+      
+      await transportAPI.update(editingVehicle.id, formData);
+      setSuccess('Vehicle updated successfully!');
+      setShowEditModal(false);
+      setEditingVehicle(null);
+      loadData();
+    } catch (error) {
+      console.error('Failed to update vehicle:', error);
+      setError('Failed to update vehicle');
+    }
+  };
+
+  const handleDeleteVehicle = async (vehicleId, vehicleName) => {
+    if (window.confirm(`Are you sure you want to delete "${vehicleName}"?`)) {
+      try {
+        await transportAPI.delete(vehicleId);
+        setSuccess(`Vehicle "${vehicleName}" deleted successfully!`);
+        loadData();
+      } catch (error) {
+        console.error('Failed to delete vehicle:', error);
+        setError('Failed to delete vehicle');
+      }
     }
   };
 
@@ -174,6 +258,14 @@ const Transport = () => {
               vehicles.map((vehicle) => (
                 <Col md={6} lg={4} key={vehicle.id} className="mb-3">
                   <Card className="h-100">
+                    {vehicle.image && (
+                      <Card.Img
+                        variant="top"
+                        src={vehicle.image}
+                        alt={vehicle.vehicle_name}
+                        style={{ height: '200px', objectFit: 'cover' }}
+                      />
+                    )}
                     <Card.Body>
                       <Card.Title>{vehicle.vehicle_name}</Card.Title>
                       <Card.Text>{vehicle.description}</Card.Text>
@@ -185,15 +277,37 @@ const Transport = () => {
                       <div className="mb-3">
                         <strong>${vehicle.price_per_trip}/trip</strong>
                       </div>
-                      {isFarmer && vehicle.available && (
-                        <Button 
-                          variant="primary" 
-                          onClick={() => openRequestModal(vehicle)}
-                          className="w-100"
-                        >
-                          Request Transport
-                        </Button>
-                      )}
+                      <div className="d-flex flex-column gap-2">
+                        {isFarmer && vehicle.available && (
+                          <Button 
+                            variant="primary" 
+                            onClick={() => openRequestModal(vehicle)}
+                            className="w-100"
+                          >
+                            Request Transport
+                          </Button>
+                        )}
+                        {user?.id === vehicle.owner && (
+                          <div className="d-flex gap-2">
+                            <Button 
+                              variant="outline-warning" 
+                              size="sm"
+                              onClick={() => handleEditVehicle(vehicle)}
+                              className="flex-fill"
+                            >
+                              ✏️ Edit
+                            </Button>
+                            <Button 
+                              variant="outline-danger" 
+                              size="sm"
+                              onClick={() => handleDeleteVehicle(vehicle.id, vehicle.vehicle_name)}
+                              className="flex-fill"
+                            >
+                              🗑️ Delete
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </Card.Body>
                   </Card>
                 </Col>
@@ -295,6 +409,11 @@ const Transport = () => {
               />
             </Form.Group>
             
+            <ImageUpload
+              onImageSelect={(file) => setVehicleForm({...vehicleForm, image: file})}
+              placeholder="Upload Vehicle Image"
+            />
+            
             <Form.Check
               type="checkbox"
               label="Available for hire"
@@ -383,6 +502,70 @@ const Transport = () => {
               </Form>
             </>
           )}
+        </Modal.Body>
+      </Modal>
+
+      {/* Edit Vehicle Modal */}
+      <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Edit Vehicle</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleUpdateVehicle}>
+            <Form.Group className="mb-3">
+              <Form.Label>Vehicle Name</Form.Label>
+              <Form.Control
+                type="text"
+                value={editForm.vehicle_name}
+                onChange={(e) => setEditForm({...editForm, vehicle_name: e.target.value})}
+                required
+              />
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <Form.Label>Description</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                value={editForm.description}
+                onChange={(e) => setEditForm({...editForm, description: e.target.value})}
+                required
+              />
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <Form.Label>Price per Trip ($)</Form.Label>
+              <Form.Control
+                type="number"
+                step="0.01"
+                value={editForm.price_per_trip}
+                onChange={(e) => setEditForm({...editForm, price_per_trip: e.target.value})}
+                required
+              />
+            </Form.Group>
+            
+            <ImageUpload
+              onImageSelect={(file) => setEditForm({...editForm, image: file})}
+              placeholder="Update Vehicle Image (Optional)"
+            />
+            
+            <Form.Check
+              type="checkbox"
+              label="Available for transport"
+              checked={editForm.available}
+              onChange={(e) => setEditForm({...editForm, available: e.target.checked})}
+              className="mb-3"
+            />
+            
+            <div className="d-flex gap-2">
+              <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+                Cancel
+              </Button>
+              <Button variant="primary" type="submit">
+                Update Vehicle
+              </Button>
+            </div>
+          </Form>
         </Modal.Body>
       </Modal>
     </Container>

@@ -4,7 +4,7 @@ from .models import Transport, TransportRequest
 class TransportSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transport
-        fields = ['id', 'vehicle_name', 'description', 'available', 'price_per_trip', 'created_at', 'owner']
+        fields = ['id', 'vehicle_name', 'description', 'image', 'available', 'price_per_trip', 'created_at', 'owner']
         read_only_fields = ['id', 'created_at', 'owner']
 
 class TransportRequestSerializer(serializers.ModelSerializer):

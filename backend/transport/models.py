@@ -6,6 +6,7 @@ User = get_user_model()
 class Transport(models.Model):
     vehicle_name = models.CharField(max_length=100)
     description = models.TextField()
+    image = models.ImageField(upload_to='vehicles/', blank=True, null=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owned_transports')  # unique related_name
     available = models.BooleanField(default=True)
     price_per_trip = models.DecimalField(max_digits=10, decimal_places=2)

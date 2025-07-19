@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Modal, Form, Alert, Badge, Spinner } from 'react-bootstrap';
 import { equipmentAPI } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
+import ImageUpload from '../components/ImageUpload';
 
 const Equipment = () => {
   const { user } = useAuth();
@@ -13,15 +14,26 @@ const Equipment = () => {
   
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [showRentalModal, setShowRentalModal] = useState(false);
   const [selectedEquipment, setSelectedEquipment] = useState(null);
+  const [editingEquipment, setEditingEquipment] = useState(null);
   
   // Form states
   const [equipmentForm, setEquipmentForm] = useState({
     name: '',
     description: '',
     price_per_day: '',
-    available: true
+    available: true,
+    image: null
+  });
+  
+  const [editForm, setEditForm] = useState({
+    name: '',
+    description: '',
+    price_per_day: '',
+    available: true,
+    image: null
   });
   
   const [rentalForm, setRentalForm] = useState({
@@ -66,14 +78,37 @@ const Equipment = () => {
   const handleAddEquipment = async (e) => {
     e.preventDefault();
     try {
-      await equipmentAPI.create(equipmentForm);
+      const formData = new FormData();
+      formData.append('name', equipmentForm.name);
+      formData.append('description', equipmentForm.description);
+      formData.append('price_per_day', equipmentForm.price_per_day);
+      formData.append('available', equipmentForm.available);
+      
+      if (equipmentForm.image) {
+        formData.append('image', equipmentForm.image);
+      }
+      
+      // Debug: Log FormData contents
+      console.log('Sending Equipment FormData with:');
+      for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+      }
+      
+      await equipmentAPI.create(formData);
       setSuccess('Equipment added successfully!');
       setShowAddModal(false);
-      setEquipmentForm({ name: '', description: '', price_per_day: '', available: true });
+      setEquipmentForm({ 
+        name: '', 
+        description: '', 
+        price_per_day: '', 
+        available: true,
+        image: null
+      });
       loadData();
     } catch (error) {
+      console.error('Failed to add equipment - Full error:', error);
+      console.error('Error response:', error.response?.data);
       setError('Failed to add equipment');
-      console.error('Failed to add equipment:', error);
     }
   };
 
@@ -113,6 +148,55 @@ const Equipment = () => {
     } catch (error) {
       setError('Failed to reject rental request');
       console.error('Failed to reject rental request:', error);
+    }
+  };
+
+  const handleEditEquipment = (equipment) => {
+    setEditingEquipment(equipment);
+    setEditForm({
+      name: equipment.name,
+      description: equipment.description,
+      price_per_day: equipment.price_per_day,
+      available: equipment.available,
+      image: null
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateEquipment = async (e) => {
+    e.preventDefault();
+    try {
+      const formData = new FormData();
+      formData.append('name', editForm.name);
+      formData.append('description', editForm.description);
+      formData.append('price_per_day', editForm.price_per_day);
+      formData.append('available', editForm.available);
+      
+      if (editForm.image) {
+        formData.append('image', editForm.image);
+      }
+      
+      await equipmentAPI.update(editingEquipment.id, formData);
+      setSuccess('Equipment updated successfully!');
+      setShowEditModal(false);
+      setEditingEquipment(null);
+      loadData();
+    } catch (error) {
+      console.error('Failed to update equipment:', error);
+      setError('Failed to update equipment');
+    }
+  };
+
+  const handleDeleteEquipment = async (equipmentId, equipmentName) => {
+    if (window.confirm(`Are you sure you want to delete "${equipmentName}"?`)) {
+      try {
+        await equipmentAPI.delete(equipmentId);
+        setSuccess(`Equipment "${equipmentName}" deleted successfully!`);
+        loadData();
+      } catch (error) {
+        console.error('Failed to delete equipment:', error);
+        setError('Failed to delete equipment');
+      }
     }
   };
 
@@ -179,6 +263,14 @@ const Equipment = () => {
               equipment.map((item) => (
                 <Col md={6} lg={4} key={item.id} className="mb-3">
                   <Card className="h-100">
+                    {item.image && (
+                      <Card.Img
+                        variant="top"
+                        src={item.image}
+                        alt={item.name}
+                        style={{ height: '200px', objectFit: 'cover' }}
+                      />
+                    )}
                     <Card.Body>
                       <Card.Title>{item.name}</Card.Title>
                       <Card.Text>{item.description}</Card.Text>
@@ -190,15 +282,37 @@ const Equipment = () => {
                       <div className="mb-3">
                         <strong>${item.price_per_day}/day</strong>
                       </div>
-                      {isFarmer && item.available && (
-                        <Button 
-                          variant="primary" 
-                          onClick={() => openRentalModal(item)}
-                          className="w-100"
-                        >
-                          Rent Equipment
-                        </Button>
-                      )}
+                      <div className="d-flex flex-column gap-2">
+                        {isFarmer && item.available && (
+                          <Button 
+                            variant="primary" 
+                            onClick={() => openRentalModal(item)}
+                            className="w-100"
+                          >
+                            Rent Equipment
+                          </Button>
+                        )}
+                        {user?.id === item.owner && (
+                          <div className="d-flex gap-2">
+                            <Button 
+                              variant="outline-warning" 
+                              size="sm"
+                              onClick={() => handleEditEquipment(item)}
+                              className="flex-fill"
+                            >
+                              ✏️ Edit
+                            </Button>
+                            <Button 
+                              variant="outline-danger" 
+                              size="sm"
+                              onClick={() => handleDeleteEquipment(item.id, item.name)}
+                              className="flex-fill"
+                            >
+                              🗑️ Delete
+                            </Button>
+                          </div>
+                        )}
+                      </div>
                     </Card.Body>
                   </Card>
                 </Col>
@@ -296,6 +410,11 @@ const Equipment = () => {
               />
             </Form.Group>
             
+            <ImageUpload
+              onImageSelect={(file) => setEquipmentForm({...equipmentForm, image: file})}
+              placeholder="Upload Equipment Image"
+            />
+            
             <Form.Check
               type="checkbox"
               label="Available for rent"
@@ -354,6 +473,70 @@ const Equipment = () => {
               </Form>
             </>
           )}
+        </Modal.Body>
+      </Modal>
+
+      {/* Edit Equipment Modal */}
+      <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Edit Equipment</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form onSubmit={handleUpdateEquipment}>
+            <Form.Group className="mb-3">
+              <Form.Label>Equipment Name</Form.Label>
+              <Form.Control
+                type="text"
+                value={editForm.name}
+                onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                required
+              />
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <Form.Label>Description</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                value={editForm.description}
+                onChange={(e) => setEditForm({...editForm, description: e.target.value})}
+                required
+              />
+            </Form.Group>
+            
+            <Form.Group className="mb-3">
+              <Form.Label>Price per Day ($)</Form.Label>
+              <Form.Control
+                type="number"
+                step="0.01"
+                value={editForm.price_per_day}
+                onChange={(e) => setEditForm({...editForm, price_per_day: e.target.value})}
+                required
+              />
+            </Form.Group>
+            
+            <ImageUpload
+              onImageSelect={(file) => setEditForm({...editForm, image: file})}
+              placeholder="Update Equipment Image (Optional)"
+            />
+            
+            <Form.Check
+              type="checkbox"
+              label="Available for rent"
+              checked={editForm.available}
+              onChange={(e) => setEditForm({...editForm, available: e.target.checked})}
+              className="mb-3"
+            />
+            
+            <div className="d-flex gap-2">
+              <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+                Cancel
+              </Button>
+              <Button variant="primary" type="submit">
+                Update Equipment
+              </Button>
+            </div>
+          </Form>
         </Modal.Body>
       </Modal>
     </Container>

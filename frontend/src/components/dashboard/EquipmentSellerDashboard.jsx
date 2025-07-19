@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Card, Badge, Button, Alert, Toast, ToastContainer } from 'react-bootstrap';
+import { Container, Row, Col, Card, Badge, Button, Alert, Toast, ToastContainer, Modal, Form } from 'react-bootstrap';
 import { equipmentAPI } from '../../services/api';
 
 const EquipmentSellerDashboard = ({ data, onRefresh }) => {
@@ -7,6 +7,16 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastVariant, setToastVariant] = useState('success');
+  
+  // Edit Modal State
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingEquipment, setEditingEquipment] = useState(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    description: '',
+    hourly_rate: '',
+    available: true
+  });
 
   console.log('EquipmentSellerDashboard received data:', data);
 
@@ -55,6 +65,50 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
       showNotification('❌ Failed to reject rental request', 'danger');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEditEquipment = (equipment) => {
+    setEditingEquipment(equipment);
+    setEditForm({
+      name: equipment.name,
+      description: equipment.description,
+      hourly_rate: equipment.hourly_rate,
+      available: equipment.available
+    });
+    setShowEditModal(true);
+  };
+
+  const handleUpdateEquipment = async (e) => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      await equipmentAPI.update(editingEquipment.id, editForm);
+      showNotification(`✅ Equipment updated successfully!`, 'success');
+      setShowEditModal(false);
+      setEditingEquipment(null);
+      if (onRefresh) onRefresh();
+    } catch (error) {
+      console.error('Error updating equipment:', error);
+      showNotification('❌ Failed to update equipment', 'danger');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteEquipment = async (equipmentId, equipmentName) => {
+    if (window.confirm(`Are you sure you want to delete "${equipmentName}"?`)) {
+      try {
+        setLoading(true);
+        await equipmentAPI.delete(equipmentId);
+        showNotification(`✅ Equipment "${equipmentName}" deleted successfully!`, 'success');
+        if (onRefresh) onRefresh();
+      } catch (error) {
+        console.error('Error deleting equipment:', error);
+        showNotification('❌ Failed to delete equipment', 'danger');
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -110,6 +164,14 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
                   {myEquipment.map((equipment) => (
                     <Col md={6} key={equipment.id} className="mb-3">
                       <Card className="h-100">
+                        {equipment.image && (
+                          <Card.Img
+                            variant="top"
+                            src={equipment.image}
+                            alt={equipment.name}
+                            style={{ height: '150px', objectFit: 'cover' }}
+                          />
+                        )}
                         <Card.Body>
                           <h6>{equipment.name}</h6>
                           <p className="text-muted small">{equipment.description}</p>
@@ -117,9 +179,24 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
                             <Badge bg={equipment.available ? 'success' : 'danger'}>
                               {equipment.available ? '✅ Available' : '🔴 Rented'}
                             </Badge>
-                            <Button variant="outline-warning" size="sm">
-                              Edit
-                            </Button>
+                            <div className="d-flex gap-1">
+                              <Button 
+                                variant="outline-warning" 
+                                size="sm"
+                                onClick={() => handleEditEquipment(equipment)}
+                                disabled={loading}
+                              >
+                                ✏️ Edit
+                              </Button>
+                              <Button 
+                                variant="outline-danger" 
+                                size="sm"
+                                onClick={() => handleDeleteEquipment(equipment.id, equipment.name)}
+                                disabled={loading}
+                              >
+                                🗑️ Delete
+                              </Button>
+                            </div>
                           </div>
                         </Card.Body>
                       </Card>
@@ -184,6 +261,62 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
           </Card>
         </Col>
       </Row>
+      
+      {/* Edit Equipment Modal */}
+      <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Edit Equipment</Modal.Title>
+        </Modal.Header>
+        <Form onSubmit={handleUpdateEquipment}>
+          <Modal.Body>
+            <Form.Group className="mb-3">
+              <Form.Label>Equipment Name</Form.Label>
+              <Form.Control
+                type="text"
+                value={editForm.name}
+                onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                required
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Description</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                value={editForm.description}
+                onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
+                required
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Hourly Rate ($)</Form.Label>
+              <Form.Control
+                type="number"
+                step="0.01"
+                value={editForm.hourly_rate}
+                onChange={(e) => setEditForm(prev => ({ ...prev, hourly_rate: e.target.value }))}
+                required
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Check
+                type="checkbox"
+                label="Available for rent"
+                checked={editForm.available}
+                onChange={(e) => setEditForm(prev => ({ ...prev, available: e.target.checked }))}
+              />
+            </Form.Group>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" type="submit" disabled={loading}>
+              {loading ? 'Updating...' : 'Update Equipment'}
+            </Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
       
       {/* Toast Notifications */}
       <ToastContainer position="top-end" className="p-3">

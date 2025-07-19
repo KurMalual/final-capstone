@@ -18,7 +18,7 @@ const Weather = () => {
       setError('');
       const response = await weatherAPI.getSouthSudanWeather();
       setWeatherData(Array.isArray(response.data) ? response.data : [response.data]);
-    } catch (err) {
+    } catch {
       // Fallback to general weather data if South Sudan specific fails
       try {
         const response = await weatherAPI.getWeatherData();
