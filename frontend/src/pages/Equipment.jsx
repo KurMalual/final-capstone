@@ -37,7 +37,8 @@ const Equipment = () => {
   });
   
   const [rentalForm, setRentalForm] = useState({
-    message: ''
+    message: '',
+    operation_location: ''
   });
 
   useEffect(() => {
@@ -117,11 +118,12 @@ const Equipment = () => {
     try {
       await equipmentAPI.createRentalRequest({
         equipment: selectedEquipment.id,
-        message: rentalForm.message
+        message: rentalForm.message,
+        operation_location: rentalForm.operation_location
       });
       setSuccess('Rental request sent successfully!');
       setShowRentalModal(false);
-      setRentalForm({ message: '' });
+      setRentalForm({ message: '', operation_location: '' });
       loadData();
     } catch (error) {
       setError('Failed to send rental request');
@@ -451,6 +453,20 @@ const Equipment = () => {
               
               <Form onSubmit={handleRentalRequest}>
                 <Form.Group className="mb-3">
+                  <Form.Label>Operation Location <span className="text-danger">*</span></Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={rentalForm.operation_location}
+                    onChange={(e) => setRentalForm({...rentalForm, operation_location: e.target.value})}
+                    placeholder="Enter where you'll use this equipment (e.g., Farm Location, Village, District)"
+                    required
+                  />
+                  <Form.Text className="text-muted">
+                    Please specify the location where you plan to operate this equipment
+                  </Form.Text>
+                </Form.Group>
+                
+                <Form.Group className="mb-3">
                   <Form.Label>Message to Equipment Owner</Form.Label>
                   <Form.Control
                     as="textarea"
@@ -458,7 +474,6 @@ const Equipment = () => {
                     value={rentalForm.message}
                     onChange={(e) => setRentalForm({...rentalForm, message: e.target.value})}
                     placeholder="Describe your rental needs, duration, etc."
-                    required
                   />
                 </Form.Group>
                 

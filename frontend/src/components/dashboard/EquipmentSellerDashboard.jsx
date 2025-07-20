@@ -112,6 +112,24 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
     }
   };
 
+  const handleToggleAvailability = async (equipmentId, equipmentName, currentStatus) => {
+    const action = currentStatus ? 'mark as unavailable' : 'mark as available';
+    if (window.confirm(`Are you sure you want to ${action} "${equipmentName}"?`)) {
+      try {
+        setLoading(true);
+        await equipmentAPI.toggleAvailability(equipmentId);
+        const newStatus = currentStatus ? 'unavailable' : 'available';
+        showNotification(`✅ Equipment "${equipmentName}" marked as ${newStatus}!`, 'success');
+        if (onRefresh) onRefresh();
+      } catch (error) {
+        console.error('Error toggling availability:', error);
+        showNotification('❌ Failed to update equipment availability', 'danger');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
   const handleDeleteRentalRequest = async (requestId, equipmentName) => {
     if (window.confirm(`Are you sure you want to delete this rental request for "${equipmentName}"?`)) {
       try {
@@ -192,10 +210,19 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
                           <h6>{equipment.name}</h6>
                           <p className="text-muted small">{equipment.description}</p>
                           <div className="d-flex justify-content-between align-items-center">
-                            <Badge bg={equipment.available ? 'success' : 'danger'}>
-                              {equipment.available ? '✅ Available' : '🔴 Rented'}
+                            <Badge bg={equipment.available ? 'success' : 'warning'}>
+                              {equipment.available ? '✅ Available' : '⏳ Pending/Rented'}
                             </Badge>
                             <div className="d-flex gap-1">
+                              <Button 
+                                variant={equipment.available ? 'outline-warning' : 'outline-success'} 
+                                size="sm"
+                                onClick={() => handleToggleAvailability(equipment.id, equipment.name, equipment.available)}
+                                disabled={loading}
+                                title={equipment.available ? 'Mark as unavailable' : 'Mark as available'}
+                              >
+                                {equipment.available ? '⏸️' : '▶️'}
+                              </Button>
                               <Button 
                                 variant="outline-warning" 
                                 size="sm"

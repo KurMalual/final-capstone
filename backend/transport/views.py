@@ -16,7 +16,8 @@ class TransportViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         queryset = Transport.objects.all()
-        # Transporters see their own, farmers see all available
+        # Transporters see ALL their own vehicles (available and unavailable), 
+        # farmers see only available vehicles
         if user.is_authenticated:
             if hasattr(user, 'role') and user.role == 'transporter':
                 return queryset.filter(owner=user)
@@ -26,6 +27,14 @@ class TransportViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+    @action(detail=True, methods=['post'], url_path='toggle-availability')
+    def toggle_availability(self, request, pk=None):
+        transport = self.get_object()
+        transport.available = not transport.available
+        transport.save()
+        status_text = "available" if transport.available else "unavailable"
+        return Response({'detail': f'Transport marked as {status_text}.'}, status=status.HTTP_200_OK)
 
 
 
@@ -46,7 +55,11 @@ class TransportRequestViewSet(viewsets.ModelViewSet):
         return queryset.none()
 
     def perform_create(self, serializer):
-        serializer.save(farmer=self.request.user)
+        # Save the transport request
+        transport_request = serializer.save(farmer=self.request.user)
+        # Mark the transport as unavailable
+        transport_request.transport.available = False
+        transport_request.transport.save()
 
     @action(detail=True, methods=['post'], url_path='approve')
     def approve(self, request, pk=None):
@@ -55,6 +68,9 @@ class TransportRequestViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Transport request already processed.'}, status=status.HTTP_400_BAD_REQUEST)
         rental.status = 'approved'
         rental.save()
+        # Keep transport unavailable when approved (it's being used)
+        rental.transport.available = False
+        rental.transport.save()
         # Send email notification to farmer if farmer exists and has email
         if rental.farmer and rental.farmer.email:
             send_mail(
@@ -73,6 +89,9 @@ class TransportRequestViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Transport request already processed.'}, status=status.HTTP_400_BAD_REQUEST)
         rental.status = 'rejected'
         rental.save()
+        # Make transport available again when rejected
+        rental.transport.available = True
+        rental.transport.save()
         # Send email notification to farmer if farmer exists and has email
         if rental.farmer and rental.farmer.email:
             send_mail(
@@ -82,4 +101,12 @@ class TransportRequestViewSet(viewsets.ModelViewSet):
                 [rental.farmer.email],
                 fail_silently=True,
             )
+        return Response({'detail': 'Transport request rejected and farmer notified.'}, status=status.HTTP_200_OK)
+
+    def perform_destroy(self, instance):
+        # Make transport available again when request is deleted
+        instance.transport.available = True
+        instance.transport.save()
+        # Delete the transport request
+        instance.delete()
         return Response({'detail': 'Transport request rejected and farmer notified.'}, status=status.HTTP_200_OK)

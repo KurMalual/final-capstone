@@ -16,7 +16,8 @@ class EquipmentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         queryset = Equipment.objects.all()
-        # Equipment sellers see their own, farmers see all available
+        # Equipment sellers see ALL their own equipment (available and unavailable), 
+        # farmers see only available equipment
         if user.is_authenticated:
             if hasattr(user, 'role') and user.role == 'equipment_seller':
                 return queryset.filter(owner=user)
@@ -26,6 +27,14 @@ class EquipmentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(owner=self.request.user)
+
+    @action(detail=True, methods=['post'], url_path='toggle-availability')
+    def toggle_availability(self, request, pk=None):
+        equipment = self.get_object()
+        equipment.available = not equipment.available
+        equipment.save()
+        status_text = "available" if equipment.available else "unavailable"
+        return Response({'detail': f'Equipment marked as {status_text}.'}, status=status.HTTP_200_OK)
 
 
 
@@ -45,8 +54,23 @@ class EquipmentRentalRequestViewSet(viewsets.ModelViewSet):
                 return queryset.filter(equipment__owner=user)
         return queryset.none()
 
+    def create(self, request, *args, **kwargs):
+        print(f"Equipment rental request data: {request.data}")
+        try:
+            return super().create(request, *args, **kwargs)
+        except Exception as e:
+            print(f"Equipment rental request creation failed: {str(e)}")
+            print(f"Request data: {request.data}")
+            raise e
+
     def perform_create(self, serializer):
-        serializer.save(farmer=self.request.user)
+        print(f"Equipment rental request data: {self.request.data}")
+        # Save the rental request
+        rental_request = serializer.save(farmer=self.request.user)
+        # Mark the equipment as unavailable
+        rental_request.equipment.available = False
+        rental_request.equipment.save()
+        print(f"Created rental request for equipment: {rental_request.equipment.name}")
 
     @action(detail=True, methods=['post'], url_path='approve')
     def approve(self, request, pk=None):
@@ -55,6 +79,9 @@ class EquipmentRentalRequestViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Rental request already processed.'}, status=status.HTTP_400_BAD_REQUEST)
         rental.status = 'approved'
         rental.save()
+        # Keep equipment unavailable when approved (it's being used)
+        rental.equipment.available = False
+        rental.equipment.save()
         # Send email notification to farmer
         if rental.farmer.email:
             send_mail(
@@ -73,6 +100,9 @@ class EquipmentRentalRequestViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Rental request already processed.'}, status=status.HTTP_400_BAD_REQUEST)
         rental.status = 'rejected'
         rental.save()
+        # Make equipment available again when rejected
+        rental.equipment.available = True
+        rental.equipment.save()
         # Send email notification to farmer
         if rental.farmer.email:
             send_mail(
@@ -83,3 +113,10 @@ class EquipmentRentalRequestViewSet(viewsets.ModelViewSet):
                 fail_silently=True,
             )
         return Response({'detail': 'Rental request rejected and farmer notified.'}, status=status.HTTP_200_OK)
+
+    def perform_destroy(self, instance):
+        # Make equipment available again when request is deleted
+        instance.equipment.available = True
+        instance.equipment.save()
+        # Delete the rental request
+        instance.delete()

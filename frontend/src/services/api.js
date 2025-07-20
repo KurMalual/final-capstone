@@ -71,6 +71,7 @@ export const equipmentAPI = {
   create: (data) => api.post('/equipment/', data),
   update: (id, data) => api.put(`/equipment/${id}/`, data),
   delete: (id) => api.delete(`/equipment/${id}/`),
+  toggleAvailability: (id) => api.post(`/equipment/${id}/toggle-availability/`),
   
   // Rental requests
   getRentalRequests: () => api.get('/equipment-rental-requests/'),
@@ -86,6 +87,7 @@ export const transportAPI = {
   create: (data) => api.post('/transports/', data),
   update: (id, data) => api.put(`/transports/${id}/`, data),
   delete: (id) => api.delete(`/transports/${id}/`),
+  toggleAvailability: (id) => api.post(`/transports/${id}/toggle-availability/`),
   
   // Transport requests
   getTransportRequests: () => api.get('/transport-requests/'),
@@ -101,6 +103,7 @@ export const marketplaceAPI = {
   createProduct: (data) => api.post('/products/', data),
   updateProduct: (id, data) => api.put(`/products/${id}/`, data),
   deleteProduct: (id) => api.delete(`/products/${id}/`),
+  toggleAvailability: (id) => api.post(`/products/${id}/toggle-availability/`),
   
   // Product orders
   getOrders: () => api.get('/product-orders/'),

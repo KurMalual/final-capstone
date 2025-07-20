@@ -16,7 +16,8 @@ class ProductViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         queryset = Product.objects.all()
-        # Farmers see their own products, buyers see all available
+        # Farmers see ALL their own products (available and unavailable), 
+        # buyers see only available products
         if user.is_authenticated:
             if hasattr(user, 'role') and user.role == 'farmer':
                 return queryset.filter(farmer=user)
@@ -26,6 +27,14 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(farmer=self.request.user)
+
+    @action(detail=True, methods=['post'], url_path='toggle-availability')
+    def toggle_availability(self, request, pk=None):
+        product = self.get_object()
+        product.available = not product.available
+        product.save()
+        status_text = "available" if product.available else "unavailable"
+        return Response({'detail': f'Product marked as {status_text}.'}, status=status.HTTP_200_OK)
 
 
 
@@ -46,7 +55,11 @@ class ProductOrderViewSet(viewsets.ModelViewSet):
         return queryset.none()
 
     def perform_create(self, serializer):
-        serializer.save(buyer=self.request.user)
+        # Save the product order
+        product_order = serializer.save(buyer=self.request.user)
+        # Mark the product as unavailable
+        product_order.product.available = False
+        product_order.product.save()
 
     @action(detail=True, methods=['post'], url_path='approve')
     def approve(self, request, pk=None):
@@ -55,6 +68,9 @@ class ProductOrderViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Order already processed.'}, status=status.HTTP_400_BAD_REQUEST)
         order.status = 'approved'
         order.save()
+        # Keep product unavailable when approved (it's been sold)
+        order.product.available = False
+        order.product.save()
         # Send email notification to buyer
         if order.buyer.email:
             send_mail(
@@ -73,6 +89,9 @@ class ProductOrderViewSet(viewsets.ModelViewSet):
             return Response({'detail': 'Order already processed.'}, status=status.HTTP_400_BAD_REQUEST)
         order.status = 'rejected'
         order.save()
+        # Make product available again when rejected
+        order.product.available = True
+        order.product.save()
         # Send email notification to buyer
         if order.buyer.email:
             send_mail(
@@ -82,4 +101,12 @@ class ProductOrderViewSet(viewsets.ModelViewSet):
                 [order.buyer.email],
                 fail_silently=True,
             )
+        return Response({'detail': 'Order rejected and buyer notified.'}, status=status.HTTP_200_OK)
+
+    def perform_destroy(self, instance):
+        # Make product available again when order is deleted
+        instance.product.available = True
+        instance.product.save()
+        # Delete the product order
+        instance.delete()
         return Response({'detail': 'Order rejected and buyer notified.'}, status=status.HTTP_200_OK)

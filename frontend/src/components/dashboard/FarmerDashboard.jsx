@@ -72,13 +72,22 @@ const FarmerDashboard = ({ data, onRefresh }) => {
 
   const handleSubmitRental = async (e) => {
     e.preventDefault();
+    
+    // Debug logging
+    console.log('Form state before submission:', rentalForm);
+    console.log('Selected equipment:', selectedEquipment);
+    
     try {
       setLoading(true);
-      await equipmentAPI.createRentalRequest({
+      const requestData = {
         equipment: selectedEquipment.id,
         message: rentalForm.message,
         operation_location: rentalForm.operation_location
-      });
+      };
+      
+      console.log('Sending rental request data:', requestData);
+      
+      await equipmentAPI.createRentalRequest(requestData);
       showNotification(`✅ Rental request sent for ${selectedEquipment.name}!`, 'success');
       setShowRentalModal(false);
       if (onRefresh) onRefresh();
