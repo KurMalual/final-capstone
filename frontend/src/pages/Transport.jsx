@@ -326,9 +326,20 @@ const Transport = () => {
               {transportRequests.map((request) => (
                 <Col md={6} lg={4} key={request.id} className="mb-3">
                   <Card>
+                    {request.transport_image && (
+                      <Card.Img
+                        variant="top"
+                        src={request.transport_image}
+                        alt={request.transport_name}
+                        style={{ height: '150px', objectFit: 'cover' }}
+                      />
+                    )}
                     <Card.Body>
                       <Card.Title>Transport Request</Card.Title>
-                      <p><strong>Vehicle:</strong> {request.transport_name || 'N/A'}</p>
+                      <p><strong>Vehicle:</strong> {request.transport_vehicle_name || 'N/A'}</p>
+                      {request.transport_price_per_trip && (
+                        <p><strong>Price:</strong> ${request.transport_price_per_trip}/trip</p>
+                      )}
                       <p><strong>From:</strong> {request.pickup_location}</p>
                       <p><strong>To:</strong> {request.delivery_location}</p>
                       <p><strong>Cargo:</strong> {request.cargo_details}</p>

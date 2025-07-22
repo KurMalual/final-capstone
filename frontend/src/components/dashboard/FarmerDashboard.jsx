@@ -162,22 +162,6 @@ const FarmerDashboard = ({ data, onRefresh }) => {
     }
   };
 
-  const handleCancelOrder = async (orderId, productName) => {
-    if (window.confirm(`Are you sure you want to cancel your order for "${productName}"?`)) {
-      try {
-        setLoading(true);
-        await marketplaceAPI.deleteOrder(orderId);
-        showNotification(`✅ Order for ${productName} cancelled!`, 'success');
-        if (onRefresh) onRefresh();
-      } catch (error) {
-        console.error('Error cancelling order:', error);
-        showNotification('❌ Failed to cancel order', 'danger');
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
-
   const handleRejectOrder = async (orderId, productName) => {
     try {
       setLoading(true);
@@ -365,164 +349,194 @@ const FarmerDashboard = ({ data, onRefresh }) => {
         </Col>
       </Row>
 
-      <Row>
-        {/* Available Equipment */}
-        <Col lg={6} className="mb-4">
+      {/* Available Equipment */}
+      <Row className="mb-4">
+        <Col xs={12}>
           <Card>
-            <Card.Header className="bg-success text-white">
+            <Card.Header className="bg-success text-white d-flex justify-content-between align-items-center">
               <h5 className="mb-0">🚜 Available Equipment</h5>
+              <small className="text-white-50">{stats.availableEquipment} items</small>
             </Card.Header>
-            <Card.Body style={{ maxHeight: '300px', overflowY: 'auto' }}>
+            <Card.Body style={{ maxHeight: '280px', overflowY: 'auto' }}>
               {data.available_equipment?.length > 0 ? (
-                data.available_equipment.slice(0, 5).map((equipment) => (
-                  <Card key={equipment.id} className="mb-2 border-0 bg-light">
-                    <Card.Body className="py-2">
+                data.available_equipment.slice(0, 6).map((equipment) => (
+                  <Card key={equipment.id} className="dashboard-item">
+                    <Card.Body>
                       <div className="d-flex justify-content-between align-items-center">
                         <div>
-                          <h6 className="mb-1">{equipment.name}</h6>
-                          <small className="text-muted">by {equipment.owner__username}</small>
+                          <h6 className="mb-1 fw-bold">{equipment.name}</h6>
+                          <div className="d-flex flex-column">
+                            <small className="text-muted mb-1">by {equipment.owner__username}</small>
+                            {equipment.price_per_day && (
+                              <small className="text-success fw-semibold">${equipment.price_per_day}/day</small>
+                            )}
+                          </div>
                         </div>
                         <Button 
-                          variant="outline-success" 
+                          variant="success" 
                           size="sm"
                           onClick={() => handleHireEquipment(equipment.id, equipment.name)}
                           disabled={loading}
+                          className="px-3"
                         >
-                          {loading ? 'Sending...' : 'Hire'}
+                          {loading ? 'Hiring...' : 'Hire'}
                         </Button>
                       </div>
                     </Card.Body>
                   </Card>
                 ))
               ) : (
-                <p className="text-muted text-center">No equipment available</p>
+                <div className="dashboard-empty-state">
+                  <p className="mb-0">No equipment available at the moment</p>
+                </div>
               )}
             </Card.Body>
           </Card>
         </Col>
+      </Row>
 
-        {/* Available Transport */}
-        <Col lg={6} className="mb-4">
+      {/* Available Transport */}
+      <Row className="mb-4">
+        <Col xs={12}>
           <Card>
-            <Card.Header className="bg-primary text-white">
+            <Card.Header className="bg-primary text-white d-flex justify-content-between align-items-center">
               <h5 className="mb-0">🚛 Available Transport</h5>
+              <small className="text-white-50">{stats.availableVehicles} vehicles</small>
             </Card.Header>
-            <Card.Body style={{ maxHeight: '300px', overflowY: 'auto' }}>
+            <Card.Body style={{ maxHeight: '280px', overflowY: 'auto' }}>
               {data.available_vehicles?.length > 0 ? (
-                data.available_vehicles.slice(0, 5).map((vehicle) => (
-                  <Card key={vehicle.id} className="mb-2 border-0 bg-light">
-                    <Card.Body className="py-2">
+                data.available_vehicles.slice(0, 6).map((vehicle) => (
+                  <Card key={vehicle.id} className="dashboard-item">
+                    <Card.Body>
                       <div className="d-flex justify-content-between align-items-center">
                         <div>
-                          <h6 className="mb-1">{vehicle.vehicle_type}</h6>
-                          <small className="text-muted">by {vehicle.owner__username} • ${vehicle.price_per_km}/km</small>
+                          <h6 className="mb-1 fw-bold">{vehicle.vehicle_name || vehicle.vehicle_type}</h6>
+                          <div className="d-flex flex-column">
+                            <small className="text-muted mb-1">by {vehicle.owner__username}</small>
+                            {vehicle.price_per_trip && (
+                              <small className="text-success fw-semibold">${vehicle.price_per_trip}/trip</small>
+                            )}
+                          </div>
                         </div>
                         <Button 
-                          variant="outline-primary" 
+                          variant="primary" 
                           size="sm"
                           onClick={() => handleRequestTransport(vehicle.id, vehicle.vehicle_type)}
                           disabled={loading}
+                          className="px-3"
                         >
-                          {loading ? 'Sending...' : 'Request'}
+                          {loading ? 'Requesting...' : 'Request'}
                         </Button>
                       </div>
                     </Card.Body>
                   </Card>
                 ))
               ) : (
-                <p className="text-muted text-center">No transport available</p>
+                <div className="dashboard-empty-state">
+                  <p className="mb-0">No transport available at the moment</p>
+                </div>
               )}
             </Card.Body>
           </Card>
         </Col>
+      </Row>
 
-        {/* My Products */}
-        <Col lg={6} className="mb-4">
+      {/* My Products */}
+      <Row className="mb-4">
+        <Col xs={12}>
           <Card>
-            <Card.Header className="bg-warning text-dark">
-              <div className="d-flex justify-content-between align-items-center">
-                <h5 className="mb-0">📦 My Products</h5>
+            <Card.Header className="bg-warning text-dark d-flex justify-content-between align-items-center">
+              <h5 className="mb-0">📦 My Products</h5>
+              <div className="d-flex align-items-center gap-2">
+                <small className="text-muted">{stats.myProducts} products</small>
                 <Button variant="outline-dark" size="sm" onClick={() => setShowAddProductModal(true)}>
                   + Add Product
                 </Button>
               </div>
             </Card.Header>
-            <Card.Body style={{ maxHeight: '300px', overflowY: 'auto' }}>
+            <Card.Body style={{ maxHeight: '280px', overflowY: 'auto' }}>
               {data.my_products?.length > 0 ? (
-                data.my_products.map((product) => (
-                  <Card key={product.id} className="mb-2 border-0 bg-light">
-                    <div className="d-flex">
-                      {product.image && (
-                        <div style={{ width: '60px', height: '60px', flexShrink: 0 }}>
-                          <img
-                            src={product.image}
-                            alt={product.name}
-                            style={{ 
-                              width: '100%', 
-                              height: '100%', 
-                              objectFit: 'cover',
-                              borderRadius: '4px'
-                            }}
-                          />
-                        </div>
-                      )}
-                      <Card.Body className="py-2">
-                        <div className="d-flex justify-content-between align-items-center">
-                          <div>
-                            <h6 className="mb-1">{product.name}</h6>
-                            <small className="text-muted">${product.price}</small>
-                          </div>
-                          <div className="d-flex align-items-center gap-2">
-                            <Badge bg={product.available ? 'success' : 'secondary'}>
-                              {product.available ? 'Available' : 'Unavailable'}
-                            </Badge>
-                            <div className="d-flex gap-1">
-                              <Button 
-                                variant="outline-warning" 
-                                size="sm"
-                                onClick={() => handleEditProduct(product)}
-                                disabled={loading}
-                              >
-                                ✏️
-                              </Button>
-                              <Button 
-                                variant="outline-danger" 
-                                size="sm"
-                                onClick={() => handleDeleteProduct(product.id, product.name)}
-                                disabled={loading}
-                              >
-                                🗑️
-                              </Button>
+                data.my_products.slice(0, 6).map((product) => (
+                  <Card key={product.id} className="dashboard-item">
+                    <Card.Body>
+                      <div className="d-flex justify-content-between align-items-center">
+                        <div>
+                          <h6 className="mb-1 fw-bold">{product.name}</h6>
+                          <div className="d-flex flex-column">
+                            <small className="text-success fw-semibold mb-1">${product.price}</small>
+                            <div className="d-flex align-items-center gap-2">
+                              <Badge bg={product.available ? 'success' : 'secondary'} className="small">
+                                {product.available ? 'Available' : 'Unavailable'}
+                              </Badge>
+                              {product.quantity && (
+                                <small className="text-muted">Qty: {product.quantity}</small>
+                              )}
                             </div>
                           </div>
                         </div>
-                      </Card.Body>
-                    </div>
+                        <div className="d-flex gap-1">
+                          <Button 
+                            variant="outline-warning" 
+                            size="sm"
+                            onClick={() => handleEditProduct(product)}
+                            disabled={loading}
+                            title="Edit Product"
+                          >
+                            ✏️
+                          </Button>
+                          <Button 
+                            variant="outline-danger" 
+                            size="sm"
+                            onClick={() => handleDeleteProduct(product.id, product.name)}
+                            disabled={loading}
+                            title="Delete Product"
+                          >
+                            🗑️
+                          </Button>
+                        </div>
+                      </div>
+                    </Card.Body>
                   </Card>
                 ))
               ) : (
-                <p className="text-muted text-center">No products listed</p>
+                <div className="dashboard-empty-state">
+                  <p className="mb-2">No products listed yet</p>
+                  <Button variant="outline-warning" size="sm" onClick={() => setShowAddProductModal(true)}>
+                    Add Your First Product
+                  </Button>
+                </div>
               )}
             </Card.Body>
           </Card>
         </Col>
+      </Row>
 
-        {/* Recent Activity */}
-        <Col lg={6} className="mb-4">
+      {/* Recent Activity */}
+      <Row className="mb-4">
+        <Col xs={12}>
           <Card>
-            <Card.Header className="bg-info text-white">
+            <Card.Header className="bg-info text-white d-flex justify-content-between align-items-center">
               <h5 className="mb-0">📋 Recent Activity</h5>
+              <small className="text-white-50">Latest updates</small>
             </Card.Header>
-            <Card.Body style={{ maxHeight: '300px', overflowY: 'auto' }}>
+            <Card.Body style={{ maxHeight: '280px', overflowY: 'auto' }}>
               <ListGroup variant="flush">
                 {/* Product Orders */}
-                {data.my_orders?.slice(0, 3).map((order) => (
-                  <ListGroup.Item key={`order-${order.id}`} className="px-0">
+                {data.my_orders?.slice(0, 5).map((order) => (
+                  <ListGroup.Item key={`order-${order.id}`} className="px-0 py-3 border-bottom">
                     <div className="d-flex justify-content-between align-items-center">
                       <div>
-                        <small className="text-muted">Order for {order.product__name}</small>
-                        <br />
-                        <small>by {order.buyer__username}</small>
+                        <div className="mb-1">
+                          <strong>Order for {order.product__name}</strong>
+                        </div>
+                        <div className="d-flex flex-column">
+                          <small className="text-muted mb-1">by {order.buyer__username}</small>
+                          {order.quantity && order.product__price && (
+                            <small className="text-success fw-semibold">
+                              {order.quantity} × ${order.product__price} = ${(order.quantity * order.product__price).toFixed(2)}
+                            </small>
+                          )}
+                        </div>
                       </div>
                       <div className="d-flex align-items-center gap-2">
                         {order.status === 'pending' ? (
@@ -547,15 +561,6 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                         ) : (
                           <div className="d-flex align-items-center gap-2">
                             {getStatusBadge(order.status)}
-                            <Button 
-                              variant="outline-secondary" 
-                              size="sm"
-                              onClick={() => handleCancelOrder(order.id, order.product__name)}
-                              disabled={loading}
-                              title="Delete this order"
-                            >
-                              🗑️
-                            </Button>
                           </div>
                         )}
                       </div>
@@ -564,18 +569,25 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                 ))}
                 
                 {/* Equipment Rentals */}
-                {data.my_equipment_rentals?.slice(0, 2).map((rental) => (
-                  <ListGroup.Item key={`rental-${rental.id}`} className="px-0">
+                {data.my_equipment_rentals?.slice(0, 3).map((rental) => (
+                  <ListGroup.Item key={`rental-${rental.id}`} className="px-0 py-3 border-bottom">
                     <div className="d-flex justify-content-between align-items-center">
                       <div>
-                        <small className="text-muted">Equipment: {rental.equipment__name}</small>
-                        {rental.operation_location && (
-                          <div>
-                            <small className="text-primary">
-                              <i className="bi bi-geo-alt"></i> {rental.operation_location}
+                        <div className="mb-1">
+                          <strong>Equipment: {rental.equipment__name}</strong>
+                        </div>
+                        <div className="d-flex flex-column">
+                          {rental.equipment__price_per_day && (
+                            <small className="text-success fw-semibold mb-1">
+                              ${rental.equipment__price_per_day}/day
                             </small>
-                          </div>
-                        )}
+                          )}
+                          {rental.operation_location && (
+                            <small className="text-primary">
+                              📍 {rental.operation_location}
+                            </small>
+                          )}
+                        </div>
                       </div>
                       <div className="d-flex align-items-center gap-2">
                         {rental.status === 'pending' && (
@@ -586,7 +598,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                             disabled={loading}
                             title="Cancel request"
                           >
-                            ❌
+                            ❌ Cancel
                           </Button>
                         )}
                         {getStatusBadge(rental.status)}
@@ -597,10 +609,17 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                 
                 {/* Transport Requests */}
                 {data.my_transport_requests?.slice(0, 2).map((request) => (
-                  <ListGroup.Item key={`transport-${request.id}`} className="px-0">
+                  <ListGroup.Item key={`transport-${request.id}`} className="px-0 py-3 border-bottom">
                     <div className="d-flex justify-content-between align-items-center">
                       <div>
-                        <small className="text-muted">Transport: {request.transport__vehicle_name}</small>
+                        <div className="mb-1">
+                          <strong>Transport: {request.transport__vehicle_name}</strong>
+                        </div>
+                        {request.transport__price_per_trip && (
+                          <small className="text-success fw-semibold">
+                            ${request.transport__price_per_trip}/trip
+                          </small>
+                        )}
                       </div>
                       <div className="d-flex align-items-center gap-2">
                         {request.status === 'pending' && (
@@ -611,7 +630,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                             disabled={loading}
                             title="Cancel request"
                           >
-                            ❌
+                            ❌ Cancel
                           </Button>
                         )}
                         {getStatusBadge(request.status)}
@@ -622,7 +641,9 @@ const FarmerDashboard = ({ data, onRefresh }) => {
               </ListGroup>
               
               {(!data.my_orders?.length && !data.my_equipment_rentals?.length && !data.my_transport_requests?.length) && (
-                <p className="text-muted text-center">No recent activity</p>
+                <div className="dashboard-empty-state">
+                  <p className="mb-0">No recent activity to display</p>
+                </div>
               )}
             </Card.Body>
           </Card>

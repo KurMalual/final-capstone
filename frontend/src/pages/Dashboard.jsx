@@ -87,7 +87,7 @@ const Dashboard = () => {
   };
 
   return (
-    <Container fluid>
+    <Container fluid className="dashboard-container">
       <Row>
         <Col>
           {renderDashboard()}

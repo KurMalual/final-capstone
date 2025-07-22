@@ -262,10 +262,29 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
             <Card.Body style={{ maxHeight: '400px', overflowY: 'auto' }}>
               {rentalRequests.length > 0 ? (
                 rentalRequests.map((request) => (
-                  <Card key={request.id} className="mb-3 border">
+                  <Card key={request.id} className="dashboard-item">
                     <Card.Body className="py-2">
-                      <h6 className="mb-1">{request.equipment__name}</h6>
-                      <small className="text-muted">by {request.farmer__username}</small>
+                      <div className="d-flex align-items-center gap-3 mb-2">
+                        {request.equipment__image && (
+                          <img 
+                            src={request.equipment__image} 
+                            alt={request.equipment__name}
+                            className="rounded"
+                            style={{ width: '50px', height: '50px', objectFit: 'cover' }}
+                          />
+                        )}
+                        <div className="flex-grow-1">
+                          <h6 className="mb-1">{request.equipment__name}</h6>
+                          <small className="text-muted">by {request.farmer__username}</small>
+                          {request.equipment__price_per_day && (
+                            <div>
+                              <small className="text-success">
+                                ${request.equipment__price_per_day}/day
+                              </small>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                       {request.operation_location && (
                         <div className="mt-1">
                           <small className="text-primary">

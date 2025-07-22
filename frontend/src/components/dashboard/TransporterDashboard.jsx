@@ -243,10 +243,29 @@ const TransporterDashboard = ({ data, onRefresh }) => {
             <Card.Body style={{ maxHeight: '400px', overflowY: 'auto' }}>
               {requestsData.length > 0 ? (
                 requestsData.map((request) => (
-                  <Card key={request.id} className="mb-3 border">
+                  <Card key={request.id} className="dashboard-item">
                     <Card.Body className="py-2">
-                      <h6 className="mb-1">{request.transport__vehicle_name}</h6>
-                      <small className="text-muted">by {request.farmer__username}</small>
+                      <div className="d-flex align-items-center gap-3 mb-2">
+                        {request.transport__image && (
+                          <img 
+                            src={request.transport__image} 
+                            alt={request.transport__vehicle_name}
+                            className="rounded"
+                            style={{ width: '50px', height: '50px', objectFit: 'cover' }}
+                          />
+                        )}
+                        <div className="flex-grow-1">
+                          <h6 className="mb-1">{request.transport__vehicle_name}</h6>
+                          <small className="text-muted">by {request.farmer__username}</small>
+                          {request.transport__price_per_trip && (
+                            <div>
+                              <small className="text-success">
+                                ${request.transport__price_per_trip}/trip
+                              </small>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                       <p className="mb-1 text-sm">From: {request.pickup_location}</p>
                       <p className="mb-1 text-sm">To: {request.delivery_location}</p>
                       <p className="mb-1 text-sm">Cargo: {request.cargo_details}</p>

@@ -9,8 +9,14 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class ProductOrderSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name', read_only=True)
+    product_image = serializers.ImageField(source='product.image', read_only=True)
+    product_price = serializers.DecimalField(source='product.price', max_digits=10, decimal_places=2, read_only=True)
+    total_price = serializers.SerializerMethodField()
     
     class Meta:
         model = ProductOrder
-        fields = ['id', 'product', 'product_name', 'buyer', 'quantity', 'status', 'message', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'product_name', 'buyer', 'created_at', 'updated_at']
+        fields = ['id', 'product', 'product_name', 'product_image', 'product_price', 'total_price', 'buyer', 'quantity', 'status', 'message', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'product_name', 'product_image', 'product_price', 'total_price', 'buyer', 'created_at', 'updated_at']
+    
+    def get_total_price(self, obj):
+        return obj.product.price * obj.quantity

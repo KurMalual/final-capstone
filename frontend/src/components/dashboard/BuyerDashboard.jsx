@@ -134,9 +134,16 @@ const BuyerDashboard = ({ data, onRefresh }) => {
             <Card.Body style={{ maxHeight: '400px', overflowY: 'auto' }}>
               {data.my_orders?.length > 0 ? (
                 data.my_orders.map((order) => (
-                  <Card key={order.id} className="mb-2 border-0 bg-light">
-                    <Card.Body className="py-2">
-                      <h6 className="mb-1">{order.product__name}</h6>
+                  <Card key={order.id} className="dashboard-item">
+                    <Card.Body>
+                      <div className="mb-2">
+                        <h6 className="mb-1 fw-bold">{order.product__name}</h6>
+                        {order.quantity && order.product__price && (
+                          <small className="text-success fw-semibold">
+                            {order.quantity} × ${order.product__price} = ${(order.quantity * order.product__price).toFixed(2)}
+                          </small>
+                        )}
+                      </div>
                       <div className="d-flex justify-content-between align-items-center">
                         <small className="text-muted">
                           {new Date(order.created_at).toLocaleDateString()}
@@ -151,7 +158,7 @@ const BuyerDashboard = ({ data, onRefresh }) => {
                           </Badge>
                           {(order.status === 'approved' || order.status === 'rejected') && (
                             <Button 
-                              variant="outline-secondary" 
+                              variant="outline-danger" 
                               size="sm"
                               onClick={() => handleDeleteOrder(order.id, order.product__name)}
                               disabled={loading}
@@ -166,7 +173,9 @@ const BuyerDashboard = ({ data, onRefresh }) => {
                   </Card>
                 ))
               ) : (
-                <p className="text-muted text-center">No orders yet</p>
+                <div className="dashboard-empty-state">
+                  <p className="mb-0">No orders yet</p>
+                </div>
               )}
             </Card.Body>
           </Card>

@@ -46,9 +46,9 @@ class DashboardSummaryView(views.APIView):
                 'transport_requests_rejected': TransportRequest.objects.filter(farmer=user, status='rejected').count(),
             }
             recent = {
-                'recent_orders': list(ProductOrder.objects.filter(product__farmer=user).order_by('-created_at')[:5].values('id','product__name','buyer__username','status','created_at')),
-                'recent_equipment_rentals': list(EquipmentRentalRequest.objects.filter(farmer=user).order_by('-created_at')[:5].values('id','equipment__name','status','created_at')),
-                'recent_transport_requests': list(TransportRequest.objects.filter(farmer=user).order_by('-created_at')[:5].values('id','transport__vehicle_name','status','created_at')),
+                'recent_orders': list(ProductOrder.objects.filter(product__farmer=user).order_by('-created_at')[:5].values('id','product__name','product__image','product__price','quantity','buyer__username','status','created_at')),
+                'recent_equipment_rentals': list(EquipmentRentalRequest.objects.filter(farmer=user).order_by('-created_at')[:5].values('id','equipment__name','equipment__image','equipment__price_per_day','status','created_at')),
+                'recent_transport_requests': list(TransportRequest.objects.filter(farmer=user).order_by('-created_at')[:5].values('id','transport__vehicle_name','transport__image','transport__price_per_trip','status','created_at')),
             }
         elif role == 'buyer':
             summary = {
@@ -59,7 +59,7 @@ class DashboardSummaryView(views.APIView):
                 'orders_rejected': ProductOrder.objects.filter(buyer=user, status='rejected').count(),
             }
             recent = {
-                'recent_orders': list(ProductOrder.objects.filter(buyer=user).order_by('-created_at')[:5].values('id','product__name','status','created_at')),
+                'recent_orders': list(ProductOrder.objects.filter(buyer=user).order_by('-created_at')[:5].values('id','product__name','product__image','product__price','quantity','status','created_at')),
             }
         elif role == 'equipment_seller':
             summary = {
@@ -70,7 +70,7 @@ class DashboardSummaryView(views.APIView):
                 'rental_requests_rejected': EquipmentRentalRequest.objects.filter(equipment__owner=user, status='rejected').count(),
             }
             recent = {
-                'recent_rental_requests': list(EquipmentRentalRequest.objects.filter(equipment__owner=user).order_by('-created_at')[:5].values('id','equipment__name','farmer__username','status','created_at')),
+                'recent_rental_requests': list(EquipmentRentalRequest.objects.filter(equipment__owner=user).order_by('-created_at')[:5].values('id','equipment__name','equipment__image','equipment__price_per_day','farmer__username','status','created_at')),
             }
         elif role == 'transporter':
             summary = {
@@ -81,7 +81,7 @@ class DashboardSummaryView(views.APIView):
                 'transport_requests_rejected': TransportRequest.objects.filter(transport__owner=user, status='rejected').count(),
             }
             recent = {
-                'recent_transport_requests': list(TransportRequest.objects.filter(transport__owner=user).order_by('-created_at')[:5].values('id','transport__vehicle_name','farmer__username','status','created_at')),
+                'recent_transport_requests': list(TransportRequest.objects.filter(transport__owner=user).order_by('-created_at')[:5].values('id','transport__vehicle_name','transport__image','transport__price_per_trip','farmer__username','status','created_at')),
             }
         else:
             summary = {'detail': 'Unknown or missing user role.'}
@@ -97,12 +97,12 @@ class DashboardSummaryView(views.APIView):
         data = {}
         if role == 'farmer':
             # Only show equipment and vehicles not owned by this user
-            available_equipment = list(Equipment.objects.filter(available=True).exclude(owner=user).values('id', 'name', 'owner__username', 'description', 'available'))
-            available_vehicles = list(Transport.objects.filter(available=True).exclude(owner=user).values('id', 'vehicle_name', 'owner__username', 'available'))
-            my_products = list(Product.objects.filter(farmer=user).values('id', 'name', 'available', 'price', 'created_at'))
-            my_equipment_rentals = list(EquipmentRentalRequest.objects.filter(farmer=user).order_by('-created_at').values('id', 'equipment__name', 'status', 'created_at'))
-            my_transport_requests = list(TransportRequest.objects.filter(farmer=user).order_by('-created_at').values('id', 'transport__vehicle_name', 'pickup_location', 'delivery_location', 'cargo_details', 'status', 'created_at'))
-            my_orders = list(ProductOrder.objects.filter(product__farmer=user).order_by('-created_at').values('id', 'product__name', 'buyer__username', 'status', 'created_at'))
+            available_equipment = list(Equipment.objects.filter(available=True).exclude(owner=user).values('id', 'name', 'image', 'price_per_day', 'owner__username', 'description', 'available'))
+            available_vehicles = list(Transport.objects.filter(available=True).exclude(owner=user).values('id', 'vehicle_name', 'image', 'price_per_trip', 'owner__username', 'available'))
+            my_products = list(Product.objects.filter(farmer=user).values('id', 'name', 'image', 'price', 'available', 'created_at'))
+            my_equipment_rentals = list(EquipmentRentalRequest.objects.filter(farmer=user).order_by('-created_at').values('id', 'equipment__name', 'equipment__image', 'equipment__price_per_day', 'status', 'created_at'))
+            my_transport_requests = list(TransportRequest.objects.filter(farmer=user).order_by('-created_at').values('id', 'transport__vehicle_name', 'transport__image', 'transport__price_per_trip', 'pickup_location', 'delivery_location', 'cargo_details', 'status', 'created_at'))
+            my_orders = list(ProductOrder.objects.filter(product__farmer=user).order_by('-created_at').values('id', 'product__name', 'product__image', 'product__price', 'quantity', 'buyer__username', 'status', 'created_at'))
             # Weather and education as before
             weather = None
             weather_debug = None
@@ -159,26 +159,26 @@ class DashboardSummaryView(views.APIView):
             }
         elif role == 'buyer':
             # Only show products not owned by this user
-            available_products = list(Product.objects.filter(available=True).exclude(farmer=user).values('id', 'name', 'farmer__username', 'price', 'created_at'))
-            my_orders = list(ProductOrder.objects.filter(buyer=user).order_by('-created_at').values('id', 'product__name', 'status', 'created_at'))
+            available_products = list(Product.objects.filter(available=True).exclude(farmer=user).values('id', 'name', 'image', 'price', 'farmer__username', 'created_at'))
+            my_orders = list(ProductOrder.objects.filter(buyer=user).order_by('-created_at').values('id', 'product__name', 'product__image', 'product__price', 'quantity', 'status', 'created_at'))
             data = {
                 'available_products': available_products,
                 'my_orders': my_orders,
             }
         elif role == 'equipment_seller':
             # My equipment
-            my_equipment = list(Equipment.objects.filter(owner=user).values('id', 'name', 'description', 'available'))
+            my_equipment = list(Equipment.objects.filter(owner=user).values('id', 'name', 'image', 'price_per_day', 'description', 'available'))
             # Rental requests for my equipment
-            rental_requests = list(EquipmentRentalRequest.objects.filter(equipment__owner=user).order_by('-created_at').values('id', 'equipment__name', 'farmer__username', 'status', 'created_at'))
+            rental_requests = list(EquipmentRentalRequest.objects.filter(equipment__owner=user).order_by('-created_at').values('id', 'equipment__name', 'equipment__image', 'equipment__price_per_day', 'farmer__username', 'status', 'created_at'))
             data = {
                 'my_equipment': my_equipment,
                 'rental_requests': rental_requests,
             }
         elif role == 'transporter':
             # My vehicles
-            my_vehicles = list(Transport.objects.filter(owner=user).values('id', 'vehicle_name', 'available'))
+            my_vehicles = list(Transport.objects.filter(owner=user).values('id', 'vehicle_name', 'image', 'price_per_trip', 'available'))
             # Transport requests for my vehicles
-            transport_requests = list(TransportRequest.objects.filter(transport__owner=user).order_by('-created_at').values('id', 'transport__vehicle_name', 'farmer__username', 'pickup_location', 'delivery_location', 'cargo_details', 'status', 'created_at'))
+            transport_requests = list(TransportRequest.objects.filter(transport__owner=user).order_by('-created_at').values('id', 'transport__vehicle_name', 'transport__image', 'transport__price_per_trip', 'farmer__username', 'pickup_location', 'delivery_location', 'cargo_details', 'status', 'created_at'))
             data = {
                 'my_vehicles': my_vehicles,
                 'transport_requests': transport_requests,

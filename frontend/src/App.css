@@ -56,6 +56,7 @@ body {
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
+  margin-bottom: 1rem;
 }
 
 .card:hover {
@@ -67,6 +68,64 @@ body {
   border-bottom: none;
   border-radius: 12px 12px 0 0 !important;
   font-weight: 600;
+  padding: 1rem 1.25rem;
+}
+
+.card-body {
+  padding: 1.25rem;
+}
+
+/* Dashboard Layout Improvements */
+.dashboard-container {
+  padding: 1rem;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+.dashboard-section {
+  margin-bottom: 2rem;
+}
+
+.dashboard-section .card-body {
+  padding: 0.75rem;
+}
+
+.dashboard-item {
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.dashboard-item:hover {
+  border-color: #dee2e6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.dashboard-item .card-body {
+  padding: 1rem;
+}
+
+.dashboard-empty-state {
+  padding: 2rem;
+  text-align: center;
+  color: #6c757d;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .card-header {
+    padding: 0.75rem 1rem;
+  }
+  
+  .card-header h5 {
+    font-size: 1rem;
+  }
+  
+  .dashboard-item .card-body {
+    padding: 0.75rem;
+  }
 }
 
 /* Stats Cards */

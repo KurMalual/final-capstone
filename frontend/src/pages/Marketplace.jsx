@@ -339,10 +339,24 @@ const Marketplace = () => {
               {orders.map((order) => (
                 <Col md={6} lg={4} key={order.id} className="mb-3">
                   <Card>
+                    {order.product_image && (
+                      <Card.Img
+                        variant="top"
+                        src={order.product_image}
+                        alt={order.product_name}
+                        style={{ height: '150px', objectFit: 'cover' }}
+                      />
+                    )}
                     <Card.Body>
                       <Card.Title>Order #{order.id}</Card.Title>
                       <p><strong>Product:</strong> {order.product_name || 'N/A'}</p>
                       <p><strong>Quantity:</strong> {order.quantity}</p>
+                      {order.product_price && (
+                        <p><strong>Unit Price:</strong> ${order.product_price}</p>
+                      )}
+                      {order.total_price && (
+                        <p><strong>Total Price:</strong> ${order.total_price}</p>
+                      )}
                       <p><strong>Status:</strong> 
                         <Badge bg={
                           order.status === 'approved' ? 'success' : 

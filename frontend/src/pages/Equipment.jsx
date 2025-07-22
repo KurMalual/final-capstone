@@ -384,9 +384,20 @@ const Equipment = () => {
               {rentalRequests.map((request) => (
                 <Col md={6} lg={4} key={request.id} className="mb-3">
                   <Card>
+                    {request.equipment_image && (
+                      <Card.Img
+                        variant="top"
+                        src={request.equipment_image}
+                        alt={request.equipment_name}
+                        style={{ height: '150px', objectFit: 'cover' }}
+                      />
+                    )}
                     <Card.Body>
                       <Card.Title>Equipment Request</Card.Title>
                       <p><strong>Equipment:</strong> {request.equipment_name || 'N/A'}</p>
+                      {request.equipment_price_per_day && (
+                        <p><strong>Price:</strong> ${request.equipment_price_per_day}/day</p>
+                      )}
                       {request.operation_location && (
                         <p><strong>Operation Location:</strong> {request.operation_location}</p>
                       )}
