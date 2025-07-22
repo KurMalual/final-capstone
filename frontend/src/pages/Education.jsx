@@ -90,7 +90,7 @@ const Education = () => {
     );
   }
 
-  const canAddResources = user?.role === 'farmer' || user?.role === 'admin';
+  const canAddResources = user?.role === 'admin';
 
   return (
     <Container fluid className="p-4">
@@ -174,7 +174,7 @@ const Education = () => {
                     <div className="h1 mb-3">📖</div>
                     <h5>No Educational Resources Yet</h5>
                     <p className="text-muted">
-                      Start building your knowledge base by adding educational materials.
+                      Educational materials will be made available by administrators. Check back later for learning resources!
                     </p>
                     {canAddResources && (
                       <Button variant="primary" onClick={() => setShowAddModal(true)}>
