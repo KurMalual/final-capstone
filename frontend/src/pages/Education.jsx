@@ -16,7 +16,7 @@ const Education = () => {
   // Form states
   const [resourceForm, setResourceForm] = useState({
     title: '',
-    resource_type: 'document',
+    resource_type: 'video',
     language: 'en',
     description: ''
   });
@@ -54,7 +54,7 @@ const Education = () => {
       await educationAPI.createResource(resourceForm);
       setSuccess('Educational resource added successfully!');
       setShowAddModal(false);
-      setResourceForm({ title: '', resource_type: 'document', language: 'en', description: '' });
+      setResourceForm({ title: '', resource_type: 'video', language: 'en', description: '' });
       loadResources();
     } catch (error) {
       setError('Failed to add resource');
@@ -66,8 +66,6 @@ const Education = () => {
     switch (type) {
       case 'video': return '🎥';
       case 'audio': return '🎵';
-      case 'document': return '📄';
-      case 'image': return '🖼️';
       default: return '📚';
     }
   };
@@ -75,9 +73,7 @@ const Education = () => {
   const getResourceTypeBadge = (type) => {
     const colors = {
       video: 'primary',
-      audio: 'success',
-      document: 'info',
-      image: 'warning'
+      audio: 'success'
     };
     return colors[type] || 'secondary';
   };
@@ -189,46 +185,86 @@ const Education = () => {
                 <Col md={6} lg={4} key={resource.id} className="mb-3">
                   <Card className="h-100">
                     <Card.Body>
+                      {/* Title only at the top */}
                       <div className="d-flex align-items-start mb-3">
                         <div className="me-3 h3">{getResourceTypeIcon(resource.resource_type)}</div>
                         <div className="flex-grow-1">
                           <Card.Title className="h6 mb-1">{resource.title}</Card.Title>
-                          <div className="mb-2">
-                            <Badge bg={getResourceTypeBadge(resource.resource_type)} className="me-2">
-                              {resource.resource_type}
-                            </Badge>
-                            <Badge bg="outline-secondary" text="dark">
-                              {resource.language?.toUpperCase() || 'EN'}
-                            </Badge>
-                          </div>
                         </div>
                       </div>
                       
+                      {/* Video Player for Video Resources */}
+                      {resource.resource_type === 'video' && resource.file && (
+                        <div className="mb-3">
+                          <video 
+                            controls 
+                            style={{ width: '100%', height: '200px', borderRadius: '8px' }}
+                            poster={resource.thumbnail}
+                          >
+                            <source src={resource.file} type="video/mp4" />
+                            <source src={resource.file} type="video/webm" />
+                            <source src={resource.file} type="video/ogg" />
+                            Your browser does not support the video tag.
+                          </video>
+                        </div>
+                      )}
+                      
+                      {/* Audio Player for Audio Resources */}
+                      {resource.resource_type === 'audio' && resource.file && (
+                        <div className="mb-3">
+                          <div 
+                            className="d-flex align-items-center p-3 bg-light rounded" 
+                            style={{ border: '2px solid #e9ecef' }}
+                          >
+                            <div className="me-3">
+                              <div 
+                                className="d-flex align-items-center justify-content-center"
+                                style={{ 
+                                  width: '50px', 
+                                  height: '50px', 
+                                  backgroundColor: '#28a745', 
+                                  borderRadius: '50%',
+                                  color: 'white',
+                                  fontSize: '20px'
+                                }}
+                              >
+                                🎵
+                              </div>
+                            </div>
+                            <div className="flex-grow-1">
+                              <audio 
+                                controls 
+                                style={{ width: '100%' }}
+                                preload="metadata"
+                              >
+                                <source src={resource.file} type="audio/mpeg" />
+                                <source src={resource.file} type="audio/wav" />
+                                <source src={resource.file} type="audio/ogg" />
+                                Your browser does not support the audio tag.
+                              </audio>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Description, badges, and date below video */}
                       {resource.description && (
-                        <Card.Text className="small text-muted mb-3">
+                        <Card.Text className="small text-muted mb-2">
                           {resource.description}
                         </Card.Text>
                       )}
                       
-                      <div className="text-muted small mb-3">
-                        Added: {new Date(resource.created_at).toLocaleDateString()}
+                      <div className="mb-2">
+                        <Badge bg={getResourceTypeBadge(resource.resource_type)} className="me-2">
+                          {resource.resource_type}
+                        </Badge>
+                        <Badge bg="outline-secondary" text="dark">
+                          {resource.language?.toUpperCase() || 'EN'}
+                        </Badge>
                       </div>
                       
-                      <div className="d-flex gap-2">
-                        {resource.file && (
-                          <Button 
-                            variant="outline-primary" 
-                            size="sm"
-                            href={resource.file}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                          >
-                            Download
-                          </Button>
-                        )}
-                        <Button variant="outline-secondary" size="sm">
-                          View Details
-                        </Button>
+                      <div className="text-muted small">
+                        Added: {new Date(resource.created_at).toLocaleDateString()}
                       </div>
                     </Card.Body>
                   </Card>
@@ -315,10 +351,8 @@ const Education = () => {
                 onChange={(e) => setResourceForm({...resourceForm, resource_type: e.target.value})}
                 required
               >
-                <option value="document">Document/PDF</option>
                 <option value="video">Video</option>
                 <option value="audio">Audio</option>
-                <option value="image">Image/Infographic</option>
               </Form.Select>
             </Form.Group>
             
