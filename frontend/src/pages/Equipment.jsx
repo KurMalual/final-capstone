@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Container, Row, Col, Card, Button, Modal, Form, Alert, Badge, Spinner } from 'react-bootstrap';
 import { equipmentAPI } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
@@ -11,6 +11,11 @@ const Equipment = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+
+  // Debug logging
+  console.log('Equipment component: user state:', user);
+  console.log('Equipment component: loading state:', loading);
+  console.log('Equipment component: error state:', error);
   
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
@@ -41,40 +46,55 @@ const Equipment = () => {
     operation_location: ''
   });
 
-  useEffect(() => {
-    loadData();
-  }, []);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
+      setError(''); // Clear any previous errors
       console.log('Equipment page: Loading data for user:', user);
       
-      const [equipmentResponse, rentalResponse] = await Promise.all([
-        equipmentAPI.getAll(),
-        equipmentAPI.getRentalRequests()
-      ]);
+      // Make API calls with individual error handling
+      let equipmentData = [];
+      let rentalData = [];
       
-      console.log('Equipment page: Equipment response:', equipmentResponse.data);
-      console.log('Equipment page: Rental response:', rentalResponse.data);
+      try {
+        const equipmentResponse = await equipmentAPI.getAll();
+        console.log('Equipment page: Equipment response:', equipmentResponse.data);
+        equipmentData = equipmentResponse.data?.results || equipmentResponse.data || [];
+      } catch (equipmentError) {
+        console.error('Equipment API error:', equipmentError);
+        setError('Failed to load equipment data');
+        equipmentData = [];
+      }
       
-      // Handle paginated API response - data is in 'results' field
-      const equipmentData = equipmentResponse.data?.results || equipmentResponse.data || [];
-      const rentalData = rentalResponse.data?.results || rentalResponse.data || [];
+      try {
+        const rentalResponse = await equipmentAPI.getRentalRequests();
+        console.log('Equipment page: Rental response:', rentalResponse.data);
+        rentalData = rentalResponse.data?.results || rentalResponse.data || [];
+      } catch (rentalError) {
+        console.error('Rental requests API error:', rentalError);
+        // Don't set error here as equipment might still work
+        rentalData = [];
+      }
       
       // Ensure we always set arrays
       setEquipment(Array.isArray(equipmentData) ? equipmentData : []);
       setRentalRequests(Array.isArray(rentalData) ? rentalData : []);
       console.log('Equipment page: Set equipment count:', equipmentData.length);
       console.log('Equipment page: Set rental requests count:', rentalData.length);
-      setError('');
+      
     } catch (error) {
-      console.error('Equipment page: Error loading data:', error);
-      setError('Failed to load data');
+      console.error('Equipment page: Critical error loading data:', error);
+      setError('Failed to load equipment page data: ' + error.message);
+      setEquipment([]);
+      setRentalRequests([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const handleAddEquipment = async (e) => {
     e.preventDefault();
@@ -216,6 +236,20 @@ const Equipment = () => {
     );
   }
 
+  if (error) {
+    return (
+      <Container fluid className="p-4">
+        <Alert variant="danger">
+          <h5>Error Loading Equipment Page</h5>
+          <p>{error}</p>
+          <Button variant="outline-danger" onClick={loadData}>
+            Try Again
+          </Button>
+        </Alert>
+      </Container>
+    );
+  }
+
   if (!user) {
     return (
       <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
@@ -227,9 +261,26 @@ const Equipment = () => {
   const isEquipmentSeller = user?.role === 'equipment_seller';
   const isFarmer = user?.role === 'farmer';
 
-  console.log('Equipment page render:', { user, isEquipmentSeller, isFarmer, equipmentCount: equipment.length });
+  console.log('Equipment page render:', { 
+    user: user?.username, 
+    role: user?.role,
+    isEquipmentSeller, 
+    isFarmer, 
+    equipmentCount: equipment.length,
+    loading,
+    error 
+  });
 
   try {
+    // Add a simple test render first
+    console.log('Equipment component: About to render, states:', {
+      loading,
+      error,
+      user: user?.username,
+      equipmentCount: equipment.length,
+      rentalRequestsCount: rentalRequests.length
+    });
+
     return (
     <Container fluid className="p-4">
       <Row className="mb-4">
@@ -336,6 +387,9 @@ const Equipment = () => {
                     <Card.Body>
                       <Card.Title>Equipment Request</Card.Title>
                       <p><strong>Equipment:</strong> {request.equipment_name || 'N/A'}</p>
+                      {request.operation_location && (
+                        <p><strong>Operation Location:</strong> {request.operation_location}</p>
+                      )}
                       <p><strong>Status:</strong> 
                         <Badge bg={
                           request.status === 'approved' ? 'success' : 
