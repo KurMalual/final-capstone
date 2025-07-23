@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Card, Badge, Button, Toast, ToastContainer, Alert, Modal, Form } from 'react-bootstrap';
+import { Container, Row, Col, Card, Badge, Button, Alert, Toast, ToastContainer, Modal, Form } from 'react-bootstrap';
 import { transportAPI } from '../../services/api';
+import { getImageUrl } from '../../utils/imageUtils';
 
 const TransporterDashboard = ({ data, onRefresh }) => {
   const [loading, setLoading] = useState(false);
@@ -135,14 +136,14 @@ const TransporterDashboard = ({ data, onRefresh }) => {
   };
 
   return (
-    <Container className="py-4">
+    <Container fluid className="py-4" style={{ backgroundColor: '#f8f9fa', minHeight: '100vh' }}>
       {/* Welcome Header */}
       <Row className="mb-4">
         <Col>
-          <Card className="bg-info text-white">
+          <Card className="bg-white shadow-sm">
             <Card.Body>
-              <h2>Welcome Back, {profileData?.first_name || profileData?.username}! 🚛</h2>
-              <p className="mb-0">Manage your vehicles and transport requests</p>
+              <h2 className="text-primary mb-1">Welcome Back, {profileData?.first_name || profileData?.username}! 🚛</h2>
+              <p className="text-muted mb-0">Manage your vehicles and transport requests</p>
             </Card.Body>
           </Card>
         </Col>
@@ -151,7 +152,7 @@ const TransporterDashboard = ({ data, onRefresh }) => {
       {/* Quick Stats */}
       <Row className="mb-4">
         <Col md={6} className="mb-3">
-          <Card className="h-100 text-center">
+          <Card className="h-100 text-center shadow-sm border-0">
             <Card.Body>
               <h3 className="text-info">🚛 {vehiclesData.length}</h3>
               <p className="mb-0">My Vehicles</p>
@@ -159,7 +160,7 @@ const TransporterDashboard = ({ data, onRefresh }) => {
           </Card>
         </Col>
         <Col md={6} className="mb-3">
-          <Card className="h-100 text-center">
+          <Card className="h-100 text-center shadow-sm border-0">
             <Card.Body>
               <h3 className="text-warning">📋 {requestsData.length}</h3>
               <p className="mb-0">Transport Requests</p>
@@ -169,56 +170,88 @@ const TransporterDashboard = ({ data, onRefresh }) => {
       </Row>
 
       <Row>
-        {/* My Vehicles */}
-        <Col lg={8} className="mb-4">
-          <Card>
+        {/* My Vehicles - Refined Design */}
+        <Col lg={requestsData.length > 0 ? 8 : 12} className="mb-4">
+          <Card className="shadow-sm border-0">
             <Card.Header className="bg-info text-white">
-              <div className="d-flex justify-content-between align-items-center">
-                <h5 className="mb-0">🚛 My Vehicles</h5>
-                <Button variant="outline-light" size="sm">
-                  + Add Vehicle
-                </Button>
+              <div className="d-flex align-items-center">
+                <div className="bg-white rounded-circle p-2 me-3">
+                  <span style={{ fontSize: '1.5rem' }}>🚛</span>
+                </div>
+                <div>
+                  <h5 className="mb-0">My Vehicles</h5>
+                  <small className="opacity-75">{vehiclesData.length} {vehiclesData.length === 1 ? 'vehicle' : 'vehicles'} available</small>
+                </div>
               </div>
             </Card.Header>
-            <Card.Body style={{ maxHeight: '400px', overflowY: 'auto' }}>
-              {vehiclesData.length > 0 ? (
+            <Card.Body className="p-4">
+              {vehiclesData.length === 0 ? (
+                <div className="text-center py-5">
+                  <div className="mb-3" style={{ fontSize: '4rem', opacity: 0.3 }}>🚛</div>
+                  <h5 className="text-muted">No vehicles available</h5>
+                  <p className="text-muted">Add your first vehicle to get started.</p>
+                  <Button variant="info" href="/transport">
+                    Add Vehicle
+                  </Button>
+                </div>
+              ) : (
                 <Row>
                   {vehiclesData.map((vehicle) => (
-                    <Col md={6} key={vehicle.id} className="mb-3">
-                      <Card className="h-100">
-                        {vehicle.image && (
-                          <Card.Img
-                            variant="top"
-                            src={vehicle.image}
-                            alt={vehicle.vehicle_type}
-                            style={{ height: '150px', objectFit: 'cover' }}
-                          />
-                        )}
-                        <Card.Body>
-                          <h6>{vehicle.vehicle_type}</h6>
-                          <small className="text-muted">Capacity: {vehicle.capacity}</small>
-                          <br />
-                          <small className="text-muted">${vehicle.price_per_km}/km</small>
-                          <div className="d-flex justify-content-between align-items-center mt-2">
-                            <Badge bg={vehicle.available ? 'success' : 'danger'}>
-                              {vehicle.available ? '✅ Available' : '🔴 In Use'}
-                            </Badge>
-                            <div className="d-flex gap-1">
+                    <Col md={6} xl={4} key={vehicle.id} className="mb-3">
+                      <Card className="h-100 border-0 shadow-sm">
+                        <div className="position-relative">
+                          {vehicle.image ? (
+                            <Card.Img
+                              variant="top"
+                              src={getImageUrl(vehicle.image)}
+                              alt={vehicle.vehicle_type}
+                              style={{ height: '180px', objectFit: 'cover' }}
+                            />
+                          ) : (
+                            <div 
+                              className="d-flex align-items-center justify-content-center bg-light"
+                              style={{ height: '180px' }}
+                            >
+                              <span style={{ fontSize: '3rem', opacity: 0.3 }}>🚛</span>
+                            </div>
+                          )}
+                          <Badge 
+                            bg={vehicle.available ? 'success' : 'secondary'} 
+                            className="position-absolute top-0 end-0 m-2"
+                          >
+                            {vehicle.available ? 'Available' : 'In Use'}
+                          </Badge>
+                        </div>
+                        <Card.Body className="p-3">
+                          <Card.Title className="h6 mb-2">{vehicle.vehicle_name || vehicle.vehicle_type || 'Vehicle'}</Card.Title>
+                          <Card.Text className="text-muted small mb-3" style={{ fontSize: '0.875rem' }}>
+                            {vehicle.description && vehicle.description.length > 80 ? `${vehicle.description.substring(0, 80)}...` : vehicle.description}
+                          </Card.Text>
+                          <div className="d-flex justify-content-between align-items-center mb-3">
+                            <strong className="text-success">
+                              ${vehicle.price_per_trip || vehicle.price_per_km || '0'}/
+                              {vehicle.price_per_trip ? 'trip' : 'km'}
+                            </strong>
+                          </div>
+                          <div className="d-grid gap-2">
+                            <div className="d-flex gap-2">
                               <Button 
-                                variant="outline-info" 
+                                variant="warning" 
                                 size="sm"
                                 onClick={() => handleEditVehicle(vehicle)}
                                 disabled={loading}
+                                className="flex-fill"
                               >
-                                ✏️ Edit
+                                Edit
                               </Button>
                               <Button 
-                                variant="outline-danger" 
+                                variant="danger" 
                                 size="sm"
-                                onClick={() => handleDeleteVehicle(vehicle.id, vehicle.vehicle_type)}
+                                onClick={() => handleDeleteVehicle(vehicle.id, vehicle.vehicle_name || vehicle.vehicle_type)}
                                 disabled={loading}
+                                className="flex-fill"
                               >
-                                🗑️ Delete
+                                Delete
                               </Button>
                             </div>
                           </div>
@@ -227,96 +260,134 @@ const TransporterDashboard = ({ data, onRefresh }) => {
                     </Col>
                   ))}
                 </Row>
-              ) : (
-                <p className="text-muted text-center">No vehicles listed</p>
               )}
             </Card.Body>
           </Card>
         </Col>
 
-        {/* Transport Requests */}
-        <Col lg={4} className="mb-4">
-          <Card>
-            <Card.Header className="bg-warning text-dark">
-              <h5 className="mb-0">📋 Transport Requests</h5>
-            </Card.Header>
-            <Card.Body style={{ maxHeight: '400px', overflowY: 'auto' }}>
-              {requestsData.length > 0 ? (
-                requestsData.map((request) => (
-                  <Card key={request.id} className="dashboard-item">
-                    <Card.Body className="py-2">
-                      <div className="d-flex align-items-center gap-3 mb-2">
-                        {request.transport__image && (
-                          <img 
-                            src={request.transport__image} 
-                            alt={request.transport__vehicle_name}
-                            className="rounded"
-                            style={{ width: '50px', height: '50px', objectFit: 'cover' }}
+        {/* Transport Requests - Refined Design */}
+        {requestsData.length > 0 && (
+          <Col lg={4}>
+            <Card className="shadow-sm border-0">
+              <Card.Header className="bg-warning text-dark">
+                <div className="d-flex align-items-center">
+                  <div className="bg-white rounded-circle p-2 me-3">
+                    <span style={{ fontSize: '1.5rem' }}>📋</span>
+                  </div>
+                  <div>
+                    <h5 className="mb-0">Transport Requests</h5>
+                    <small className="opacity-75">{requestsData.length} {requestsData.length === 1 ? 'request' : 'requests'}</small>
+                  </div>
+                </div>
+              </Card.Header>
+              <Card.Body className="p-0" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                {requestsData.map((request, index) => (
+                  <div key={request.id} className={`p-3 ${index !== requestsData.length - 1 ? 'border-bottom' : ''}`}>
+                    <div className="d-flex align-items-start">
+                      {/* Vehicle Image or Fallback */}
+                      <div className="me-3 flex-shrink-0">
+                        {request.transport__vehicle_image ? (
+                          <img
+                            src={getImageUrl(request.transport__vehicle_image)}
+                            alt={request.transport__vehicle_name || 'Vehicle'}
+                            style={{ 
+                              width: '120px', 
+                              height: '120px', 
+                              objectFit: 'cover',
+                              borderRadius: '8px',
+                              border: '1px solid #ddd'
+                            }}
+                            onError={(e) => {
+                              // Hide the broken image and show fallback
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
                           />
-                        )}
-                        <div className="flex-grow-1">
-                          <h6 className="mb-1">{request.transport__vehicle_name}</h6>
-                          <small className="text-muted">by {request.farmer__username}</small>
-                          {request.transport__price_per_trip && (
-                            <div>
-                              <small className="text-success">
-                                ${request.transport__price_per_trip}/trip
-                              </small>
-                            </div>
-                          )}
+                        ) : null}
+                        {/* Fallback Icon */}
+                        <div 
+                          className="d-flex align-items-center justify-content-center bg-light"
+                          style={{ 
+                            width: '120px', 
+                            height: '120px', 
+                            borderRadius: '8px',
+                            border: '1px solid #ddd',
+                            display: request.transport__vehicle_image ? 'none' : 'flex'
+                          }}
+                        >
+                          <span style={{ fontSize: '2.5rem', opacity: 0.5 }}>🚛</span>
                         </div>
                       </div>
-                      <p className="mb-1 text-sm">From: {request.pickup_location}</p>
-                      <p className="mb-1 text-sm">To: {request.delivery_location}</p>
-                      <p className="mb-1 text-sm">Cargo: {request.cargo_details}</p>
-                      <div className="mt-2">
-                        {request.status === 'pending' ? (
-                          <div className="d-grid gap-2">
+                      <div className="flex-grow-1">
+                        <div className="d-flex justify-content-between align-items-start mb-2">
+                          <h6 className="mb-0 fw-bold">{request.transport__vehicle_name || 'Vehicle'}</h6>
+                          <Badge bg={
+                            request.status === 'approved' ? 'success' : 
+                            request.status === 'rejected' ? 'danger' : 'warning'
+                          }>
+                            {request.status}
+                          </Badge>
+                        </div>
+                        
+                        <div className="small text-muted mb-2">
+                          <div className="d-flex justify-content-between">
+                            <span>👤 {request.farmer__username || 'Farmer'}</span>
+                            {request.transport__price_per_trip && (
+                              <span className="fw-semibold text-success">${request.transport__price_per_trip}/trip</span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="small mb-2">
+                          <div><strong>📍 From:</strong> {request.pickup_location}</div>
+                          <div><strong>🎯 To:</strong> {request.delivery_location}</div>
+                          {request.cargo_details && <div><strong>📦 Cargo:</strong> {request.cargo_details.length > 50 ? request.cargo_details.substring(0, 50) + '...' : request.cargo_details}</div>}
+                        </div>
+                        
+                        {request.status === 'pending' && (
+                          <div className="d-flex gap-2 mt-3">
                             <Button 
                               variant="success" 
                               size="sm"
-                              disabled={loading}
                               onClick={() => handleAcceptTransport(request.id, request.transport__vehicle_name)}
+                              disabled={loading}
+                              className="px-3"
                             >
                               ✅ Accept
                             </Button>
                             <Button 
                               variant="danger" 
                               size="sm"
-                              disabled={loading}
                               onClick={() => handleRejectTransport(request.id, request.transport__vehicle_name)}
+                              disabled={loading}
+                              className="px-3"
                             >
                               ❌ Reject
                             </Button>
                           </div>
-                        ) : (
-                          <div className="d-flex justify-content-between align-items-center">
-                            <Badge bg={
-                              request.status === 'approved' ? 'success' : 'danger'
-                            }>
-                              {request.status === 'approved' ? '✅ Accepted' : '❌ Rejected'}
-                            </Badge>
+                        )}
+                        
+                        {request.status !== 'pending' && (
+                          <div className="mt-2">
                             <Button 
                               variant="outline-secondary" 
                               size="sm"
                               onClick={() => handleDeleteTransportRequest(request.id, request.transport__vehicle_name)}
                               disabled={loading}
-                              title="Delete this request"
+                              className="w-100"
                             >
-                              🗑️
+                              Remove
                             </Button>
                           </div>
                         )}
                       </div>
-                    </Card.Body>
-                  </Card>
-                ))
-              ) : (
-                <p className="text-muted text-center">No transport requests</p>
-              )}
-            </Card.Body>
-          </Card>
-        </Col>
+                    </div>
+                  </div>
+                ))}
+              </Card.Body>
+            </Card>
+          </Col>
+        )}
       </Row>
       
       {/* Edit Vehicle Modal */}

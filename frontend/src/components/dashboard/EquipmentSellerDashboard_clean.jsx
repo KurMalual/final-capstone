@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Container, Row, Col, Card, Badge, Button, Alert, Toast, ToastContainer, Modal, Form } from 'react-bootstrap';
 import { equipmentAPI } from '../../services/api';
-import { getImageUrl } from '../../utils/imageUtils';
 
 const EquipmentSellerDashboard = ({ data, onRefresh }) => {
   const [loading, setLoading] = useState(false);
@@ -197,7 +196,7 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
                           {equipment.image ? (
                             <Card.Img
                               variant="top"
-                              src={getImageUrl(equipment.image)}
+                              src={equipment.image}
                               alt={equipment.name}
                               style={{ height: '180px', objectFit: 'cover' }}
                             />
@@ -230,7 +229,7 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
                           <div className="d-grid gap-2">
                             <div className="d-flex gap-2">
                               <Button 
-                                variant="warning" 
+                                variant="outline-primary" 
                                 size="sm"
                                 onClick={() => handleEditEquipment(equipment)}
                                 disabled={loading}
@@ -239,7 +238,7 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
                                 Edit
                               </Button>
                               <Button 
-                                variant="danger" 
+                                variant="outline-danger" 
                                 size="sm"
                                 onClick={() => handleDeleteEquipment(equipment.id, equipment.name)}
                                 disabled={loading}
@@ -278,8 +277,25 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
                 {rentalRequests.map((request, index) => (
                   <div key={request.id} className={`p-3 ${index !== rentalRequests.length - 1 ? 'border-bottom' : ''}`}>
                     <div className="d-flex align-items-start">
+                      <div className="flex-shrink-0 me-3">
+                        {request.equipment__image ? (
+                          <img
+                            src={request.equipment__image}
+                            alt={request.equipment__name}
+                            className="rounded"
+                            style={{ width: '50px', height: '50px', objectFit: 'cover', display: 'block' }}
+                          />
+                        ) : (
+                          <div 
+                            className="d-flex align-items-center justify-content-center bg-light rounded"
+                            style={{ width: '50px', height: '50px' }}
+                          >
+                            <span style={{ fontSize: '1.5rem', opacity: 0.5 }}>🚜</span>
+                          </div>
+                        )}
+                      </div>
                       <div className="flex-grow-1">
-                        <div className="d-flex justify-content-between align-items-start mb-2">
+                        <div className="d-flex justify-content-between align-items-start mb-2" style={{marginBottom: 0}}>
                           <h6 className="mb-0">{request.equipment__name || 'Equipment'}</h6>
                           <Badge bg={
                             request.status === 'approved' ? 'success' : 

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Container, Row, Col, Card, Badge, Button, Alert, Toast, ToastContainer, Modal, Form } from 'react-bootstrap';
 import { equipmentAPI } from '../../services/api';
-import { getImageUrl } from '../../utils/imageUtils';
 
 const EquipmentSellerDashboard = ({ data, onRefresh }) => {
   const [loading, setLoading] = useState(false);
@@ -59,7 +58,7 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
     try {
       setLoading(true);
       await equipmentAPI.rejectRental(requestId);
-      showNotification(`✅ Rental request for ${equipmentName} rejected!`, 'success');
+      showNotification(`❌ Rental request for ${equipmentName} rejected`, 'warning');
       if (onRefresh) onRefresh();
     } catch (error) {
       console.error('Error rejecting rental:', error);
@@ -69,28 +68,12 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
     }
   };
 
-  const handleDeleteRentalRequest = async (requestId, equipmentName) => {
-    if (window.confirm(`Delete rental request for "${equipmentName}"?`)) {
-      try {
-        setLoading(true);
-        await equipmentAPI.deleteRentalRequest(requestId);
-        showNotification(`✅ Rental request deleted!`, 'success');
-        if (onRefresh) onRefresh();
-      } catch (error) {
-        console.error('Error deleting rental request:', error);
-        showNotification('❌ Failed to delete rental request', 'danger');
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
-
   const handleEditEquipment = (equipment) => {
     setEditingEquipment(equipment);
     setEditForm({
-      name: equipment.name || '',
-      description: equipment.description || '',
-      hourly_rate: equipment.hourly_rate || '',
+      name: equipment.name,
+      description: equipment.description,
+      hourly_rate: equipment.hourly_rate,
       available: equipment.available
     });
     setShowEditModal(true);
@@ -123,6 +106,40 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
       } catch (error) {
         console.error('Error deleting equipment:', error);
         showNotification('❌ Failed to delete equipment', 'danger');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleToggleAvailability = async (equipmentId, equipmentName, currentStatus) => {
+    const action = currentStatus ? 'mark as unavailable' : 'mark as available';
+    if (window.confirm(`Are you sure you want to ${action} "${equipmentName}"?`)) {
+      try {
+        setLoading(true);
+        await equipmentAPI.toggleAvailability(equipmentId);
+        const newStatus = currentStatus ? 'unavailable' : 'available';
+        showNotification(`✅ Equipment "${equipmentName}" marked as ${newStatus}!`, 'success');
+        if (onRefresh) onRefresh();
+      } catch (error) {
+        console.error('Error toggling availability:', error);
+        showNotification('❌ Failed to update equipment availability', 'danger');
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
+
+  const handleDeleteRentalRequest = async (requestId, equipmentName) => {
+    if (window.confirm(`Are you sure you want to delete this rental request for "${equipmentName}"?`)) {
+      try {
+        setLoading(true);
+        await equipmentAPI.deleteRentalRequest(requestId);
+        showNotification(`✅ Rental request deleted successfully!`, 'success');
+        if (onRefresh) onRefresh();
+      } catch (error) {
+        console.error('Error deleting rental request:', error);
+        showNotification('❌ Failed to delete rental request', 'danger');
       } finally {
         setLoading(false);
       }
@@ -197,7 +214,7 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
                           {equipment.image ? (
                             <Card.Img
                               variant="top"
-                              src={getImageUrl(equipment.image)}
+                              src={equipment.image}
                               alt={equipment.name}
                               style={{ height: '180px', objectFit: 'cover' }}
                             />
@@ -230,7 +247,17 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
                           <div className="d-grid gap-2">
                             <div className="d-flex gap-2">
                               <Button 
-                                variant="warning" 
+                                variant={equipment.available ? 'outline-warning' : 'outline-success'} 
+                                size="sm"
+                                onClick={() => handleToggleAvailability(equipment.id, equipment.name, equipment.available)}
+                                disabled={loading}
+                                className="flex-fill"
+                                title={equipment.available ? 'Mark as unavailable' : 'Mark as available'}
+                              >
+                                {equipment.available ? 'Pause' : 'Resume'}
+                              </Button>
+                              <Button 
+                                variant="outline-primary" 
                                 size="sm"
                                 onClick={() => handleEditEquipment(equipment)}
                                 disabled={loading}
@@ -239,7 +266,7 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
                                 Edit
                               </Button>
                               <Button 
-                                variant="danger" 
+                                variant="outline-danger" 
                                 size="sm"
                                 onClick={() => handleDeleteEquipment(equipment.id, equipment.name)}
                                 disabled={loading}
@@ -278,6 +305,23 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
                 {rentalRequests.map((request, index) => (
                   <div key={request.id} className={`p-3 ${index !== rentalRequests.length - 1 ? 'border-bottom' : ''}`}>
                     <div className="d-flex align-items-start">
+                      <div className="flex-shrink-0 me-3">
+                        {request.equipment__image ? (
+                          <img
+                            src={request.equipment__image}
+                            alt={request.equipment__name}
+                            className="rounded"
+                            style={{ width: '50px', height: '50px', objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <div 
+                            className="d-flex align-items-center justify-content-center bg-light rounded"
+                            style={{ width: '50px', height: '50px' }}
+                          >
+                            <span style={{ fontSize: '1.5rem', opacity: 0.5 }}>🚜</span>
+                          </div>
+                        )}
+                      </div>
                       <div className="flex-grow-1">
                         <div className="d-flex justify-content-between align-items-start mb-2">
                           <h6 className="mb-0">{request.equipment__name || 'Equipment'}</h6>
@@ -348,66 +392,63 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
           </Col>
         )}
       </Row>
-
+      
       {/* Edit Equipment Modal */}
-      {showEditModal && editingEquipment && (
-        <Modal show={showEditModal} onHide={() => setShowEditModal(false)} size="lg">
-          <Modal.Header closeButton>
-            <Modal.Title>Edit Equipment</Modal.Title>
-          </Modal.Header>
+      <Modal show={showEditModal} onHide={() => setShowEditModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Edit Equipment</Modal.Title>
+        </Modal.Header>
+        <Form onSubmit={handleUpdateEquipment}>
           <Modal.Body>
-            <Form onSubmit={handleUpdateEquipment}>
-              <Form.Group className="mb-3">
-                <Form.Label>Equipment Name</Form.Label>
-                <Form.Control
-                  type="text"
-                  value={editForm.name}
-                  onChange={(e) => setEditForm({...editForm, name: e.target.value})}
-                  required
-                />
-              </Form.Group>
-              
-              <Form.Group className="mb-3">
-                <Form.Label>Description</Form.Label>
-                <Form.Control
-                  as="textarea"
-                  rows={3}
-                  value={editForm.description}
-                  onChange={(e) => setEditForm({...editForm, description: e.target.value})}
-                />
-              </Form.Group>
-              
-              <Form.Group className="mb-3">
-                <Form.Label>Hourly Rate</Form.Label>
-                <Form.Control
-                  type="number"
-                  step="0.01"
-                  value={editForm.hourly_rate}
-                  onChange={(e) => setEditForm({...editForm, hourly_rate: e.target.value})}
-                />
-              </Form.Group>
-              
+            <Form.Group className="mb-3">
+              <Form.Label>Equipment Name</Form.Label>
+              <Form.Control
+                type="text"
+                value={editForm.name}
+                onChange={(e) => setEditForm(prev => ({ ...prev, name: e.target.value }))}
+                required
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Description</Form.Label>
+              <Form.Control
+                as="textarea"
+                rows={3}
+                value={editForm.description}
+                onChange={(e) => setEditForm(prev => ({ ...prev, description: e.target.value }))}
+                required
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
+              <Form.Label>Hourly Rate ($)</Form.Label>
+              <Form.Control
+                type="number"
+                step="0.01"
+                value={editForm.hourly_rate}
+                onChange={(e) => setEditForm(prev => ({ ...prev, hourly_rate: e.target.value }))}
+                required
+              />
+            </Form.Group>
+            <Form.Group className="mb-3">
               <Form.Check
                 type="checkbox"
                 label="Available for rent"
                 checked={editForm.available}
-                onChange={(e) => setEditForm({...editForm, available: e.target.checked})}
-                className="mb-3"
+                onChange={(e) => setEditForm(prev => ({ ...prev, available: e.target.checked }))}
               />
-              
-              <div className="d-flex justify-content-end gap-2">
-                <Button variant="secondary" onClick={() => setShowEditModal(false)}>
-                  Cancel
-                </Button>
-                <Button variant="primary" type="submit" disabled={loading}>
-                  {loading ? 'Updating...' : 'Update Equipment'}
-                </Button>
-              </div>
-            </Form>
+            </Form.Group>
           </Modal.Body>
-        </Modal>
-      )}
-
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowEditModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="primary" type="submit" disabled={loading}>
+              {loading ? 'Updating...' : 'Update Equipment'}
+            </Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
+      
       {/* Toast Notifications */}
       <ToastContainer position="top-end" className="p-3">
         <Toast show={showToast} onClose={() => setShowToast(false)} bg={toastVariant}>

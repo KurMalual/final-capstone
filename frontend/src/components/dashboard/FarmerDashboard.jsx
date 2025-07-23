@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Container, Row, Col, Card, Badge, Button, ListGroup, Alert, Toast, ToastContainer, Modal, Form } from 'react-bootstrap';
 import { equipmentAPI, transportAPI, marketplaceAPI } from '../../services/api';
 import ImageUpload from '../ImageUpload';
+import { getImageUrl } from '../../utils/imageUtils';
 
 const FarmerDashboard = ({ data, onRefresh }) => {
   const [loading, setLoading] = useState(false);
@@ -476,7 +477,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                         </div>
                         <div className="d-flex gap-1">
                           <Button 
-                            variant="outline-warning" 
+                            variant="warning" 
                             size="sm"
                             onClick={() => handleEditProduct(product)}
                             disabled={loading}
@@ -485,7 +486,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                             ✏️
                           </Button>
                           <Button 
-                            variant="outline-danger" 
+                            variant="danger" 
                             size="sm"
                             onClick={() => handleDeleteProduct(product.id, product.name)}
                             disabled={loading}
@@ -524,28 +525,71 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                 {/* Product Orders */}
                 {data.my_orders?.slice(0, 5).map((order) => (
                   <ListGroup.Item key={`order-${order.id}`} className="px-0 py-3 border-bottom">
-                    <div className="d-flex justify-content-between align-items-center">
-                      <div>
-                        <div className="mb-1">
-                          <strong>Order for {order.product__name}</strong>
-                        </div>
-                        <div className="d-flex flex-column">
-                          <small className="text-muted mb-1">by {order.buyer__username}</small>
-                          {order.quantity && order.product__price && (
-                            <small className="text-success fw-semibold">
-                              {order.quantity} × ${order.product__price} = ${(order.quantity * order.product__price).toFixed(2)}
-                            </small>
-                          )}
+                    <div className="d-flex align-items-start">
+                      {/* Product Image or Fallback */}
+                      <div className="me-3 flex-shrink-0">
+                        {order.product__image ? (
+                          <img
+                            src={getImageUrl(order.product__image)}
+                            alt={order.product__name || 'Product'}
+                            style={{ 
+                              width: '120px', 
+                              height: '120px', 
+                              objectFit: 'cover',
+                              borderRadius: '8px',
+                              border: '1px solid #ddd'
+                            }}
+                            onError={(e) => {
+                              // Hide the broken image and show fallback
+                              e.target.style.display = 'none';
+                              e.target.nextSibling.style.display = 'flex';
+                            }}
+                          />
+                        ) : null}
+                        {/* Fallback Icon */}
+                        <div 
+                          className="d-flex align-items-center justify-content-center bg-light"
+                          style={{ 
+                            width: '120px', 
+                            height: '120px', 
+                            borderRadius: '8px',
+                            border: '1px solid #ddd',
+                            display: order.product__image ? 'none' : 'flex'
+                          }}
+                        >
+                          <span style={{ fontSize: '2.5rem', opacity: 0.5 }}>🛒</span>
                         </div>
                       </div>
-                      <div className="d-flex align-items-center gap-2">
-                        {order.status === 'pending' ? (
-                          <>
+                      <div className="flex-grow-1">
+                        <div className="d-flex justify-content-between align-items-start mb-2">
+                          <h6 className="mb-0 fw-bold">Order for {order.product__name || 'Product'}</h6>
+                          <Badge bg={
+                            order.status === 'approved' ? 'success' : 
+                            order.status === 'rejected' ? 'danger' : 'warning'
+                          }>
+                            {order.status}
+                          </Badge>
+                        </div>
+                        
+                        <div className="small text-muted mb-2">
+                          <div className="d-flex justify-content-between">
+                            <span>👤 {order.buyer__username || 'Buyer'}</span>
+                            {order.quantity && order.product__price && (
+                              <span className="fw-semibold text-success">
+                                {order.quantity} × ${order.product__price} = ${(order.quantity * order.product__price).toFixed(2)}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        
+                        {order.status === 'pending' && (
+                          <div className="d-flex gap-2 mt-3">
                             <Button 
                               variant="success" 
                               size="sm"
                               onClick={() => handleApproveOrder(order.id, order.product__name)}
                               disabled={loading}
+                              className="px-3"
                             >
                               ✅ Approve
                             </Button>
@@ -554,12 +598,15 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                               size="sm"
                               onClick={() => handleRejectOrder(order.id, order.product__name)}
                               disabled={loading}
+                              className="px-3"
                             >
                               ❌ Reject
                             </Button>
-                          </>
-                        ) : (
-                          <div className="d-flex align-items-center gap-2">
+                          </div>
+                        )}
+                        
+                        {order.status !== 'pending' && (
+                          <div className="d-flex align-items-center gap-2 mt-2">
                             {getStatusBadge(order.status)}
                           </div>
                         )}

@@ -334,57 +334,102 @@ const Marketplace = () => {
       {orders.length > 0 && (
         <Row>
           <Col>
-            <h4>{isFarmer ? 'Product Orders' : 'My Orders'}</h4>
+            <h4>{isFarmer ? 'Product Orders' : 'My Orders'} ({orders.length} total)</h4>
             <Row>
               {orders.map((order) => (
-                <Col md={6} lg={4} key={order.id} className="mb-3">
-                  <Card>
-                    {order.product_image && (
-                      <Card.Img
-                        variant="top"
-                        src={order.product_image}
-                        alt={order.product_name}
-                        style={{ height: '150px', objectFit: 'cover' }}
-                      />
-                    )}
+                <Col md={12} lg={6} key={order.id} className="mb-3">
+                  <Card className="shadow-sm">
                     <Card.Body>
-                      <Card.Title>Order #{order.id}</Card.Title>
-                      <p><strong>Product:</strong> {order.product_name || 'N/A'}</p>
-                      <p><strong>Quantity:</strong> {order.quantity}</p>
-                      {order.product_price && (
-                        <p><strong>Unit Price:</strong> ${order.product_price}</p>
-                      )}
-                      {order.total_price && (
-                        <p><strong>Total Price:</strong> ${order.total_price}</p>
-                      )}
-                      <p><strong>Status:</strong> 
-                        <Badge bg={
-                          order.status === 'approved' ? 'success' : 
-                          order.status === 'rejected' ? 'danger' : 'warning'
-                        } className="ms-2">
-                          {order.status}
-                        </Badge>
-                      </p>
-                      <p><strong>Message:</strong> {order.message}</p>
-                      
-                      {isFarmer && order.status === 'pending' && (
-                        <div className="d-flex gap-2">
-                          <Button 
-                            variant="success" 
-                            size="sm"
-                            onClick={() => handleApproveOrder(order.id)}
+                      <div className="d-flex align-items-start">
+                        {/* Product Image or Fallback */}
+                        <div className="me-3 flex-shrink-0">
+                          {order.product_image ? (
+                            <img
+                              src={order.product_image}
+                              alt={order.product_name || 'Product'}
+                              style={{ 
+                                width: '180px', 
+                                height: '180px', 
+                                objectFit: 'cover',
+                                borderRadius: '8px',
+                                border: '1px solid #ddd'
+                              }}
+                              onError={(e) => {
+                                // Hide the broken image and show fallback
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                            />
+                          ) : null}
+                          {/* Fallback Icon */}
+                          <div 
+                            className="d-flex align-items-center justify-content-center bg-light"
+                            style={{ 
+                              width: '180px', 
+                              height: '180px', 
+                              borderRadius: '8px',
+                              border: '1px solid #ddd',
+                              display: order.product_image ? 'none' : 'flex'
+                            }}
                           >
-                            Approve
-                          </Button>
-                          <Button 
-                            variant="danger" 
-                            size="sm"
-                            onClick={() => handleRejectOrder(order.id)}
-                          >
-                            Reject
-                          </Button>
+                            <i className="fas fa-shopping-basket" style={{ fontSize: '2rem', opacity: 0.4, color: '#6c757d' }}></i>
+                          </div>
                         </div>
-                      )}
+                        <div className="flex-grow-1">
+                          <div className="d-flex justify-content-between align-items-start mb-2">
+                            <h6 className="mb-0 fw-bold">Order #{order.id}</h6>
+                            <Badge bg={
+                              order.status === 'approved' ? 'success' : 
+                              order.status === 'rejected' ? 'danger' : 'warning'
+                            }>
+                              {order.status}
+                            </Badge>
+                          </div>
+                          
+                          <div className="small text-muted mb-2">
+                            <div className="d-flex justify-content-between">
+                              <span>🛍️ {order.product_name || 'Product'}</span>
+                              {order.product_price && (
+                                <span className="fw-semibold text-success">Unit: ${order.product_price}</span>
+                              )}
+                            </div>
+                          </div>
+                          
+                          <div className="small mb-2">
+                            <div><strong>📦 Quantity:</strong> {order.quantity}</div>
+                            {order.total_price && (
+                              <div><strong>💰 Total Price:</strong> ${order.total_price}</div>
+                            )}
+                          </div>
+                          
+                          {order.message && (
+                            <div className="small mb-2 text-muted">
+                              <strong>Message:</strong> {order.message.length > 80 ? order.message.substring(0, 80) + '...' : order.message}
+                            </div>
+                          )}
+                          
+                          {isFarmer && order.status === 'pending' && (
+                            <div className="d-flex gap-2 mt-3">
+                              <Button 
+                                variant="success" 
+                                size="sm"
+                                onClick={() => handleApproveOrder(order.id)}
+                                className="px-3"
+                              >
+                                ✅ Approve
+                              </Button>
+                              <Button 
+                                variant="danger" 
+                                size="sm"
+                                onClick={() => handleRejectOrder(order.id)}
+                                className="px-3"
+                              >
+                                ❌ Reject
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </Card.Body>
                   </Card>
                 </Col>

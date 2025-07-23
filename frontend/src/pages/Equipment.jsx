@@ -3,6 +3,7 @@ import { Container, Row, Col, Card, Button, Modal, Form, Alert, Badge, Spinner }
 import { equipmentAPI } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import ImageUpload from '../components/ImageUpload';
+import { getImageUrl } from '../utils/imageUtils';
 
 const Equipment = () => {
   const { user } = useAuth();
@@ -319,7 +320,7 @@ const Equipment = () => {
                     {item.image && (
                       <Card.Img
                         variant="top"
-                        src={item.image}
+                        src={getImageUrl(item.image)}
                         alt={item.name}
                         style={{ height: '200px', objectFit: 'cover' }}
                       />
@@ -348,7 +349,7 @@ const Equipment = () => {
                         {user?.id === item.owner && (
                           <div className="d-flex gap-2">
                             <Button 
-                              variant="outline-warning" 
+                              variant="warning" 
                               size="sm"
                               onClick={() => handleEditEquipment(item)}
                               className="flex-fill"
@@ -356,7 +357,7 @@ const Equipment = () => {
                               ✏️ Edit
                             </Button>
                             <Button 
-                              variant="outline-danger" 
+                              variant="danger" 
                               size="sm"
                               onClick={() => handleDeleteEquipment(item.id, item.name)}
                               className="flex-fill"
@@ -379,60 +380,125 @@ const Equipment = () => {
       {rentalRequests.length > 0 && (
         <Row>
           <Col>
-            <h4>Rental Requests</h4>
+            <h4>Rental Requests ({rentalRequests.length} total)</h4>
             <Row>
-              {rentalRequests.map((request) => (
-                <Col md={6} lg={4} key={request.id} className="mb-3">
-                  <Card>
-                    {request.equipment_image && (
-                      <Card.Img
-                        variant="top"
-                        src={request.equipment_image}
-                        alt={request.equipment_name}
-                        style={{ height: '150px', objectFit: 'cover' }}
-                      />
-                    )}
+              {rentalRequests.map((request) => {
+                // Debug: Log request data to see what fields are available
+                console.log('=== RENTAL REQUEST DEBUG ===');
+                console.log('Full request object:', request);
+                console.log('Equipment image field:', request.equipment_image);
+                console.log('Equipment name:', request.equipment_name);
+                if (request.equipment_image) {
+                  console.log('Processed image URL:', getImageUrl(request.equipment_image));
+                  console.log('Raw image URL:', request.equipment_image);
+                }
+                console.log('============================');
+                
+                return (
+                <Col md={12} lg={6} key={request.id} className="mb-3">
+                  <Card className="shadow-sm">
                     <Card.Body>
-                      <Card.Title>Equipment Request</Card.Title>
-                      <p><strong>Equipment:</strong> {request.equipment_name || 'N/A'}</p>
-                      {request.equipment_price_per_day && (
-                        <p><strong>Price:</strong> ${request.equipment_price_per_day}/day</p>
-                      )}
-                      {request.operation_location && (
-                        <p><strong>Operation Location:</strong> {request.operation_location}</p>
-                      )}
-                      <p><strong>Status:</strong> 
-                        <Badge bg={
-                          request.status === 'approved' ? 'success' : 
-                          request.status === 'rejected' ? 'danger' : 'warning'
-                        } className="ms-2">
-                          {request.status}
-                        </Badge>
-                      </p>
-                      <p><strong>Message:</strong> {request.message}</p>
-                      
-                      {isEquipmentSeller && request.status === 'pending' && (
-                        <div className="d-flex gap-2">
-                          <Button 
-                            variant="success" 
-                            size="sm"
-                            onClick={() => handleApproveRental(request.id)}
+                      <div className="d-flex align-items-start">
+                        {/* Equipment Image or Fallback */}
+                        <div className="me-3 flex-shrink-0">
+                          {request.equipment_image ? (
+                            <img
+                              src={getImageUrl(request.equipment_image)}
+                              alt={request.equipment_name}
+                              style={{ 
+                                width: '180px', 
+                                height: '180px', 
+                                objectFit: 'cover',
+                                borderRadius: '8px',
+                                border: '1px solid #ddd'
+                              }}
+                              onError={(e) => {
+                                console.log('❌ Image failed to load:', request.equipment_image);
+                                console.log('❌ Processed URL:', getImageUrl(request.equipment_image));
+                                // Hide the broken image and show fallback
+                                e.target.style.display = 'none';
+                                e.target.nextSibling.style.display = 'flex';
+                              }}
+                              onLoad={() => {
+                                console.log('✅ Image loaded successfully:', request.equipment_image);
+                              }}
+                            />
+                          ) : (
+                            console.log('⚠️ No equipment_image field for:', request.equipment_name)
+                          )}
+                          {/* Fallback Icon */}
+                          <div 
+                            className="d-flex align-items-center justify-content-center bg-light"
+                            style={{ 
+                              width: '180px', 
+                              height: '180px', 
+                              borderRadius: '8px',
+                              border: '1px solid #ddd',
+                              display: request.equipment_image ? 'none' : 'flex'
+                            }}
                           >
-                            Approve
-                          </Button>
-                          <Button 
-                            variant="danger" 
-                            size="sm"
-                            onClick={() => handleRejectRental(request.id)}
-                          >
-                            Reject
-                          </Button>
+                            <i className="fas fa-tractor" style={{ fontSize: '2rem', opacity: 0.4, color: '#6c757d' }}></i>
+                          </div>
                         </div>
-                      )}
+                        <div className="flex-grow-1">
+                          <div className="d-flex justify-content-between align-items-start mb-2">
+                            <h6 className="mb-0 fw-bold">{request.equipment_name || 'Equipment Request'}</h6>
+                            <Badge bg={
+                              request.status === 'approved' ? 'success' : 
+                              request.status === 'rejected' ? 'danger' : 'warning'
+                            }>
+                              {request.status}
+                            </Badge>
+                          </div>
+                          
+                          <div className="small text-muted mb-2">
+                            <div className="d-flex justify-content-between">
+                              <span>👤 {request.farmer_name || 'Farmer'}</span>
+                              {request.equipment_price_per_day && (
+                                <span className="fw-semibold text-success">${request.equipment_price_per_day}/day</span>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {request.operation_location && (
+                            <div className="small mb-2">
+                              <strong>📍 Location:</strong> {request.operation_location}
+                            </div>
+                          )}
+                          
+                          {request.message && (
+                            <div className="small mb-2 text-muted">
+                              <strong>Message:</strong> {request.message.length > 80 ? request.message.substring(0, 80) + '...' : request.message}
+                            </div>
+                          )}
+                          
+                          {isEquipmentSeller && request.status === 'pending' && (
+                            <div className="d-flex gap-2 mt-3">
+                              <Button 
+                                variant="success" 
+                                size="sm"
+                                onClick={() => handleApproveRental(request.id)}
+                                className="px-3"
+                              >
+                                ✅ Approve
+                              </Button>
+                              <Button 
+                                variant="outline-danger" 
+                                size="sm"
+                                onClick={() => handleRejectRental(request.id)}
+                                className="px-3"
+                              >
+                                ❌ Reject
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </Card.Body>
                   </Card>
                 </Col>
-              ))}
+                );
+              })}
             </Row>
           </Col>
         </Row>
