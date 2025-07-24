@@ -427,18 +427,7 @@ const Equipment = () => {
                             console.log('⚠️ No equipment_image field for:', request.equipment_name)
                           )}
                           {/* Fallback Icon */}
-                          <div 
-                            className="d-flex align-items-center justify-content-center bg-light"
-                            style={{ 
-                              width: '180px', 
-                              height: '180px', 
-                              borderRadius: '8px',
-                              border: '1px solid #ddd',
-                              display: request.equipment_image ? 'none' : 'flex'
-                            }}
-                          >
-                            <i className="fas fa-tractor" style={{ fontSize: '2rem', opacity: 0.4, color: '#6c757d' }}></i>
-                          </div>
+                          
                         </div>
                         <div className="flex-grow-1">
                           <div className="d-flex justify-content-between align-items-start mb-2">
