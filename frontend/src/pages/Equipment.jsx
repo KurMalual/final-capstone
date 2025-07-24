@@ -472,6 +472,12 @@ const Equipment = () => {
                             </div>
                           )}
                           
+                          {request.status === 'approved' && (
+                            <div className="small mb-2">
+                              <strong>Payment Method:</strong> {request.payment_method}
+                            </div>
+                          )}
+                          
                           {isEquipmentSeller && request.status === 'pending' && (
                             <div className="d-flex gap-2 mt-3">
                               <Button 

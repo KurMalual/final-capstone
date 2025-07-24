@@ -353,6 +353,13 @@ const Transport = () => {
                       </p>
                       <p><strong>Message:</strong> {request.message}</p>
                       
+                      {/* Display payment method for transport requests */}
+                      {request.status === 'approved' && (
+                        <div className="small mb-2">
+                          <strong>Payment Method:</strong> {request.payment_method}
+                        </div>
+                      )}
+                      
                       {isTransporter && request.status === 'pending' && (
                         <div className="d-flex gap-2">
                           <Button 

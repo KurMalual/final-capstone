@@ -67,6 +67,7 @@ const Dashboard = () => {
 
     switch (user.role) {
       case 'farmer':
+        console.log('Dashboard: Data passed to FarmerDashboard:', dashboardData);
         return <FarmerDashboard data={dashboardData} onRefresh={fetchDashboardData} />;
       case 'buyer':
         return <BuyerDashboard data={dashboardData} onRefresh={fetchDashboardData} />;

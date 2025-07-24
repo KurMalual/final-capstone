@@ -78,6 +78,7 @@ class EquipmentRentalRequestViewSet(viewsets.ModelViewSet):
         if rental.status != 'pending':
             return Response({'detail': 'Rental request already processed.'}, status=status.HTTP_400_BAD_REQUEST)
         rental.status = 'approved'
+        rental.payment_method = 'Cash on Delivery'
         rental.save()
         # Keep equipment unavailable when approved (it's being used)
         rental.equipment.available = False

@@ -103,6 +103,14 @@ class TransportRequestViewSet(viewsets.ModelViewSet):
             )
         return Response({'detail': 'Transport request rejected and farmer notified.'}, status=status.HTTP_200_OK)
 
+    @action(detail=True, methods=['post'], url_path='approve-request')
+    def approve_request(self, request, pk=None):
+        transport_request = self.get_object()
+        transport_request.status = 'approved'
+        transport_request.payment_method = 'Cash on Delivery'
+        transport_request.save()
+        return Response({'detail': 'Transport request approved with payment method Cash on Delivery.'}, status=status.HTTP_200_OK)
+
     def perform_destroy(self, instance):
         # Make transport available again when request is deleted
         instance.transport.available = True

@@ -428,6 +428,13 @@ const Marketplace = () => {
                               </Button>
                             </div>
                           )}
+                          
+                          {/* Display payment method for product orders */}
+                          {order.status === 'approved' && (
+                            <div className="small mb-2">
+                              <strong>Payment Method:</strong> {order.payment_method}
+                            </div>
+                          )}
                         </div>
                       </div>
                     </Card.Body>

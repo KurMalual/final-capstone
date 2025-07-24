@@ -62,25 +62,12 @@ class ProductOrderViewSet(viewsets.ModelViewSet):
         product_order.product.save()
 
     @action(detail=True, methods=['post'], url_path='approve')
-    def approve(self, request, pk=None):
-        order = self.get_object()
-        if order.status != 'pending':
-            return Response({'detail': 'Order already processed.'}, status=status.HTTP_400_BAD_REQUEST)
-        order.status = 'approved'
-        order.save()
-        # Keep product unavailable when approved (it's been sold)
-        order.product.available = False
-        order.product.save()
-        # Send email notification to buyer
-        if order.buyer.email:
-            send_mail(
-                'Order Approved',
-                f'Your order for {order.product.name} has been approved by the farmer.',
-                'noreply@smartfarm.com',
-                [order.buyer.email],
-                fail_silently=True,
-            )
-        return Response({'detail': 'Order approved and buyer notified.'}, status=status.HTTP_200_OK)
+    def approve_order(self, request, pk=None):
+        product_order = self.get_object()
+        product_order.status = 'approved'
+        product_order.payment_method = 'Cash on Delivery'
+        product_order.save()
+        return Response({'detail': 'Product order approved with payment method Cash on Delivery.'}, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=['post'], url_path='reject')
     def reject(self, request, pk=None):

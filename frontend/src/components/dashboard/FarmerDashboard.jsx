@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Container, Row, Col, Card, Badge, Button, ListGroup, Alert, Toast, ToastContainer, Modal, Form } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Container, Row, Col, Card, Badge, Button, ListGroup, Alert, Toast, ToastContainer, Modal, Form, Spinner } from 'react-bootstrap';
 import { equipmentAPI, transportAPI, marketplaceAPI } from '../../services/api';
 import ImageUpload from '../ImageUpload';
 import { getImageUrl } from '../../utils/imageUtils';
@@ -9,8 +9,15 @@ const FarmerDashboard = ({ data, onRefresh }) => {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastVariant, setToastVariant] = useState('success');
-  
-  // Add Product Modal
+
+  // Add missing state variables
+  const [showRentalModal, setShowRentalModal] = useState(false);
+  const [selectedEquipment, setSelectedEquipment] = useState(null);
+  const [rentalForm, setRentalForm] = useState({
+    message: '',
+    operation_location: ''
+  });
+
   const [showAddProductModal, setShowAddProductModal] = useState(false);
   const [productForm, setProductForm] = useState({
     name: '',
@@ -21,8 +28,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
     available: true,
     image: null
   });
-  
-  // Edit Product Modal
+
   const [showEditProductModal, setShowEditProductModal] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [editProductForm, setEditProductForm] = useState({
@@ -35,27 +41,47 @@ const FarmerDashboard = ({ data, onRefresh }) => {
     image: null
   });
 
-  // Equipment Rental Modal
-  const [showRentalModal, setShowRentalModal] = useState(false);
-  const [selectedEquipment, setSelectedEquipment] = useState(null);
-  const [rentalForm, setRentalForm] = useState({
-    message: '',
-    operation_location: ''
-  });
+  // Add fallback state for missing data
+  const [dashboardData, setDashboardData] = useState(null);
 
-  if (!data) return null;
+  useEffect(() => {
+    if (!data) {
+      console.warn('No data received for FarmerDashboard.');
+      setDashboardData({
+        available_equipment: [],
+        available_vehicles: [],
+        my_products: [],
+        my_equipment_rentals: [],
+        my_transport_requests: [],
+        my_orders: [],
+        weather: null,
+      });
+    } else {
+      setDashboardData(data);
+    }
+  }, [data]);
 
-  const { profile } = data;
+  if (!dashboardData) {
+    return (
+      <Container className="py-4 text-center">
+        <Spinner animation="border" variant="success" />
+        <p>Loading dashboard...</p>
+      </Container>
+    );
+  }
+
+  const { profile, available_equipment, available_vehicles, my_products, my_equipment_rentals, my_transport_requests, my_orders, weather } = dashboardData;
+
   const stats = {
-    availableEquipment: data.available_equipment?.length || 0,
-    availableVehicles: data.available_vehicles?.length || 0,
-    myProducts: data.my_products?.length || 0,
-    myEquipmentRentals: data.my_equipment_rentals?.length || 0,
-    myTransportRequests: data.my_transport_requests?.length || 0,
-    myOrders: data.my_orders?.length || 0,
+    availableEquipment: available_equipment?.length || 0,
+    availableVehicles: available_vehicles?.length || 0,
+    myProducts: my_products?.length || 0,
+    myEquipmentRentals: my_equipment_rentals?.length || 0,
+    myTransportRequests: my_transport_requests?.length || 0,
+    myOrders: my_orders?.length || 0,
   };
 
-  const showNotification = (message, variant = 'success') => {
+  const showNotification = async (message, variant = 'success') => {
     setToastMessage(message);
     setToastVariant(variant);
     setShowToast(true);
@@ -359,8 +385,8 @@ const FarmerDashboard = ({ data, onRefresh }) => {
               <small className="text-white-50">{stats.availableEquipment} items</small>
             </Card.Header>
             <Card.Body style={{ maxHeight: '280px', overflowY: 'auto' }}>
-              {data.available_equipment?.length > 0 ? (
-                data.available_equipment.slice(0, 6).map((equipment) => (
+              {available_equipment?.length > 0 ? (
+                available_equipment.slice(0, 6).map((equipment) => (
                   <Card key={equipment.id} className="dashboard-item">
                     <Card.Body>
                       <div className="d-flex justify-content-between align-items-center">
@@ -405,8 +431,8 @@ const FarmerDashboard = ({ data, onRefresh }) => {
               <small className="text-white-50">{stats.availableVehicles} vehicles</small>
             </Card.Header>
             <Card.Body style={{ maxHeight: '280px', overflowY: 'auto' }}>
-              {data.available_vehicles?.length > 0 ? (
-                data.available_vehicles.slice(0, 6).map((vehicle) => (
+              {available_vehicles?.length > 0 ? (
+                available_vehicles.slice(0, 6).map((vehicle) => (
                   <Card key={vehicle.id} className="dashboard-item">
                     <Card.Body>
                       <div className="d-flex justify-content-between align-items-center">
@@ -456,8 +482,8 @@ const FarmerDashboard = ({ data, onRefresh }) => {
               </div>
             </Card.Header>
             <Card.Body style={{ maxHeight: '280px', overflowY: 'auto' }}>
-              {data.my_products?.length > 0 ? (
-                data.my_products.slice(0, 6).map((product) => (
+              {my_products?.length > 0 ? (
+                my_products.slice(0, 6).map((product) => (
                   <Card key={product.id} className="dashboard-item">
                     <Card.Body>
                       <div className="d-flex justify-content-between align-items-center">
@@ -523,7 +549,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
             <Card.Body style={{ maxHeight: '280px', overflowY: 'auto' }}>
               <ListGroup variant="flush">
                 {/* Product Orders */}
-                {data.my_orders?.slice(0, 5).map((order) => (
+                {my_orders?.slice(0, 5).map((order) => (
                   <ListGroup.Item key={`order-${order.id}`} className="px-0 py-3 border-bottom">
                     <div className="d-flex align-items-start">
                       {/* Product Image or Fallback */}
@@ -616,7 +642,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                 ))}
                 
                 {/* Equipment Rentals */}
-                {data.my_equipment_rentals?.slice(0, 3).map((rental) => (
+                {my_equipment_rentals?.slice(0, 3).map((rental) => (
                   <ListGroup.Item key={`rental-${rental.id}`} className="px-0 py-3 border-bottom">
                     <div className="d-flex justify-content-between align-items-center">
                       <div>
@@ -655,7 +681,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                 ))}
                 
                 {/* Transport Requests */}
-                {data.my_transport_requests?.slice(0, 2).map((request) => (
+                {my_transport_requests?.slice(0, 2).map((request) => (
                   <ListGroup.Item key={`transport-${request.id}`} className="px-0 py-3 border-bottom">
                     <div className="d-flex justify-content-between align-items-center">
                       <div>
@@ -687,7 +713,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                 ))}
               </ListGroup>
               
-              {(!data.my_orders?.length && !data.my_equipment_rentals?.length && !data.my_transport_requests?.length) && (
+              {(!my_orders?.length && !my_equipment_rentals?.length && !my_transport_requests?.length) && (
                 <div className="dashboard-empty-state">
                   <p className="mb-0">No recent activity to display</p>
                 </div>
@@ -698,7 +724,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
       </Row>
 
       {/* Weather Section */}
-      {data.weather && (
+      {weather && (
         <Row className="mb-4">
           <Col>
             <Card>
@@ -706,19 +732,19 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                 <h5 className="mb-0">🌤️ Weather Information</h5>
               </Card.Header>
               <Card.Body>
-                {data.weather.error ? (
-                  <Alert variant="warning">{data.weather.error}</Alert>
+                {weather.error ? (
+                  <Alert variant="warning">{weather.error}</Alert>
                 ) : (
                   <Row className="text-center">
                     <Col md={3}>
-                      <h3>{data.weather.temperature}°C</h3>
-                      <p className="text-muted">{data.weather.city || data.weather.location}</p>
+                      <h3>{weather.temperature}°C</h3>
+                      <p className="text-muted">{weather.city || weather.location}</p>
                     </Col>
                     <Col md={3}>
-                      <h4>{data.weather.description}</h4>
+                      <h4>{weather.description}</h4>
                     </Col>
                     <Col md={3}>
-                      <p>Humidity: {data.weather.humidity}%</p>
+                      <p>Humidity: {weather.humidity}%</p>
                     </Col>
                     <Col md={3}>
                       <Badge bg="info">Good for farming</Badge>

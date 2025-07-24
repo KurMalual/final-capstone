@@ -25,6 +25,7 @@ class ProductOrder(models.Model):
     message = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    payment_method = models.CharField(max_length=50, default='Cash on Delivery')
 
     class Meta:
         ordering = ['-created_at']
