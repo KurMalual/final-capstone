@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=65.5.1", "wheel>=0.40.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -30,5 +30,4 @@ packages = [
 ]
 
 [tool.setuptools.package-data]
-# Optional: if you want to include static files, templates, etc.
 "*" = ["*.html", "*.json", "*.csv", "*.txt", "*.md"]
