@@ -2,7 +2,7 @@ services:
   - type: web                     # You're deploying a web service (like a Django API)
     name: uninest-backend         # The name of the service on Render
     buildCommand: ./build.sh      # The script Render should run to build your backend
-    startCommand: gunicorn smartfarm_backend.wsgi:application
+    startCommand: gunicorn backend.smartfarm_backend.wsgi:application
                                   # The command to start your Django app using Gunicorn (a Python WSGI server)
     envVars:                      # List of environment variables used in the app
       - key: DJANGO_SETTINGS_MODULE
@@ -21,3 +21,7 @@ services:
       - key: ALLOWED_HOSTS
         value: final-capstone-jm3o.onrender.com
         # Tells Django which domain(s) are allowed to serve the app.
+
+      - key: PYTHONPATH
+        value: /opt/render/project/src/backend
+        # Ensures the backend directory is included in the Python path.
