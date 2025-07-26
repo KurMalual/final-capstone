@@ -3,7 +3,7 @@ services:
     name: uninest-backend
     env: python
     buildCommand: cd backend && pip install --upgrade pip setuptools wheel && pip install -r requirements.txt
-    startCommand: cd backend && gunicorn smartfarm_backend.wsgi:application
+    startCommand: cd backend && PYTHONPATH=$(pwd) gunicorn smartfarm_backend.wsgi:application
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: smartfarm_backend.settings
