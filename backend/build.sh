@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-set -e  # Exit immediately if any command fails
+set -e
 
+# Upgrade pip and dependencies
 pip install --upgrade pip setuptools wheel
+
+# Install project dependencies
 pip install -r requirements.txt
 
-# Debugging: Print PYTHONPATH
-echo "PYTHONPATH: $PYTHONPATH"
-
 # Apply database migrations
-python manage.py migrate
+python backend/manage.py migrate
 
-# Collect static files without input
-python manage.py collectstatic --noinput
+# Collect static files
+python backend/manage.py collectstatic --noinput
