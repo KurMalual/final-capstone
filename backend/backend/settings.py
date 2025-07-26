@@ -47,12 +47,12 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
-    'equipment',
-    'transport',
-    'marketplace',
-    'users',
-    'education',
-    'weather',
+    'backend.equipment',
+    'backend.transport',
+    'backend.marketplace',
+    'backend.users',
+    'backend.education',
+    'backend.weather',
 ]
 
 MIDDLEWARE = [
