@@ -5,9 +5,9 @@ services:
     buildCommand: |
       pip install -r backend/requirements.txt
     startCommand: |
-      gunicorn backend.smartfarm_backend.wsgi:application
+      cd backend && gunicorn smartfarm_backend.wsgi:application
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: smartfarm_backend.settings
       - key: PYTHONPATH
-        value: /opt/render/project/src
+        value: /opt/render/project/src/backend:/opt/render/project/src

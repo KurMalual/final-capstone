@@ -2,7 +2,7 @@
 OPENWEATHER_API_KEY = '67d420588c363ed048911e7549549c98'
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = True
-
+ROOT_URLCONF = 'smartfarm_backend.urls'
 # Custom user model
 AUTH_USER_MODEL = 'users.User'
 """
