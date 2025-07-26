@@ -9,3 +9,9 @@ class User(AbstractUser):
         ('transporter', 'Transporter'),
     ]
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='farmer')
+    preferred_payment_method = models.CharField(
+        max_length=50,
+        choices=[('cash', 'Cash'), ('credit', 'Credit'), ('mobile', 'Mobile Money')],
+        default='cash',
+        help_text='Preferred payment method for transactions.'
+    )

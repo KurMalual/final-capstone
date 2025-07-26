@@ -11,6 +11,12 @@ class Transport(models.Model):
     available = models.BooleanField(default=True)
     price_per_trip = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
+    payment_method = models.CharField(
+        max_length=50,
+        choices=[('cash', 'Cash'), ('credit', 'Credit'), ('mobile', 'Mobile Money')],
+        default='cash',
+        help_text='Preferred payment method for transport services.'
+    )
 
 class TransportRequest(models.Model):
     transport = models.ForeignKey(Transport, on_delete=models.CASCADE, related_name='transport_requests')
