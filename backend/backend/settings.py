@@ -47,7 +47,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'corsheaders',
-    'equipment',
+    'backend.equipment',
     'transport',
     'marketplace',
     'users',
