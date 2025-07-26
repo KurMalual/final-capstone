@@ -1,15 +1,23 @@
 services:
-  - type: web
-    name: uninest-backend
-    env: python
-    buildCommand: ./build.sh
+  - type: web                     # You're deploying a web service (like a Django API)
+    name: uninest-backend         # The name of the service on Render
+    buildCommand: ./build.sh      # The script Render should run to build your backend
     startCommand: gunicorn smartfarm_backend.wsgi:application
-    envVars:
+                                  # The command to start your Django app using Gunicorn (a Python WSGI server)
+    envVars:                      # List of environment variables used in the app
       - key: DJANGO_SETTINGS_MODULE
         value: smartfarm_backend.settings
+        # Tells Django which settings module to use (required for it to start properly)
+
       - key: SECRET_KEY
         sync: false
+        # Django’s secret key (used for cryptographic signing, sessions, etc.)
+        # You will manually set this in the Render Dashboard for security reasons
+
       - key: DATABASE_URL
         sync: false
+        # The database connection string. Also set manually in the Render Dashboard.
+
       - key: ALLOWED_HOSTS
-        value: "your-app.onrender.com"
+        value: your-app.onrender.com
+        # Tells Django which domain(s) are allowed to serve the app.
