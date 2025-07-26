@@ -2,9 +2,10 @@ import os
 import sys
 from pathlib import Path
 
-# Add the backend directory to Python path
+# Add both backend and project root to Python path
 BASE_DIR = Path(__file__).resolve().parent.parent
 sys.path.append(str(BASE_DIR))
+sys.path.append(str(BASE_DIR.parent))
 
 from django.core.wsgi import get_wsgi_application
 
