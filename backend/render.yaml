@@ -19,5 +19,5 @@ services:
         # The database connection string. Also set manually in the Render Dashboard.
 
       - key: ALLOWED_HOSTS
-        value: your-app.onrender.com
+        value: final-capstone-jm3o.onrender.com
         # Tells Django which domain(s) are allowed to serve the app.
