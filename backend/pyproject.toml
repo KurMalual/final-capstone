@@ -1,33 +1,3 @@
 [build-system]
-requires = ["setuptools>=65.5.1", "wheel>=0.40.0"]
+requires = ["setuptools", "wheel"]
 build-backend = "setuptools.build_meta"
-
-[project]
-name = "smartfarm_backend"
-version = "0.1.0"
-description = "SmartFarm Django backend"
-authors = [{ name = "Your Name", email = "your@email.com" }]
-readme = "README.md"
-requires-python = ">=3.8"
-dependencies = [
-    "Django>=4.2",
-    "djangorestframework",
-    # add other dependencies here
-]
-
-[tool.setuptools]
-packages = [
-    "backend",
-    "users",
-    "orders",
-    "education",
-    "education_resources",
-    "equipment",
-    "transport",
-    "marketplace",
-    "weather",
-    "media"
-]
-
-[tool.setuptools.package-data]
-"*" = ["*.html", "*.json", "*.csv", "*.txt", "*.md"]

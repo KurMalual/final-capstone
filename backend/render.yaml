@@ -1,13 +1,15 @@
-# render.yaml
 services:
   - type: web
-    name: smartfarm-backend
-    buildCommand: pip install -r backend/requirements.txt
-    startCommand: python backend/manage.py migrate && python backend/manage.py runserver 0.0.0.0:8000
+    name: uninest-backend
+    env: python
+    buildCommand: ./build.sh
+    startCommand: gunicorn smartfarm_backend.wsgi:application
     envVars:
       - key: DJANGO_SETTINGS_MODULE
-        value: backend.settings
+        value: smartfarm_backend.settings
       - key: SECRET_KEY
-        value: your-secret-key-here
-      - key: DEBUG
-        value: "False"
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: ALLOWED_HOSTS
+        value: "your-app.onrender.com"
