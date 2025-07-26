@@ -34,7 +34,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
+# postgresql://smartfarm_django_user:wcMIFXZiTlLuHNwC8uj1vK2LRysSsDpN@dpg-d22fibfgi27c73etq4vg-a.oregon-postgres.render.com/smartfarm_django
 # Application definition
 
 INSTALLED_APPS = [
