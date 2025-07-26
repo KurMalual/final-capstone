@@ -1,16 +1,12 @@
-"""
-WSGI config for smartfarm_backend project.
-
-It exposes the WSGI callable as a module-level variable named ``application``.
-"""
-
 import os
 import sys
+from pathlib import Path
+
+# Add the project root to Python path
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+sys.path.append(str(BASE_DIR))
+
 from django.core.wsgi import get_wsgi_application
 
-# Print the PYTHONPATH and sys.path for debugging
-print("PYTHONPATH:", sys.path)
-
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "smartfarm_backend.settings")
-
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'smartfarm_backend.settings')
 application = get_wsgi_application()

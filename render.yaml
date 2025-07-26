@@ -1,21 +1,13 @@
 services:
   - type: web
-    name: uninest-backend
+    name: smartfarm-backend
     env: python
-    buildCommand: cd backend && pip install --upgrade pip setuptools wheel && pip install -r requirements.txt
-    startCommand: gunicorn smartfarm_backend.wsgi:application
+    buildCommand: |
+      pip install -r backend/requirements.txt
+    startCommand: |
+      gunicorn backend.smartfarm_backend.wsgi:application
     envVars:
       - key: DJANGO_SETTINGS_MODULE
         value: smartfarm_backend.settings
-
-      - key: SECRET_KEY
-        sync: false
-
-      - key: DATABASE_URL
-        sync: false
-
-      - key: ALLOWED_HOSTS
-        value: final-capstone-jm3o.onrender.com
-
       - key: PYTHONPATH
-        value: /opt/render/project/src/backend
+        value: /opt/render/project/src
