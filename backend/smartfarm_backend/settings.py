@@ -33,7 +33,7 @@ SECRET_KEY = 'django-insecure-ih95vpae$tbztrrl&2hch#_v9e$w-z$zl+_1slf!ov(6s3ghr^
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['https://final-capstone-jm3o.onrender.com', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['final-capstone-jm3o.onrender.com', '127.0.0.1', 'localhost']
 
 # postgresql://smartfarm_django_user:wcMIFXZiTlLuHNwC8uj1vK2LRysSsDpN@dpg-d22fibfgi27c73etq4vg-a.oregon-postgres.render.com/smartfarm_django
 # Application definition
