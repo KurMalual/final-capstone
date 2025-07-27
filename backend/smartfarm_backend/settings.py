@@ -1,11 +1,3 @@
-# OpenWeather API Key (set your real key in production or .env)
-OPENWEATHER_API_KEY = '67d420588c363ed048911e7549549c98'
-# CORS settings
-CORS_ALLOW_ALL_ORIGINS = True
-ROOT_URLCONF = 'smartfarm_backend.urls'
-WSGI_APPLICATION = 'smartfarm_backend.wsgi.application'
-# Custom user model
-AUTH_USER_MODEL = 'users.User'
 """
 Django settings for backend project.
 
@@ -19,19 +11,26 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# OpenWeather API Key (set your real key in production or .env)
+OPENWEATHER_API_KEY = os.getenv('REACT_APP_WEATHER_API_KEY', 'default_key')
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
+# CORS settings
+CORS_ALLOWED_ORIGINS = [
+    "https://final-capstone-j9u0emknq-kur-majoks-projects.vercel.app",
+]
+# Optional: If you're sending credentials (like cookies or headers)
+CORS_ALLOW_CREDENTIALS = True
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-ih95vpae$tbztrrl&2hch#_v9e$w-z$zl+_1slf!ov(6s3ghr^'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'default_secret_key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = ['final-capstone-jm3o.onrender.com', '127.0.0.1', 'localhost']
 
@@ -67,8 +66,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
-# CORS settings
-CORS_ALLOW_ALL_ORIGINS = True
 
 TEMPLATES = [
     {
@@ -85,8 +82,7 @@ TEMPLATES = [
         },
     },
 ]
-
-WSGI_APPLICATION = 'backend.wsgi.application'
+WSGI_APPLICATION = 'smartfarm_backend.wsgi.application'
 
 
 # Database
