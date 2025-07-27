@@ -12,3 +12,7 @@ services:
         value: smartfarm_backend.settings
       - key: PYTHONPATH
         value: /opt/render/project/src/backend:/opt/render/project/src
+      - key: DATABASE_URL
+        value: postgresql://smartfarm_django_user:wcMIFXZiTlLuHNwC8uj1vK2LRysSsDpN@dpg-d22fibfgi27c73etq4vg-a.oregon-postgres.render.com/smartfarm_django
+      - key: REACT_APP_WEATHER_API_KEY
+        value: 67d420588c363ed048911e7549549c98
