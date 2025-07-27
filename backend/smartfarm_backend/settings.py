@@ -8,7 +8,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Security
 SECRET_KEY = 'django-insecure-ih95vpae$tbztrrl&2hch#_v9e$w-z$zl+_1slf!ov(6s3ghr^'
 DEBUG = True
-ALLOWED_HOSTS = ['final-capstone-jm3o.onrender.com', '127.0.0.1', 'localhost']
+ALLOWED_HOSTS = ['final-capstone-jm3o.onrender.com', '127.0.0.1']
 
 # Custom user model
 AUTH_USER_MODEL = 'users.User'

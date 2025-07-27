@@ -9,11 +9,11 @@ export const getImageUrl = (imagePath) => {
   
   // If the path starts with /media/, prepend the backend base URL
   if (imagePath.startsWith('/media/')) {
-    return `http://localhost:8000${imagePath}`;
+    return `https://final-capstone-jm3o.onrender.com${imagePath}`;
   }
   
   // If it's just a filename or relative path, assume it's in media folder
-  return `http://localhost:8000/media/${imagePath}`;
+  return `https://final-capstone-jm3o.onrender.com/media/${imagePath}`;
 };
 
 export default getImageUrl;

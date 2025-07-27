@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api',
+  baseURL: 'https://final-capstone-jm3o.onrender.com/api',
   headers: {
     'Content-Type': 'application/json',
   },
