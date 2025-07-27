@@ -54,10 +54,9 @@ CORS_ALLOWED_ORIGINS = [
 ]
 CORS_ALLOW_CREDENTIALS = True
 
-# Database — use PostgreSQL on Render
 DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
+    'default': dj_database_url.parse(
+        'postgresql://smartfarm_django_user:wcMIFXZiTlLuHNwC8uj1vK2LRysSsDpN@dpg-d22fibfgi27c73etq4vg-a.oregon-postgres.render.com/smartfarm_django',
         conn_max_age=600,
         ssl_require=True
     )
