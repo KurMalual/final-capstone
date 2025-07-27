@@ -97,3 +97,19 @@ REST_FRAMEWORK = {
 
 # OpenWeather API Key (replace with real key or load from env)
 OPENWEATHER_API_KEY = os.getenv("REACT_APP_WEATHER_API_KEY", "dummy_default_key")
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [],  # Add custom template directories here if needed
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
