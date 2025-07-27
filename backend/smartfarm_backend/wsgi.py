@@ -13,4 +13,9 @@ print("sys.path:", sys.path)
 from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'smartfarm_backend.settings')
+
+# Debugging: Verify the ROOT_URLCONF and DJANGO_SETTINGS_MODULE values
+print("ROOT_URLCONF:", os.getenv('DJANGO_SETTINGS_MODULE'))
+print("BASE_DIR added to sys.path:", BASE_DIR)
+
 application = get_wsgi_application()
