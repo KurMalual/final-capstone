@@ -19,15 +19,15 @@ const BuyerDashboard = ({ data, onRefresh }) => {
     setTimeout(() => setShowToast(false), 3000);
   };
 
-  const handleOrderProduct = async (productId, productName) => {
+  const handleOrderProduct = async (productId) => {
     try {
       setLoading(true);
       await marketplaceAPI.createOrder({
         product: productId,
         quantity: 1,
-        message: `Order for ${productName}`
+        message: `Order for SSP{productName}`
       });
-      showNotification(`✅ Order placed for ${productName}!`, 'success');
+      showNotification(`✅ Order placed for SSP{productName}!`, 'success');
       if (onRefresh) onRefresh();
     } catch (error) {
       console.error('Error placing order:', error);
@@ -37,12 +37,12 @@ const BuyerDashboard = ({ data, onRefresh }) => {
     }
   };
 
-  const handleDeleteOrder = async (orderId, productName) => {
-    if (window.confirm(`Are you sure you want to delete your order for "${productName}"?`)) {
+  const handleDeleteOrder = async (orderId) => {
+    if (window.confirm(`Are you sure you want to delete your order for SSP{productName}?`)) {
       try {
         setLoading(true);
         await marketplaceAPI.deleteOrder(orderId);
-        showNotification(`✅ Order for ${productName} deleted successfully!`, 'success');
+        showNotification(`✅ Order for SSP{productName} deleted successfully!`, 'success');
         if (onRefresh) onRefresh();
       } catch (error) {
         console.error('Error deleting order:', error);
@@ -103,7 +103,7 @@ const BuyerDashboard = ({ data, onRefresh }) => {
                         <Card.Body>
                           <h6>{product.name}</h6>
                           <p className="text-muted mb-1">by {product.farmer__username}</p>
-                          <p className="text-success fw-bold">${product.price}</p>
+                          <p className="text-success fw-bold">SSP{product.price}</p>
                           <Button 
                             variant="success" 
                             size="sm" 
@@ -140,7 +140,7 @@ const BuyerDashboard = ({ data, onRefresh }) => {
                         <h6 className="mb-1 fw-bold">{order.product__name}</h6>
                         {order.quantity && order.product__price && (
                           <small className="text-success fw-semibold">
-                            {order.quantity} × ${order.product__price} = ${(order.quantity * order.product__price).toFixed(2)}
+                            {order.quantity} × SSP{order.product__price} = SSP{(order.quantity * order.product__price).toFixed(2)}
                           </small>
                         )}
                       </div>

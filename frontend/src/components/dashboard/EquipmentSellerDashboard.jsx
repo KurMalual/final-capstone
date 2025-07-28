@@ -223,7 +223,7 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
                           </Card.Text>
                           <div className="d-flex justify-content-between align-items-center mb-3">
                             <strong className="text-success">
-                              ${equipment.price_per_day || equipment.hourly_rate}/
+                              SSP {equipment.price_per_day || equipment.hourly_rate}/
                               {equipment.price_per_day ? 'day' : 'hour'}
                             </strong>
                           </div>
@@ -292,7 +292,7 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
                         <p className="text-muted small mb-1">👤 {request.farmer__username}</p>
                         
                         {request.equipment__price_per_day && (
-                          <p className="text-success small mb-1"><strong>${request.equipment__price_per_day}/day</strong></p>
+                          <p className="text-success small mb-1"><strong>SSP {request.equipment__price_per_day}/day</strong></p>
                         )}
                         
                         {request.operation_location && (

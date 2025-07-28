@@ -4,14 +4,36 @@ from django.contrib.auth import authenticate
 from equipment.models import Equipment, EquipmentRentalRequest
 from transport.models import Transport, TransportRequest
 from marketplace.models import Product, ProductOrder
+from django.core.mail import EmailMessage
+from rest_framework.views import APIView
+from rest_framework.response import Response
 
-from .models import User
-from .serializers import UserSerializer
+from .models import User, Message
+from .serializers import UserSerializer, MessageSerializer
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+class MessageViewSet(viewsets.ModelViewSet):
+    queryset = Message.objects.all()
+    serializer_class = MessageSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return Message.objects.filter(recipient=user)
+
+    def perform_create(self, serializer):
+        message = serializer.save(sender=self.request.user)
+        # Send email notification using EmailMessage
+        email_message = EmailMessage(
+            subject=f"New Message from {message.sender.username}: {message.subject}",
+            body=message.body,
+            from_email='k.malual@alustudent.com',
+            to=[message.recipient.email],
+        )
+        email_message.send(fail_silently=False)
 
 class DashboardSummaryView(views.APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -315,3 +337,27 @@ class LogoutView(views.APIView):
                 {'error': f'Logout failed: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
+
+
+class PublicContactView(APIView):
+    permission_classes = []  # No authentication required
+
+    def post(self, request):
+        name = request.data.get('name')
+        email = request.data.get('email')
+        message = request.data.get('message')
+
+        if not name or not email or not message:
+            return Response({'error': 'All fields are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Send email using EmailMessage
+        email_message = EmailMessage(
+            subject=f"Contact Form Submission from {name}",
+            body=f"Email: {email}\n\nMessage:\n{message}",
+            from_email='smartfarmconnect@gmail.com',  # Use the authenticated email as the sender
+            to=['smartfarmconnect@gmail.com'],
+            reply_to=[email],  # Add the user's email as the reply-to address
+        )
+        email_message.send(fail_silently=False)
+
+        return Response({'success': 'Message sent successfully.'}, status=status.HTTP_200_OK)

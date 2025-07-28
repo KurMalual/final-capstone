@@ -334,7 +334,7 @@ const Equipment = () => {
                         </Badge>
                       </div>
                       <div className="mb-3">
-                        <strong>${item.price_per_day}/day</strong>
+                        <strong>SSP {item.price_per_day}/day</strong>
                       </div>
                       <div className="d-flex flex-column gap-2">
                         {isFarmer && item.available && (
@@ -444,7 +444,7 @@ const Equipment = () => {
                             <div className="d-flex justify-content-between">
                               <span>👤 {request.farmer_name || 'Farmer'}</span>
                               {request.equipment_price_per_day && (
-                                <span className="fw-semibold text-success">${request.equipment_price_per_day}/day</span>
+                                <span className="fw-semibold text-success">SSP {request.equipment_price_per_day}/day</span>
                               )}
                             </div>
                           </div>
@@ -528,7 +528,7 @@ const Equipment = () => {
             </Form.Group>
             
             <Form.Group className="mb-3">
-              <Form.Label>Price per Day ($)</Form.Label>
+              <Form.Label>Price per Day (SSP)</Form.Label>
               <Form.Control
                 type="number"
                 step="0.01"
@@ -574,7 +574,7 @@ const Equipment = () => {
               <div className="mb-3">
                 <h5>{selectedEquipment.name}</h5>
                 <p>{selectedEquipment.description}</p>
-                <p><strong>Price:</strong> ${selectedEquipment.price_per_day}/day</p>
+                <p><strong>Price:</strong> SSP{selectedEquipment.price_per_day}/day</p>
               </div>
               
               <Form onSubmit={handleRentalRequest}>
@@ -646,7 +646,7 @@ const Equipment = () => {
             </Form.Group>
             
             <Form.Group className="mb-3">
-              <Form.Label>Price per Day ($)</Form.Label>
+              <Form.Label>Price per Day (SSP)</Form.Label>
               <Form.Control
                 type="number"
                 step="0.01"

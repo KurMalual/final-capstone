@@ -1,9 +1,35 @@
 import React from 'react';
 import { Container, Row, Col, Button, Navbar, Nav, Card } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import axios from 'axios';
 import './LandingPage.css';
 
 const LandingPage = () => {
+  const [isMessageSent, setIsMessageSent] = React.useState(false);
+
+  const handleContactFormSubmit = async (event) => {
+    event.preventDefault();
+
+    const name = event.target.name.value;
+    const email = event.target.email.value;
+    const message = event.target.message.value;
+
+    console.log('Form Data:', { name, email, message }); // Debugging log
+
+    try {
+      await axios.post('http://127.0.0.1:8000/api/auth/contact/', {
+        name,
+        email,
+        message,
+      });
+
+      setIsMessageSent(true); // Set the message sent state to true
+      alert('Message has been sent. We will get back to you.');
+    } catch (error) {
+      alert(error.response?.data?.error || 'An error occurred while sending the message.');
+    }
+  };
+
   return (
     <div className="landing-page">
       {/* Navigation */}
@@ -297,7 +323,7 @@ const LandingPage = () => {
                 </div>
                 <div>
                   <h6 className="mb-1">Phone</h6>
-                  <p className="text-muted">+211 123 456 789</p>
+                  <p className="text-muted">+211 924 828 569</p>
                 </div>
               </div>
               
@@ -307,7 +333,7 @@ const LandingPage = () => {
                 </div>
                 <div>
                   <h6 className="mb-1">Email</h6>
-                  <p className="text-muted">info@smartfarmconnect.ss</p>
+                  <p className="text-muted">smartfarmconnect@gmail.com</p>
                 </div>
               </div>
             </Col>
@@ -316,10 +342,11 @@ const LandingPage = () => {
               <Card className="border-0 shadow">
                 <Card.Body className="p-4">
                   <h5 className="mb-4">Send us a Message</h5>
-                  <form>
+                  <form onSubmit={handleContactFormSubmit}>
                     <div className="mb-3">
                       <input 
                         type="text" 
+                        name="name" 
                         className="form-control" 
                         placeholder="Your Name"
                         style={{border: '1px solid #ddd', borderRadius: '8px', padding: '12px'}}
@@ -328,6 +355,7 @@ const LandingPage = () => {
                     <div className="mb-3">
                       <input 
                         type="email" 
+                        name="email" 
                         className="form-control" 
                         placeholder="Your Email"
                         style={{border: '1px solid #ddd', borderRadius: '8px', padding: '12px'}}
@@ -335,16 +363,23 @@ const LandingPage = () => {
                     </div>
                     <div className="mb-3">
                       <textarea 
+                        name="message" 
                         className="form-control" 
                         rows="5" 
                         placeholder="Your Message"
                         style={{border: '1px solid #ddd', borderRadius: '8px', padding: '12px'}}
                       ></textarea>
                     </div>
-                    <Button variant="success" size="lg" className="w-100 py-3">
+                    <Button type="submit" variant="success" size="lg" className="w-100 py-3">
                       SEND MESSAGE
                     </Button>
                   </form>
+
+                  {isMessageSent && (
+                    <div className="alert alert-success mt-3" role="alert">
+                      Message has been sent. We will get back to you.
+                    </div>
+                  )}
                 </Card.Body>
               </Card>
             </Col>
@@ -363,8 +398,8 @@ const LandingPage = () => {
             <Col md={6}>
               <h5>Contact Info</h5>
               <p>📍 Juba, South Sudan</p>
-              <p>📞 +211 123 456 789</p>
-              <p>📧 info@smartfarmconnect.ss</p>
+              <p>📞 +211 924 828 569</p>
+              <p>📧 smartfarmconnect@gmail.com</p>
             </Col>
           </Row>
           <hr />

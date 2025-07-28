@@ -44,8 +44,8 @@ const Footer = () => {
             <h5>Contact Info</h5>
             <div className="footer-contact">
               <p>📍 Juba, South Sudan</p>
-              <p>📞 +211 123 456 789</p>
-              <p>📧 info@smartfarmconnect.ss</p>
+              <p>📞 +211 924 828 569</p>
+              <p>📧 smartfarmconnect@gmail.com</p>
             </div>
           </Col>
         </Row>

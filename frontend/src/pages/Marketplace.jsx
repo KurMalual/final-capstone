@@ -285,7 +285,7 @@ const Marketplace = () => {
                         </Badge>
                       </div>
                       <div className="mb-2">
-                        <strong>Price:</strong> ${product.price}
+                        <strong>Price:</strong> SSP{product.price}
                       </div>
                       <div className="mb-3">
                         <strong>Quantity:</strong> {product.quantity || 'N/A'}
@@ -379,7 +379,7 @@ const Marketplace = () => {
                             <div className="d-flex justify-content-between">
                               <span>🛍️ {order.product_name || 'Product'}</span>
                               {order.product_price && (
-                                <span className="fw-semibold text-success">Unit: ${order.product_price}</span>
+                                <span className="fw-semibold text-success">Unit: SSP{order.product_price}</span>
                               )}
                             </div>
                           </div>
@@ -387,7 +387,7 @@ const Marketplace = () => {
                           <div className="small mb-2">
                             <div><strong>📦 Quantity:</strong> {order.quantity}</div>
                             {order.total_price && (
-                              <div><strong>💰 Total Price:</strong> ${order.total_price}</div>
+                              <div><strong>💰 Total Price:</strong> SSP{order.total_price}</div>
                             )}
                           </div>
                           
@@ -481,7 +481,7 @@ const Marketplace = () => {
             </Form.Group>
             
             <Form.Group className="mb-3">
-              <Form.Label>Price ($)</Form.Label>
+              <Form.Label>Price (SSP)</Form.Label>
               <Form.Control
                 type="number"
                 step="0.01"
@@ -538,7 +538,7 @@ const Marketplace = () => {
               <div className="mb-3">
                 <h5>{selectedProduct.name}</h5>
                 <p>{selectedProduct.description}</p>
-                <p><strong>Price:</strong> ${selectedProduct.price}</p>
+                <p><strong>Price:</strong> SSP{selectedProduct.price}</p>
                 <p><strong>Available:</strong> {selectedProduct.quantity}</p>
               </div>
               
@@ -621,7 +621,7 @@ const Marketplace = () => {
             <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>Price ($)</Form.Label>
+                  <Form.Label>Price (SSP)</Form.Label>
                   <Form.Control
                     type="number"
                     step="0.01"

@@ -275,7 +275,7 @@ const Transport = () => {
                         </Badge>
                       </div>
                       <div className="mb-3">
-                        <strong>${vehicle.price_per_trip}/trip</strong>
+                        <strong>SSP{vehicle.price_per_trip}/trip</strong>
                       </div>
                       <div className="d-flex flex-column gap-2">
                         {isFarmer && vehicle.available && (
@@ -338,7 +338,7 @@ const Transport = () => {
                       <Card.Title>Transport Request</Card.Title>
                       <p><strong>Vehicle:</strong> {request.transport_vehicle_name || 'N/A'}</p>
                       {request.transport_price_per_trip && (
-                        <p><strong>Price:</strong> ${request.transport_price_per_trip}/trip</p>
+                        <p><strong>Price:</strong> SSP{request.transport_price_per_trip}/trip</p>
                       )}
                       <p><strong>From:</strong> {request.pickup_location}</p>
                       <p><strong>To:</strong> {request.delivery_location}</p>
@@ -406,7 +406,7 @@ const Transport = () => {
             </Form.Group>
             
             <Form.Group className="mb-3">
-              <Form.Label>Price per Trip ($)</Form.Label>
+              <Form.Label>Price per Trip (SSP)</Form.Label>
               <Form.Control
                 type="number"
                 step="0.01"
@@ -462,7 +462,7 @@ const Transport = () => {
             <>
               <div className="mb-3">
                 <h5>{selectedVehicle.vehicle_name}</h5>
-                <p><strong>Price:</strong> ${selectedVehicle.price_per_trip}/trip</p>
+                <p><strong>Price:</strong> SSP{selectedVehicle.price_per_trip}/trip</p>
                 <p>{selectedVehicle.description}</p>
               </div>
               
@@ -552,7 +552,7 @@ const Transport = () => {
             </Form.Group>
             
             <Form.Group className="mb-3">
-              <Form.Label>Price per Trip ($)</Form.Label>
+              <Form.Label>Price per Trip (SSP)</Form.Label>
               <Form.Control
                 type="number"
                 step="0.01"

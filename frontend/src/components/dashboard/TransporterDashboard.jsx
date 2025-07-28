@@ -229,7 +229,7 @@ const TransporterDashboard = ({ data, onRefresh }) => {
                           </Card.Text>
                           <div className="d-flex justify-content-between align-items-center mb-3">
                             <strong className="text-success">
-                              ${vehicle.price_per_trip || vehicle.price_per_km || '0'}/
+                              SSP {vehicle.price_per_trip || vehicle.price_per_km || '0'}/
                               {vehicle.price_per_trip ? 'trip' : 'km'}
                             </strong>
                           </div>
@@ -333,7 +333,7 @@ const TransporterDashboard = ({ data, onRefresh }) => {
                           <div className="d-flex justify-content-between">
                             <span>👤 {request.farmer__username || 'Farmer'}</span>
                             {request.transport__price_per_trip && (
-                              <span className="fw-semibold text-success">${request.transport__price_per_trip}/trip</span>
+                              <span className="fw-semibold text-success">SSP {request.transport__price_per_trip}/trip</span>
                             )}
                           </div>
                         </div>
@@ -416,7 +416,7 @@ const TransporterDashboard = ({ data, onRefresh }) => {
               />
             </Form.Group>
             <Form.Group className="mb-3">
-              <Form.Label>Price per KM ($)</Form.Label>
+              <Form.Label>Price per KM (SSP)</Form.Label>
               <Form.Control
                 type="number"
                 step="0.01"

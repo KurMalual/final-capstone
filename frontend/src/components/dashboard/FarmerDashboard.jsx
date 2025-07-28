@@ -91,7 +91,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
   const handleHireEquipment = async (equipmentId, equipmentName) => {
     setSelectedEquipment({ id: equipmentId, name: equipmentName });
     setRentalForm({
-      message: `Request to hire ${equipmentName}`,
+      message: `Request to hire SSP{equipmentName}`,
       operation_location: ''
     });
     setShowRentalModal(true);
@@ -115,7 +115,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
       console.log('Sending rental request data:', requestData);
       
       await equipmentAPI.createRentalRequest(requestData);
-      showNotification(`✅ Rental request sent for ${selectedEquipment.name}!`, 'success');
+      showNotification(`✅ Rental request sent for SSP{selectedEquipment.name}!`, 'success');
       setShowRentalModal(false);
       if (onRefresh) onRefresh();
     } catch (error) {
@@ -126,14 +126,14 @@ const FarmerDashboard = ({ data, onRefresh }) => {
     }
   };
 
-  const handleRequestTransport = async (transportId, vehicleName) => {
+  const handleRequestTransport = async (transportId) => {
     try {
       setLoading(true);
       await transportAPI.createTransportRequest({
         transport: transportId,
-        message: `Request for transport with ${vehicleName}`
+        message: `Request for transport with SSP{vehicleName}`
       });
-      showNotification(`✅ Transport request sent for ${vehicleName}!`, 'success');
+      showNotification(`✅ Transport request sent for SSP{vehicleName}!`, 'success');
       if (onRefresh) onRefresh();
     } catch (error) {
       console.error('Error requesting transport:', error);
@@ -143,12 +143,12 @@ const FarmerDashboard = ({ data, onRefresh }) => {
     }
   };
 
-  const handleCancelRentalRequest = async (requestId, equipmentName) => {
-    if (window.confirm(`Are you sure you want to cancel your rental request for "${equipmentName}"?`)) {
+  const handleCancelRentalRequest = async (requestId) => {
+    if (window.confirm(`Are you sure you want to cancel your rental request for SSP{equipmentName}?`)) {
       try {
         setLoading(true);
         await equipmentAPI.deleteRentalRequest(requestId);
-        showNotification(`✅ Rental request for ${equipmentName} cancelled!`, 'success');
+        showNotification(`✅ Rental request for SSP{equipmentName} cancelled!`, 'success');
         if (onRefresh) onRefresh();
       } catch (error) {
         console.error('Error cancelling rental request:', error);
@@ -159,11 +159,11 @@ const FarmerDashboard = ({ data, onRefresh }) => {
     }
   };
 
-  const handleApproveOrder = async (orderId, productName) => {
+  const handleApproveOrder = async (orderId) => {
     try {
       setLoading(true);
       await marketplaceAPI.approveOrder(orderId);
-      showNotification(`✅ Order for ${productName} approved!`, 'success');
+      showNotification(`✅ Order for SSP{productName} approved!`, 'success');
       if (onRefresh) onRefresh();
     } catch (error) {
       console.error('Error approving order:', error);
@@ -173,12 +173,12 @@ const FarmerDashboard = ({ data, onRefresh }) => {
     }
   };
 
-  const handleCancelTransportRequest = async (requestId, vehicleName) => {
-    if (window.confirm(`Are you sure you want to cancel your transport request for "${vehicleName}"?`)) {
+  const handleCancelTransportRequest = async (requestId) => {
+    if (window.confirm(`Are you sure you want to cancel your transport request for SSP{vehicleName}?`)) {
       try {
         setLoading(true);
         await transportAPI.deleteTransportRequest(requestId);
-        showNotification(`✅ Transport request for ${vehicleName} cancelled!`, 'success');
+        showNotification(`✅ Transport request for SSP{vehicleName} cancelled!`, 'success');
         if (onRefresh) onRefresh();
       } catch (error) {
         console.error('Error cancelling transport request:', error);
@@ -189,11 +189,11 @@ const FarmerDashboard = ({ data, onRefresh }) => {
     }
   };
 
-  const handleRejectOrder = async (orderId, productName) => {
+  const handleRejectOrder = async (orderId) => {
     try {
       setLoading(true);
       await marketplaceAPI.rejectOrder(orderId);
-      showNotification(`❌ Order for ${productName} rejected`, 'warning');
+      showNotification(`❌ Order for SSP{productName} rejected`, 'warning');
       if (onRefresh) onRefresh();
     } catch (error) {
       console.error('Error rejecting order:', error);
@@ -285,12 +285,12 @@ const FarmerDashboard = ({ data, onRefresh }) => {
     }
   };
 
-  const handleDeleteProduct = async (productId, productName) => {
-    if (window.confirm(`Are you sure you want to delete "${productName}"?`)) {
+  const handleDeleteProduct = async (productId) => {
+    if (window.confirm(`Are you sure you want to delete SSP{productName}?`)) {
       try {
         setLoading(true);
         await marketplaceAPI.deleteProduct(productId);
-        showNotification(`✅ Product "${productName}" deleted successfully!`, 'success');
+        showNotification(`✅ Product SSP{productName} deleted successfully!`, 'success');
         if (onRefresh) onRefresh();
       } catch (error) {
         console.error('Error deleting product:', error);
@@ -395,7 +395,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                           <div className="d-flex flex-column">
                             <small className="text-muted mb-1">by {equipment.owner__username}</small>
                             {equipment.price_per_day && (
-                              <small className="text-success fw-semibold">${equipment.price_per_day}/day</small>
+                              <small className="text-success fw-semibold">SSP{equipment.price_per_day}/day</small>
                             )}
                           </div>
                         </div>
@@ -441,7 +441,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                           <div className="d-flex flex-column">
                             <small className="text-muted mb-1">by {vehicle.owner__username}</small>
                             {vehicle.price_per_trip && (
-                              <small className="text-success fw-semibold">${vehicle.price_per_trip}/trip</small>
+                              <small className="text-success fw-semibold">SSP{vehicle.price_per_trip}/trip</small>
                             )}
                           </div>
                         </div>
@@ -490,7 +490,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                         <div>
                           <h6 className="mb-1 fw-bold">{product.name}</h6>
                           <div className="d-flex flex-column">
-                            <small className="text-success fw-semibold mb-1">${product.price}</small>
+                            <small className="text-success fw-semibold mb-1">SSP {product.price}</small>
                             <div className="d-flex align-items-center gap-2">
                               <Badge bg={product.available ? 'success' : 'secondary'} className="small">
                                 {product.available ? 'Available' : 'Unavailable'}
@@ -602,7 +602,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                             <span>👤 {order.buyer__username || 'Buyer'}</span>
                             {order.quantity && order.product__price && (
                               <span className="fw-semibold text-success">
-                                {order.quantity} × ${order.product__price} = ${(order.quantity * order.product__price).toFixed(2)}
+                                {order.quantity} SSP {order.product__price} = SSP{(order.quantity * order.product__price).toFixed(2)}
                               </span>
                             )}
                           </div>
@@ -652,7 +652,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                         <div className="d-flex flex-column">
                           {rental.equipment__price_per_day && (
                             <small className="text-success fw-semibold mb-1">
-                              ${rental.equipment__price_per_day}/day
+                              SSP {rental.equipment__price_per_day}/day
                             </small>
                           )}
                           {rental.operation_location && (
@@ -690,7 +690,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                         </div>
                         {request.transport__price_per_trip && (
                           <small className="text-success fw-semibold">
-                            ${request.transport__price_per_trip}/trip
+                            SSP {request.transport__price_per_trip}/trip
                           </small>
                         )}
                       </div>
