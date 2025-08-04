@@ -129,6 +129,18 @@ The project is divided into the following components:
 - `/api/weather/` - Weather information
 
 ![My Screenshot](images/home.png)
+![My Screenshot](images/home2.png)
+![My Screenshot](images/home3.png)
+![My Screenshot](images/home4.png)
+![My Screenshot](images/Screenshot-2025-08-04-231758.png)
+![My Screenshot](images/Screenshot-2025-08-04-231758.png)
+![My Screenshot](image/equipment.png)
+![My Screenshot](images/Screenshot025-08-0431910.png)
+![My Screenshot](images/Screenshot025-08-04232149.png)
+![My Screenshot](images/Screenshot2025-08-04231859.png)
+![My Screenshot]!(images/Screenshot2025-08-04232235.png)
+![My Screenshot]
+
 
 ## License
 This project is licensed under the MIT License.
