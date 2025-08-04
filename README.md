@@ -128,6 +128,7 @@ The project is divided into the following components:
 - `/api/transports/` - Transportation services
 - `/api/weather/` - Weather information
 
-C:\Users\majok\Desktop\Africans_LU\Year3-trimester3\final-capstone\images\Screenshot 2025-08-04 232401.png
+![Diagram](images/Screenshot 2025-08-04 232401.png)
+
 ## License
 This project is licensed under the MIT License.
