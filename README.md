@@ -88,6 +88,11 @@ This is the link to my github account
     https://github.com/KurMalual/final-capstone.git
 
 ## License
+"C:\Users\majok\Pictures\Screenshots\Screenshot 2025-08-04 232401.png"
+"C:\Users\majok\Pictures\Screenshots\Screenshot 2025-08-04 232413.png"
+"C:\Users\majok\Pictures\Screenshots\Screenshot 2025-08-04 232433.png"
+"C:\Users\majok\Pictures\Screenshots\Screenshot 2025-08-04 232444.png"
+
 ![alt text](image.png)
 ![alt text](image-1.png)
 ![alt text](image-2.png)
