@@ -129,33 +129,10 @@ The project is divided into the following components:
 - `/api/weather/` - Weather information
 
 ## License
-
-This project is licensed under the MIT License. See the LICENSE file for details.
-
-## Contact
-
-For more information, visit the [GitHub Repository](https://github.com/KurMalual/final-capstone).
-
-## Feedback Implementation Summary
-
-During the final defense, the panelists provided constructive feedback regarding the lack of clearly defined terms and conditions for equipment usage and transportation within the system. They emphasized the need for explicit agreements between the farmers and the service provider to avoid disputes, particularly in cases involving equipment damage, misuse, or extended usage beyond the agreed timeframe.
-
-In response to this feedback, the following enhancements were made to the system:
-
-- **Terms and Conditions Section**: A detailed terms and conditions agreement has been added for both equipment usage and transportation services. This section clearly outlines the responsibilities of the user (farmer) and the service provider.
-
-- **Damage and Liability Clause**: The new terms specify who is liable in case of damage to the equipment or vehicle during the period of use. This ensures transparency and helps mitigate conflicts.
-
-- **Usage Duration Policy**: The maximum allowable usage time for each equipment or transportation request has been clearly stated, including penalties or restrictions for exceeding the agreed timeframe.
-
-- **Mandatory Agreement Before Request Submission**: The system now requires that farmers must read and agree to the terms and conditions before submitting a request for equipment or transportation services. If the terms are not accepted, the request will not be processed. This ensures that users are fully informed and have explicitly consented to the rules governing the service.
-
-These changes enhance the reliability and professionalism of the platform, aligning it more closely with real-world expectations and protecting both parties involved in the transaction.
-
-This is the link to the deployed website https://final-capstone-8wugaeo7i-smart-farm-apms.vercel.app/
-
-screenshot of the full website
-
-C:\Users\majok\Desktop\Africans_LU\Year3-trimester3\final-capstone\images\Screenshot 2025-08-04 232401.png
-images\Screenshot 2025-08-04 232413.png
-images\Screenshot 2025-08-04 232433.png
+![alt text](image.png)
+![alt text](image-1.png)
+![alt text](image-2.png)
+![alt text](image-3.png)
+![alt text](image-4.png)
+![alt text](image-5.png)
+This project is licensed under the MIT License.
