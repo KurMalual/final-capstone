@@ -17,6 +17,10 @@ class Equipment(models.Model):
         default='cash',
         help_text='Preferred payment method for renting this equipment.'
     )
+    terms_and_conditions = models.TextField(
+        default='Equipment should be used responsibly. Any damage caused by the farmer will result in a penalty. Equipment is rented for a maximum of one week.',
+        help_text='Terms and conditions for renting this equipment.'
+    )
 
 class EquipmentRentalRequest(models.Model):
     equipment = models.ForeignKey(Equipment, on_delete=models.CASCADE, related_name='rental_requests')

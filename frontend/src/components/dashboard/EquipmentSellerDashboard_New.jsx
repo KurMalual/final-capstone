@@ -153,7 +153,7 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
         <Col>
           <Card className="bg-white shadow-sm">
             <Card.Body>
-              <h2 className="text-primary mb-1">Welcome Back, {profile?.first_name || profile?.username}! 🚜</h2>
+              <h2 className="text-primary mb-1">Welcome Back, {profile?.first_name || profile?.username}!</h2>
               <p className="text-muted mb-0">Manage your equipment and rental requests</p>
             </Card.Body>
           </Card>
@@ -165,7 +165,7 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
         <Col md={6} className="mb-3">
           <Card className="h-100 text-center shadow-sm border-0">
             <Card.Body>
-              <h3 className="text-warning">🚜 {myEquipment.length}</h3>
+              <h3 className="text-warning">{myEquipment.length}</h3>
               <p className="mb-0">My Equipment</p>
             </Card.Body>
           </Card>
@@ -173,7 +173,7 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
         <Col md={6} className="mb-3">
           <Card className="h-100 text-center shadow-sm border-0">
             <Card.Body>
-              <h3 className="text-info">📋 {rentalRequests.length}</h3>
+              <h3 className="text-info">{rentalRequests.length}</h3>
               <p className="mb-0">Rental Requests</p>
             </Card.Body>
           </Card>
@@ -187,7 +187,7 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
             <Card.Header className="bg-primary text-white">
               <div className="d-flex align-items-center">
                 <div className="bg-white rounded-circle p-2 me-3">
-                  <span style={{ fontSize: '1.5rem' }}>🚜</span>
+                  <span style={{ fontSize: '1.5rem' }}></span>
                 </div>
                 <div>
                   <h5 className="mb-0">My Equipment</h5>
@@ -198,7 +198,7 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
             <Card.Body className="p-4">
               {myEquipment.length === 0 ? (
                 <div className="text-center py-5">
-                  <div className="mb-3" style={{ fontSize: '4rem', opacity: 0.3 }}>🚜</div>
+                  <div className="mb-3" style={{ fontSize: '4rem', opacity: 0.3 }}></div>
                   <h5 className="text-muted">No equipment available</h5>
                   <p className="text-muted">Add your first piece of equipment to get started.</p>
                   <Button variant="primary" href="/equipment">
@@ -293,7 +293,7 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
               <Card.Header className="bg-info text-white">
                 <div className="d-flex align-items-center">
                   <div className="bg-white rounded-circle p-2 me-3">
-                    <span style={{ fontSize: '1.5rem' }}>📋</span>
+                    <span style={{ fontSize: '1.5rem' }}></span>
                   </div>
                   <div>
                     <h5 className="mb-0">Rental Requests</h5>
@@ -318,7 +318,7 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
                             className="d-flex align-items-center justify-content-center bg-light rounded"
                             style={{ width: '50px', height: '50px' }}
                           >
-                            <span style={{ fontSize: '1.5rem', opacity: 0.5 }}>🚜</span>
+                            <span style={{ fontSize: '1.5rem', opacity: 0.5 }}></span>
                           </div>
                         )}
                       </div>
@@ -344,7 +344,7 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
                         )}
                         
                         {request.message && (
-                          <p className="text-muted small mb-2">💬 {request.message.length > 60 ? `${request.message.substring(0, 60)}...` : request.message}</p>
+                          <p className="text-muted small mb-2">{request.message.length > 60 ? `${request.message.substring(0, 60)}...` : request.message}</p>
                         )}
                         
                         {request.status === 'pending' && (

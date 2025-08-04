@@ -4,6 +4,7 @@ import { equipmentAPI } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import ImageUpload from '../components/ImageUpload';
 import { getImageUrl } from '../utils/imageUtils';
+import { Link } from 'react-router-dom';
 
 const Equipment = () => {
   const { user } = useAuth();
@@ -22,6 +23,7 @@ const Equipment = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showRentalModal, setShowRentalModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const [selectedEquipment, setSelectedEquipment] = useState(null);
   const [editingEquipment, setEditingEquipment] = useState(null);
   
@@ -46,6 +48,8 @@ const Equipment = () => {
     message: '',
     operation_location: ''
   });
+
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const loadData = useCallback(async () => {
     try {
@@ -140,7 +144,8 @@ const Equipment = () => {
       await equipmentAPI.createRentalRequest({
         equipment: selectedEquipment.id,
         message: rentalForm.message,
-        operation_location: rentalForm.operation_location
+        operation_location: rentalForm.operation_location,
+        agreed_to_terms: agreedToTerms // Add this field
       });
       setSuccess('Rental request sent successfully!');
       setShowRentalModal(false);
@@ -228,6 +233,14 @@ const Equipment = () => {
     setShowRentalModal(true);
   };
 
+  const handleSendRentalRequest = () => {
+    if (!agreedToTerms) {
+      alert('You must agree to the terms and conditions before sending a rental request.');
+      return;
+    }
+    // Logic to send the rental request
+  };
+
   if (loading) {
     return (
       <Container className="d-flex justify-content-center align-items-center" style={{ minHeight: '50vh' }}>
@@ -287,7 +300,7 @@ const Equipment = () => {
       <Row className="mb-4">
         <Col>
           <div className="d-flex justify-content-between align-items-center">
-            <h2>🚜 Equipment Management</h2>
+            <h2>Equipment Management</h2>
             {isEquipmentSeller && (
               <Button variant="success" onClick={() => setShowAddModal(true)}>
                 + Add Equipment
@@ -338,13 +351,15 @@ const Equipment = () => {
                       </div>
                       <div className="d-flex flex-column gap-2">
                         {isFarmer && item.available && (
-                          <Button 
-                            variant="primary" 
-                            onClick={() => openRentalModal(item)}
-                            className="w-100"
-                          >
-                            Rent Equipment
-                          </Button>
+                          <>
+                            <Button 
+                              variant="primary" 
+                              onClick={() => openRentalModal(item)}
+                              className="w-100"
+                            >
+                              Rent Equipment
+                            </Button>
+                          </>
                         )}
                         {user?.id === item.owner && (
                           <div className="d-flex gap-2">
@@ -603,6 +618,21 @@ const Equipment = () => {
                   />
                 </Form.Group>
                 
+                {/* Terms and Conditions Section */}
+                <div className="mb-3">
+                  <Form.Check
+                    type="checkbox"
+                    label={(
+                      <span>
+                        I have read and agree to the <Link to="#" onClick={() => setShowTermsModal(true)}>Terms and Conditions</Link>
+                      </span>
+                    )}
+                    checked={agreedToTerms}
+                    onChange={(e) => setAgreedToTerms(e.target.checked)}
+                    required
+                  />
+                </div>
+                
                 <div className="d-flex gap-2">
                   <Button variant="secondary" onClick={() => setShowRentalModal(false)}>
                     Cancel
@@ -679,6 +709,32 @@ const Equipment = () => {
             </div>
           </Form>
         </Modal.Body>
+      </Modal>
+
+      {/* Terms and Conditions Modal */}
+      <Modal show={showTermsModal} onHide={() => setShowTermsModal(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Terms and Conditions</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <h5>Rental Terms and Conditions</h5>
+          <ol>
+            <li><strong>Eligibility:</strong> You must be at least 18 years old and have a valid ID to rent equipment.</li>
+            <li><strong>Rental Period:</strong> Specify the duration for which you need the equipment.</li>
+            <li><strong>Payment:</strong> Full payment is required upfront. Rental fees are non-refundable.</li>
+            <li><strong>Deposit:</strong> A refundable deposit may be required, depending on the equipment.</li>
+            <li><strong>Usage:</strong> Equipment must be used only for its intended purpose and in accordance with all safety guidelines.</li>
+            <li><strong>Maintenance:</strong> Keep the equipment in good condition. Report any damages immediately.</li>
+            <li><strong>Liability:</strong> You are responsible for any injury or damage caused by the equipment during the rental period.</li>
+            <li><strong>Termination:</strong> We reserve the right to terminate the rental agreement at any time for violation of terms.</li>
+          </ol>
+          <p>By renting our equipment, you agree to abide by these terms and conditions. If you have any questions, please contact us before proceeding with the rental.</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowTermsModal(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
       </Modal>
     </Container>
   );

@@ -235,7 +235,7 @@ const Marketplace = () => {
       <Row className="mb-4">
         <Col>
           <div className="d-flex justify-content-between align-items-center">
-            <h2>🛒 Agricultural Marketplace</h2>
+            <h2>Agricultural Marketplace</h2>
             {isFarmer && (
               <Button variant="success" onClick={() => setShowAddModal(true)}>
                 + Add Product

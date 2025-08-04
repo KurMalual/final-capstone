@@ -60,7 +60,7 @@ const BuyerDashboard = ({ data, onRefresh }) => {
         <Col>
           <Card className="bg-primary text-white">
             <Card.Body>
-              <h2>Welcome Back, {profile?.first_name || profile?.username}! 🛒</h2>
+              <h2>Welcome Back, {profile?.first_name || profile?.username}!</h2>
               <p className="mb-0">Find fresh products from local farmers</p>
             </Card.Body>
           </Card>
@@ -72,7 +72,7 @@ const BuyerDashboard = ({ data, onRefresh }) => {
         <Col md={6} className="mb-3">
           <Card className="h-100 text-center">
             <Card.Body>
-              <h3 className="text-success">📦 {data.available_products?.length || 0}</h3>
+              <h3 className="text-success">{data.available_products?.length || 0}</h3>
               <p className="mb-0">Available Products</p>
             </Card.Body>
           </Card>
@@ -80,7 +80,7 @@ const BuyerDashboard = ({ data, onRefresh }) => {
         <Col md={6} className="mb-3">
           <Card className="h-100 text-center">
             <Card.Body>
-              <h3 className="text-info">📋 {data.my_orders?.length || 0}</h3>
+              <h3 className="text-info">{data.my_orders?.length || 0}</h3>
               <p className="mb-0">My Orders</p>
             </Card.Body>
           </Card>
@@ -92,7 +92,7 @@ const BuyerDashboard = ({ data, onRefresh }) => {
         <Col lg={8} className="mb-4">
           <Card>
             <Card.Header className="bg-success text-white">
-              <h5 className="mb-0">📦 Fresh Products Available</h5>
+              <h5 className="mb-0">Fresh Products Available</h5>
             </Card.Header>
             <Card.Body style={{ maxHeight: '400px', overflowY: 'auto' }}>
               {data.available_products?.length > 0 ? (
@@ -129,7 +129,7 @@ const BuyerDashboard = ({ data, onRefresh }) => {
         <Col lg={4} className="mb-4">
           <Card>
             <Card.Header className="bg-info text-white">
-              <h5 className="mb-0">📋 My Orders</h5>
+              <h5 className="mb-0">My Orders</h5>
             </Card.Header>
             <Card.Body style={{ maxHeight: '400px', overflowY: 'auto' }}>
               {data.my_orders?.length > 0 ? (

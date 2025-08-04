@@ -1,0 +1,38 @@
+.terms-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  background-color: #ffffff; /* White background for content visibility */
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+body {
+  background-color: #ffffff; /* Reverted to default white background */
+}
+
+.terms-title {
+  font-size: 2.5rem;
+  color: #333; /* Dark text for better readability */
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.terms-intro {
+  font-size: 1.2rem;
+  color: #555; /* Dark text for better readability */
+  margin-bottom: 20px;
+}
+
+.terms-section-title {
+  font-size: 1.8rem;
+  color: #444; /* Dark text for better readability */
+  margin-top: 20px;
+  margin-bottom: 10px;
+}
+
+.terms-text {
+  font-size: 1rem;
+  color: #666; /* Dark text for better readability */
+  line-height: 1.6;
+}

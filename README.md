@@ -1,97 +1,161 @@
-# Smart Farm Connect
+# Smart Farm Advisory And Agricultural Products Management System (APMS) For South Sudan
 
-A comprehensive platform designed for South Sudan's agricultural ecosystem, bridging the gap between Farmers, Buyers, and Transporters.
+A comprehensive platform designed to revolutionize South Sudan's agricultural ecosystem by bridging the gap between Farmers, Buyers, Transporters, and Equipment Sellers. The system provides advisory services, weather updates, and a marketplace for agricultural products and services.
+
+## Overview
+
+The Smart Farm APMS is a modular and scalable system that integrates multiple functionalities to support the agricultural community in South Sudan. It includes:
+
+- **User Roles**: Farmers, Buyers, Transporters, and Equipment renters.
+- **Weather Integration**: Real-time weather updates using the OpenWeather API.
+- **Marketplace**: A platform for buying and selling agricultural products.
+- **Equipment Rental**: A service for renting farming equipment.
+- **Transportation Coordination**: Tools to connect transporters with farmers and buyers.
+- **Dashboards**: Role-specific dashboards for better user experience.
 
 ## Project Structure
 
-This project consists of:
+The project is divided into the following components:
 
-- **Frontend**: React application with TypeScript and Tailwind CSS
-- **Backend**: Django REST API with multiple apps for different features
+- **Backend**: Built with Django and Django REST Framework, providing APIs for all functionalities.
+- **Frontend**: Developed using React, Bootstrap, and CSS for a responsive and user-friendly interface.
+- **Database**: SQLite for development and PostgreSQL for production.
+- **Hosting**: Deployed on render for scalability and reliability.
 
-## Setup Instructions
+## Setup and Installation
+
+### Prerequisites
+
+- Python 3.8 or higher
+- Node.js and npm
+- Git
+- Virtual Environment (venv)
 
 ### Backend Setup
-1. Clone the repo https://github.com/KurMalual/final-capstone
-2. . Create a virtual environment:
+
+1. Clone the repository:
+   \`\`\`bash
+   git clone https://github.com/KurMalual/final-capstone.git
+   cd final-capstone/backend
    \`\`\`
+
+2. Create and activate a virtual environment:
+   \`\`\`bash
    python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   venv\Scripts\activate  # On Windows
    \`\`\`
 
 3. Install dependencies:
-   \`\`\`
-   pip install django djangorestframework django-cors-headers pillow
+   \`\`\`bash
+   install Django
+   pip install -r requirements.txt
+   Pillow
+   django-cors-headers
    \`\`\`
 
-4. Navigate to the backend directory and run migrations:
-   \`\`\`cd final-capstone
-   `\`
+4. Apply database migrations:
+   \`\`\`bash
    python manage.py makemigrations
-   `\  `
    python manage.py migrate
    \`\`\`
 
-5. Create a superuser:
-   \`\`\`
+5. Create a superuser for admin access:
+   \`\`\`bash
    python manage.py createsuperuser
    \`\`\`
 
-6. Run the development server:
-   \`\`\`
+6. Start the development server:
+   \`\`\`bash
    python manage.py runserver
    \`\`\`
 
 ### Frontend Setup
 
 1. Navigate to the frontend directory:
-   \`\`\`
-   cd frontend
+   \`\`\`bash
+   cd ../frontend
    \`\`\`
 
+## Dependencies
 2. Install dependencies:
-   \`\`\`
+   \`\`\`bash
    npm install
    \`\`\`
 
 3. Start the development server:
-   \`\`\`
-   npm start
+   \`\`\`bash
+   npm run dev
    \`\`\`
 
-## Features
 
-- User authentication with role-based access (Farmer, Buyer, Transporter, Equipment Seller)
-- Weather information for farmers
-- Marketplace for agricultural products
-- Equipment rental service
-- Transportation coordination
-- Dashboard for each user type
+### Backend
+- Django
+- Django REST Framework
+- Pillow
+- django-cors-headers
+- OpenWeather API integration
+
+### Frontend
+- React
+- Bootstrap
+- Axios
+
+### Database
+- SQLite (Development)
+- PostgreSQL (Production)
+
+## Instructions to Run the Project
+
+1. Follow the setup instructions for both the backend and frontend.
+2. Start the backend server using `python manage.py runserver`.
+3. Start the frontend server using `npm run dev`.
+4. Access the application at `http://localhost:3000`.
+
+### User Dashboards
+- Farmers can requster equipment rental, transport coordination, view weather updates, watch educational videos and manage their products.
+- Buyers can browse the marketplace and place orders.
+- Transporters can coordinate logistics.
+- Equipment renters can list and manage their equipment.
+
+### Screenshots
+
 
 ## API Endpoints
 
-- `/api/auth/` - Authentication endpoints
+- `/api/auth/` - User authentication
 - `/api/products/` - Product management
 - `/api/equipment/` - Equipment rental
 - `/api/transports/` - Transportation services
 - `/api/weather/` - Weather information
 
-## Technologies Used
-
-- **Frontend**: React, TypeScript, Tailwind CSS, Axios
-- **Backend**: Django, Django REST Framework
-- **Database**: SQLite (development), PostgreSQL (production)
-- **Authentication**: Token-based authentication
-
-
-This is the link to my github account
-    https://github.com/KurMalual/final-capstone.git
-
 ## License
-![alt text](image.png)
-![alt text](image-1.png)
-![alt text](image-2.png)
-![alt text](image-3.png)
-![alt text](image-4.png)
-![alt text](image-5.png)
-This project is licensed under the MIT License.
+
+This project is licensed under the MIT License. See the LICENSE file for details.
+
+## Contact
+
+For more information, visit the [GitHub Repository](https://github.com/KurMalual/final-capstone).
+
+## Feedback Implementation Summary
+
+During the final defense, the panelists provided constructive feedback regarding the lack of clearly defined terms and conditions for equipment usage and transportation within the system. They emphasized the need for explicit agreements between the farmers and the service provider to avoid disputes, particularly in cases involving equipment damage, misuse, or extended usage beyond the agreed timeframe.
+
+In response to this feedback, the following enhancements were made to the system:
+
+- **Terms and Conditions Section**: A detailed terms and conditions agreement has been added for both equipment usage and transportation services. This section clearly outlines the responsibilities of the user (farmer) and the service provider.
+
+- **Damage and Liability Clause**: The new terms specify who is liable in case of damage to the equipment or vehicle during the period of use. This ensures transparency and helps mitigate conflicts.
+
+- **Usage Duration Policy**: The maximum allowable usage time for each equipment or transportation request has been clearly stated, including penalties or restrictions for exceeding the agreed timeframe.
+
+- **Mandatory Agreement Before Request Submission**: The system now requires that farmers must read and agree to the terms and conditions before submitting a request for equipment or transportation services. If the terms are not accepted, the request will not be processed. This ensures that users are fully informed and have explicitly consented to the rules governing the service.
+
+These changes enhance the reliability and professionalism of the platform, aligning it more closely with real-world expectations and protecting both parties involved in the transaction.
+
+This is the link to the deployed website https://final-capstone-8wugaeo7i-smart-farm-apms.vercel.app/
+
+screenshot of the full website
+
+C:\Users\majok\Desktop\Africans_LU\Year3-trimester3\final-capstone\images\Screenshot 2025-08-04 232401.png
+images\Screenshot 2025-08-04 232413.png
+images\Screenshot 2025-08-04 232433.png

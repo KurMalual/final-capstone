@@ -16,6 +16,7 @@ const Transport = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showRequestModal, setShowRequestModal] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [editingVehicle, setEditingVehicle] = useState(null);
   
@@ -42,6 +43,8 @@ const Transport = () => {
     cargo_details: '',
     message: ''
   });
+
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -123,7 +126,8 @@ const Transport = () => {
         pickup_location: requestForm.pickup_location,
         delivery_location: requestForm.delivery_location,
         cargo_details: requestForm.cargo_details,
-        message: requestForm.message
+        message: requestForm.message,
+        agreed_to_terms: agreedToTerms,
       });
       setSuccess('Transport request sent successfully!');
       setShowRequestModal(false);
@@ -228,7 +232,7 @@ const Transport = () => {
         <Row className="mb-4">
           <Col>
             <div className="d-flex justify-content-between align-items-center">
-              <h2>🚛 Transport Services</h2>
+              <h2>Transport Services</h2>
               {isTransporter && (
                 <Button variant="success" onClick={() => setShowAddModal(true)}>
                   + Add Vehicle
@@ -509,11 +513,26 @@ const Transport = () => {
                   />
                 </Form.Group>
                 
+                <Form.Check
+                  type="checkbox"
+                  label={
+                    <span>
+                      I have read and agree to the <a href="#" onClick={() => setShowTermsModal(true)}>Terms and Conditions</a>
+                    </span>
+                  }
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  required
+                />
+                
                 <div className="d-flex gap-2">
                   <Button variant="secondary" onClick={() => setShowRequestModal(false)}>
                     Cancel
                   </Button>
-                  <Button variant="primary" type="submit">
+                  <Button
+                    variant="primary"
+                    type="submit"
+                  >
                     Send Request
                   </Button>
                 </div>
@@ -585,6 +604,29 @@ const Transport = () => {
             </div>
           </Form>
         </Modal.Body>
+      </Modal>
+
+      {/* Terms and Conditions Modal */}
+      <Modal show={showTermsModal} onHide={() => setShowTermsModal(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Terms and Conditions</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <h5>Transport Terms and Conditions</h5>
+          <ol>
+            <li><strong>Eligibility:</strong> You must be at least 18 years old and have a valid ID to request transport services.</li>
+            <li><strong>Payment:</strong> Full payment is required upfront. Transport fees are non-refundable.</li>
+            <li><strong>Usage:</strong> Transport services must be used only for their intended purpose and in accordance with all safety guidelines.</li>
+            <li><strong>Liability:</strong> You are responsible for any damages caused during the transport service.</li>
+            <li><strong>Termination:</strong> We reserve the right to terminate the service agreement at any time for violation of terms.</li>
+          </ol>
+          <p>By requesting our transport services, you agree to abide by these terms and conditions. If you have any questions, please contact us before proceeding with the request.</p>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowTermsModal(false)}>
+            Close
+          </Button>
+        </Modal.Footer>
       </Modal>
     </Container>
   );

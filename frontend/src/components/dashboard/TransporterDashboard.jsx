@@ -31,8 +31,8 @@ const TransporterDashboard = ({ data, onRefresh }) => {
 
   // Handle both data structures - direct data or nested in 'data'
   const profileData = data.profile || { username: 'Transporter', first_name: 'Transporter' };
-  const vehiclesData = data.my_vehicles || [];
-  const requestsData = data.transport_requests || [];
+  const vehiclesData = data?.my_vehicles || [];
+  const requestsData = data?.transport_requests || [];
 
   console.log('TransporterDashboard processed data:', {
     profile: profileData,
@@ -50,11 +50,11 @@ const TransporterDashboard = ({ data, onRefresh }) => {
   const handleAcceptTransport = async (requestId, vehicleName) => {
     try {
       setLoading(true);
-      await transportAPI.approveTransport(requestId);
+      await transportAPI.acceptTransportRequest(requestId);
       showNotification(`✅ Transport request for ${vehicleName} accepted!`, 'success');
       if (onRefresh) onRefresh();
     } catch (error) {
-      console.error('Error accepting transport:', error);
+      console.error('Error accepting transport request:', error);
       showNotification('❌ Failed to accept transport request', 'danger');
     } finally {
       setLoading(false);
@@ -142,7 +142,7 @@ const TransporterDashboard = ({ data, onRefresh }) => {
         <Col>
           <Card className="bg-white shadow-sm">
             <Card.Body>
-              <h2 className="text-primary mb-1">Welcome Back, {profileData?.first_name || profileData?.username}! 🚛</h2>
+              <h2 className="text-primary mb-1">Welcome Back, {profileData?.first_name || profileData?.username}!</h2>
               <p className="text-muted mb-0">Manage your vehicles and transport requests</p>
             </Card.Body>
           </Card>
@@ -154,7 +154,7 @@ const TransporterDashboard = ({ data, onRefresh }) => {
         <Col md={6} className="mb-3">
           <Card className="h-100 text-center shadow-sm border-0">
             <Card.Body>
-              <h3 className="text-info">🚛 {vehiclesData.length}</h3>
+              <h3 className="text-info">{vehiclesData.length}</h3>
               <p className="mb-0">My Vehicles</p>
             </Card.Body>
           </Card>
@@ -162,7 +162,7 @@ const TransporterDashboard = ({ data, onRefresh }) => {
         <Col md={6} className="mb-3">
           <Card className="h-100 text-center shadow-sm border-0">
             <Card.Body>
-              <h3 className="text-warning">📋 {requestsData.length}</h3>
+              <h3 className="text-warning">{requestsData.length}</h3>
               <p className="mb-0">Transport Requests</p>
             </Card.Body>
           </Card>
@@ -176,7 +176,7 @@ const TransporterDashboard = ({ data, onRefresh }) => {
             <Card.Header className="bg-info text-white">
               <div className="d-flex align-items-center">
                 <div className="bg-white rounded-circle p-2 me-3">
-                  <span style={{ fontSize: '1.5rem' }}>🚛</span>
+                  <span style={{ fontSize: '1.5rem' }}></span>
                 </div>
                 <div>
                   <h5 className="mb-0">My Vehicles</h5>
@@ -187,7 +187,7 @@ const TransporterDashboard = ({ data, onRefresh }) => {
             <Card.Body className="p-4">
               {vehiclesData.length === 0 ? (
                 <div className="text-center py-5">
-                  <div className="mb-3" style={{ fontSize: '4rem', opacity: 0.3 }}>🚛</div>
+                  <div className="mb-3" style={{ fontSize: '4rem', opacity: 0.3 }}></div>
                   <h5 className="text-muted">No vehicles available</h5>
                   <p className="text-muted">Add your first vehicle to get started.</p>
                   <Button variant="info" href="/transport">
@@ -212,7 +212,7 @@ const TransporterDashboard = ({ data, onRefresh }) => {
                               className="d-flex align-items-center justify-content-center bg-light"
                               style={{ height: '180px' }}
                             >
-                              <span style={{ fontSize: '3rem', opacity: 0.3 }}>🚛</span>
+                              <span style={{ fontSize: '3rem', opacity: 0.3 }}></span>
                             </div>
                           )}
                           <Badge 
@@ -272,7 +272,7 @@ const TransporterDashboard = ({ data, onRefresh }) => {
               <Card.Header className="bg-warning text-dark">
                 <div className="d-flex align-items-center">
                   <div className="bg-white rounded-circle p-2 me-3">
-                    <span style={{ fontSize: '1.5rem' }}>📋</span>
+                    <span style={{ fontSize: '1.5rem' }}></span>
                   </div>
                   <div>
                     <h5 className="mb-0">Transport Requests</h5>
@@ -315,7 +315,7 @@ const TransporterDashboard = ({ data, onRefresh }) => {
                             display: request.transport__vehicle_image ? 'none' : 'flex'
                           }}
                         >
-                          <span style={{ fontSize: '2.5rem', opacity: 0.5 }}>🚛</span>
+                          <span style={{ fontSize: '2.5rem', opacity: 0.5 }}></span>
                         </div>
                       </div>
                       <div className="flex-grow-1">
@@ -341,7 +341,7 @@ const TransporterDashboard = ({ data, onRefresh }) => {
                         <div className="small mb-2">
                           <div><strong>📍 From:</strong> {request.pickup_location}</div>
                           <div><strong>🎯 To:</strong> {request.delivery_location}</div>
-                          {request.cargo_details && <div><strong>📦 Cargo:</strong> {request.cargo_details.length > 50 ? request.cargo_details.substring(0, 50) + '...' : request.cargo_details}</div>}
+                          {request.cargo_details && <div><strong>Cargo:</strong> {request.cargo_details.length > 50 ? request.cargo_details.substring(0, 50) + '...' : request.cargo_details}</div>}
                         </div>
                         
                         {request.status === 'pending' && (
@@ -444,7 +444,7 @@ const TransporterDashboard = ({ data, onRefresh }) => {
           </Modal.Footer>
         </Form>
       </Modal>
-      
+
       {/* Toast Notifications */}
       <ToastContainer position="top-end" className="p-3">
         <Toast show={showToast} onClose={() => setShowToast(false)} bg={toastVariant}>

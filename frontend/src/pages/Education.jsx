@@ -94,7 +94,7 @@ const Education = () => {
         <Col>
           <div className="d-flex justify-content-between align-items-center">
             <div>
-              <h2>📚 Agricultural Education Center</h2>
+              <h2>Agricultural Education Center</h2>
               <p className="text-muted">Learn modern farming techniques and best practices</p>
             </div>
             {canAddResources && (
@@ -114,12 +114,12 @@ const Education = () => {
         <Col>
           <Card className="bg-light border-0">
             <Card.Body>
-              <h5>🌱 Learning Categories</h5>
+              <h5>Learning Categories</h5>
               <Row className="g-3">
                 <Col md={3}>
                   <Card className="text-center border-0 bg-white">
                     <Card.Body className="p-3">
-                      <div className="h2 mb-2">🌾</div>
+                      <div className="h2 mb-2"></div>
                       <h6>Crop Management</h6>
                       <small className="text-muted">Learn about planting, growing, and harvesting techniques</small>
                     </Card.Body>
@@ -128,7 +128,7 @@ const Education = () => {
                 <Col md={3}>
                   <Card className="text-center border-0 bg-white">
                     <Card.Body className="p-3">
-                      <div className="h2 mb-2">🐄</div>
+                      <div className="h2 mb-2"></div>
                       <h6>Livestock Care</h6>
                       <small className="text-muted">Animal husbandry and veterinary care</small>
                     </Card.Body>
@@ -137,7 +137,7 @@ const Education = () => {
                 <Col md={3}>
                   <Card className="text-center border-0 bg-white">
                     <Card.Body className="p-3">
-                      <div className="h2 mb-2">🚜</div>
+                      <div className="h2 mb-2"></div>
                       <h6>Modern Technology</h6>
                       <small className="text-muted">Agricultural machinery and smart farming</small>
                     </Card.Body>
@@ -146,7 +146,7 @@ const Education = () => {
                 <Col md={3}>
                   <Card className="text-center border-0 bg-white">
                     <Card.Body className="p-3">
-                      <div className="h2 mb-2">💰</div>
+                      <div className="h2 mb-2"></div>
                       <h6>Farm Business</h6>
                       <small className="text-muted">Financial management and marketing</small>
                     </Card.Body>
@@ -167,7 +167,7 @@ const Education = () => {
               <Col>
                 <Card className="text-center p-4">
                   <Card.Body>
-                    <div className="h1 mb-3">📖</div>
+                    <div className="h1 mb-3"></div>
                     <h5>No Educational Resources Yet</h5>
                     <p className="text-muted">
                       Educational materials will be made available by administrators. Check back later for learning resources!
@@ -280,10 +280,10 @@ const Education = () => {
         <Col>
           <Card>
             <Card.Body>
-              <Card.Title>💡 Quick Farming Tips</Card.Title>
+              <Card.Title>Quick Farming Tips</Card.Title>
               <Row>
                 <Col md={6}>
-                  <h6>🌱 Soil Health</h6>
+                  <h6>Soil Health</h6>
                   <ul>
                     <li>Test soil pH regularly (ideal: 6.0-7.0)</li>
                     <li>Use organic compost to improve fertility</li>
@@ -292,7 +292,7 @@ const Education = () => {
                   </ul>
                 </Col>
                 <Col md={6}>
-                  <h6>🐛 Pest Management</h6>
+                  <h6>Pest Management</h6>
                   <ul>
                     <li>Use integrated pest management (IPM)</li>
                     <li>Encourage beneficial insects</li>
@@ -303,7 +303,7 @@ const Education = () => {
               </Row>
               <Row>
                 <Col md={6}>
-                  <h6>💧 Water Management</h6>
+                  <h6>Water Management</h6>
                   <ul>
                     <li>Install drip irrigation for efficiency</li>
                     <li>Mulch around plants to retain moisture</li>
@@ -312,7 +312,7 @@ const Education = () => {
                   </ul>
                 </Col>
                 <Col md={6}>
-                  <h6>📈 Productivity Tips</h6>
+                  <h6>Productivity Tips</h6>
                   <ul>
                     <li>Keep detailed farming records</li>
                     <li>Plan seasonal crop schedules</li>

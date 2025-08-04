@@ -147,7 +147,7 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
         <Col md={6} className="mb-3">
           <Card className="h-100 text-center shadow-sm border-0">
             <Card.Body>
-              <h3 className="text-warning">🚜 {myEquipment.length}</h3>
+              <h3 className="text-warning">{myEquipment.length}</h3>
               <p className="mb-0">My Equipment</p>
             </Card.Body>
           </Card>
@@ -155,7 +155,7 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
         <Col md={6} className="mb-3">
           <Card className="h-100 text-center shadow-sm border-0">
             <Card.Body>
-              <h3 className="text-info">📋 {rentalRequests.length}</h3>
+              <h3 className="text-info">{rentalRequests.length}</h3>
               <p className="mb-0">Rental Requests</p>
             </Card.Body>
           </Card>
@@ -265,7 +265,7 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
               <Card.Header className="bg-info text-white">
                 <div className="d-flex align-items-center">
                   <div className="bg-white rounded-circle p-2 me-3">
-                    <span style={{ fontSize: '1.5rem' }}>📋</span>
+                    <span style={{ fontSize: '1.5rem' }}></span>
                   </div>
                   <div>
                     <h5 className="mb-0">Rental Requests</h5>
@@ -316,7 +316,7 @@ const EquipmentSellerDashboard = ({ data, onRefresh }) => {
                         )}
                         
                         {request.message && (
-                          <p className="text-muted small mb-2">💬 {request.message.length > 60 ? `${request.message.substring(0, 60)}...` : request.message}</p>
+                          <p className="text-muted small mb-2">{request.message.length > 60 ? `${request.message.substring(0, 60)}...` : request.message}</p>
                         )}
                         
                         {request.status === 'pending' && (

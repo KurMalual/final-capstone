@@ -89,6 +89,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
   };
 
   const handleHireEquipment = async (equipmentId, equipmentName) => {
+    console.log('FarmerDashboard - handleHireEquipment triggered for:', equipmentName);
     setSelectedEquipment({ id: equipmentId, name: equipmentName });
     setRentalForm({
       message: `Request to hire SSP{equipmentName}`,
@@ -99,11 +100,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
 
   const handleSubmitRental = async (e) => {
     e.preventDefault();
-    
-    // Debug logging
-    console.log('Form state before submission:', rentalForm);
-    console.log('Selected equipment:', selectedEquipment);
-    
+
     try {
       setLoading(true);
       const requestData = {
@@ -315,13 +312,14 @@ const FarmerDashboard = ({ data, onRefresh }) => {
   };
 
   return (
+    <>
     <Container className="py-4">
       {/* Welcome Header */}
       <Row className="mb-4">
         <Col>
           <Card className="bg-success text-white">
             <Card.Body>
-              <h2>Welcome Back, {profile?.first_name || profile?.username}! 🌾</h2>
+              <h2>Welcome Back, {profile?.first_name || profile?.username}!</h2>
               <p className="mb-0">Here's what's happening on your farm today</p>
             </Card.Body>
           </Card>
@@ -381,7 +379,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
         <Col xs={12}>
           <Card>
             <Card.Header className="bg-success text-white d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">🚜 Available Equipment</h5>
+              <h5 className="mb-0">Available Equipment</h5>
               <small className="text-white-50">{stats.availableEquipment} items</small>
             </Card.Header>
             <Card.Body style={{ maxHeight: '280px', overflowY: 'auto' }}>
@@ -427,7 +425,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
         <Col xs={12}>
           <Card>
             <Card.Header className="bg-primary text-white d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">🚛 Available Transport</h5>
+              <h5 className="mb-0">Available Transport</h5>
               <small className="text-white-50">{stats.availableVehicles} vehicles</small>
             </Card.Header>
             <Card.Body style={{ maxHeight: '280px', overflowY: 'auto' }}>
@@ -473,7 +471,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
         <Col xs={12}>
           <Card>
             <Card.Header className="bg-warning text-dark d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">📦 My Products</h5>
+              <h5 className="mb-0">My Products</h5>
               <div className="d-flex align-items-center gap-2">
                 <small className="text-muted">{stats.myProducts} products</small>
                 <Button variant="outline-dark" size="sm" onClick={() => setShowAddProductModal(true)}>
@@ -543,7 +541,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
         <Col xs={12}>
           <Card>
             <Card.Header className="bg-info text-white d-flex justify-content-between align-items-center">
-              <h5 className="mb-0">📋 Recent Activity</h5>
+              <h5 className="mb-0">Recent Activity</h5>
               <small className="text-white-50">Latest updates</small>
             </Card.Header>
             <Card.Body style={{ maxHeight: '280px', overflowY: 'auto' }}>
@@ -583,7 +581,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
                             display: order.product__image ? 'none' : 'flex'
                           }}
                         >
-                          <span style={{ fontSize: '2.5rem', opacity: 0.5 }}>🛒</span>
+                          <span style={{ fontSize: '2.5rem', opacity: 0.5 }}></span>
                         </div>
                       </div>
                       <div className="flex-grow-1">
@@ -729,7 +727,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
           <Col>
             <Card>
               <Card.Header className="bg-light">
-                <h5 className="mb-0">🌤️ Weather Information</h5>
+                <h5 className="mb-0">Weather Information</h5>
               </Card.Header>
               <Card.Body>
                 {weather.error ? (
@@ -774,7 +772,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
       {/* Add Product Modal */}
       <Modal show={showAddProductModal} onHide={() => setShowAddProductModal(false)} size="lg">
         <Modal.Header closeButton>
-          <Modal.Title>📦 Add New Product</Modal.Title>
+          <Modal.Title>Add New Product</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form onSubmit={handleAddProduct}>
@@ -1024,6 +1022,7 @@ const FarmerDashboard = ({ data, onRefresh }) => {
         </Form>
       </Modal>
     </Container>
+    </>
   );
 };
 

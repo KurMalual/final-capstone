@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from django.core.mail import send_mail
 from .models import Equipment, EquipmentRentalRequest
 from .serializers import EquipmentSerializer, EquipmentRentalRequestSerializer
+from rest_framework import serializers
 
 
 
@@ -36,6 +37,12 @@ class EquipmentViewSet(viewsets.ModelViewSet):
         status_text = "available" if equipment.available else "unavailable"
         return Response({'detail': f'Equipment marked as {status_text}.'}, status=status.HTTP_200_OK)
 
+    @action(detail=True, methods=['get'], permission_classes=[permissions.AllowAny])
+    def terms_and_conditions(self, request, pk=None):
+        equipment = self.get_object()
+        return Response({'terms_and_conditions': equipment.terms_and_conditions})
+
+
 
 
 class EquipmentRentalRequestViewSet(viewsets.ModelViewSet):
@@ -65,6 +72,8 @@ class EquipmentRentalRequestViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         print(f"Equipment rental request data: {self.request.data}")
+        if not serializer.validated_data.get('agreed_to_terms', False):
+            raise serializers.ValidationError("You must agree to the terms and conditions to proceed.")
         # Save the rental request
         rental_request = serializer.save(farmer=self.request.user)
         # Mark the equipment as unavailable

@@ -17,6 +17,10 @@ class Transport(models.Model):
         default='cash',
         help_text='Preferred payment method for transport services.'
     )
+    terms_and_conditions = models.TextField(
+        default='Vehicles should be used responsibly. Any damage caused by the farmer will result in a penalty. Vehicles are rented for a maximum of one week.',
+        help_text='Terms and conditions for using this transport service.'
+    )
 
 class TransportRequest(models.Model):
     transport = models.ForeignKey(Transport, on_delete=models.CASCADE, related_name='transport_requests')

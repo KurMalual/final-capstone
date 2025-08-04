@@ -23,6 +23,8 @@ import Transport from './pages/Transport';
 import Marketplace from './pages/Marketplace';
 import Weather from './pages/Weather';
 import Education from './pages/Education';
+import RequestWithTerms from './pages/RequestWithTerms';
+import TermsAndConditions from './pages/TermsAndConditions';
 
 const AppContent = () => {
   const { isAuthenticated } = useAuth();
@@ -114,6 +116,17 @@ const AppContent = () => {
         />
         
         <Route 
+          path="/request-with-terms" 
+          element={
+            <PrivateRoute>
+              <Layout>
+                <RequestWithTerms onSubmit={() => alert('Request submitted successfully!')} />
+              </Layout>
+            </PrivateRoute>
+          } 
+        />
+        
+        <Route 
           path="/profile" 
           element={
             <PrivateRoute>
@@ -125,6 +138,11 @@ const AppContent = () => {
               </Layout>
             </PrivateRoute>
           } 
+        />
+        
+        <Route 
+          path="/terms-and-conditions" 
+          element={<TermsAndConditions />} 
         />
         
         {/* Default redirect - removed since / is now the landing page */}

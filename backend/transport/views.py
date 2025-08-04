@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from django.core.mail import send_mail
 from .models import Transport, TransportRequest
 from .serializers import TransportSerializer, TransportRequestSerializer
+from rest_framework import serializers
 
 
 
@@ -36,6 +37,12 @@ class TransportViewSet(viewsets.ModelViewSet):
         status_text = "available" if transport.available else "unavailable"
         return Response({'detail': f'Transport marked as {status_text}.'}, status=status.HTTP_200_OK)
 
+    @action(detail=True, methods=['get'], permission_classes=[permissions.AllowAny])
+    def terms_and_conditions(self, request, pk=None):
+        transport = self.get_object()
+        return Response({'terms_and_conditions': transport.terms_and_conditions})
+
+
 
 
 class TransportRequestViewSet(viewsets.ModelViewSet):
@@ -55,6 +62,8 @@ class TransportRequestViewSet(viewsets.ModelViewSet):
         return queryset.none()
 
     def perform_create(self, serializer):
+        if not serializer.validated_data.get('agreed_to_terms', False):
+            raise serializers.ValidationError("You must agree to the terms and conditions to proceed.")
         # Save the transport request
         transport_request = serializer.save(farmer=self.request.user)
         # Mark the transport as unavailable
