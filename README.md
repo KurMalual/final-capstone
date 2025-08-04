@@ -139,7 +139,8 @@ The project is divided into the following components:
 ![My Screenshot](images/Screenshot025-08-04232149.png)
 ![My Screenshot](images/Screenshot2025-08-04231859.png)
 ![My Screenshot]!(images/Screenshot2025-08-04232235.png)
-![My Screenshot]
+![My Screenshot]!(images/Screenshot2025-08-04232323.png)
+![alt text](images/Screenshot2025-08-04232340.png)
 
 
 ## License
